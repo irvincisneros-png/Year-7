@@ -680,6 +680,7 @@ function Section1({ progress, setProgress }) {
         <p className="lead">Everything around you is made of tiny particles. Whether something is solid, liquid or gas depends on how those particles are arranged and how much energy they have.</p>
       </div>
 
+      <Figure src="img/states.png" caption="The same substance as a solid, a liquid and a gas — particles packed, looser, then spread out." />
       <DotPoint id="4.1.1" title="The three states of matter" progress={progress} setProgress={setProgress}>
         <p>All matter is made of tiny particles. Depending on how those particles are arranged and how much energy they have, a substance can exist as a <Term def="A state of matter where particles are packed closely in a fixed arrangement and vibrate on the spot.">solid</Term>, a <Term def="A state of matter where particles are close together but can slide past each other, taking the shape of any container.">liquid</Term> or a <Term def="A state of matter where particles are far apart, moving rapidly in all directions, and spreading to fill any container.">gas</Term>. These are the three states of matter.</p>
         <p>Water is special because it naturally exists in all three states at temperatures common on Earth. Ice is found in glaciers and the polar ice caps. Liquid water covers more than 70 percent of Earth's surface in oceans, rivers and lakes. Water vapour is a gas in the atmosphere that forms clouds and drives the water cycle.</p>
@@ -818,6 +819,7 @@ function Section2({ progress, setProgress }) {
         <p className="lead">Water has some surprising properties that set it apart from most other substances. Understanding these helps explain everything from why ships float to why ice forms on top of ponds.</p>
       </div>
 
+      <Figure src="img/water.png" caption="Surface tension lets a water strider rest on top of the water." />
       <DotPoint id="4.2.1" title="Density, buoyancy and surface tension" progress={progress} setProgress={setProgress}>
         <p><Term def="The amount of mass packed into a given volume. Formula: density = mass divided by volume (rho = m/v). Units: g/mL or kg per cubic metre.">Density</Term> tells you how much mass is packed into a volume of space. Water has a density of about 1.00 g/mL. Interestingly, ice is less dense than liquid water (about 0.917 g/mL) because water molecules form a more open, hexagonal crystal pattern when they freeze. This is why ice floats on water, which is crucial for life in frozen lakes: the ice acts like a lid, keeping the liquid water underneath from freezing solid.</p>
         <p><Term def="The upward force exerted by a fluid on an object that is partially or fully submerged. An object floats when buoyant force equals its weight.">Buoyancy</Term> is the upward push a fluid gives an object. An object floats when it is less dense than the fluid. If it is denser, it sinks. <Term def="A property of liquid surfaces where surface molecules experience a net inward pull, creating a thin 'skin' that resists being broken.">Surface tension</Term> is a special property of water where the surface behaves like a thin elastic skin. This lets insects like water striders walk on water and helps water form round droplets.</p>
@@ -1018,6 +1020,7 @@ function Section4({ progress, setProgress }) {
         <p className="lead">Mixtures can be separated because each component keeps its own physical properties. Choosing the right technique depends on knowing those differences.</p>
       </div>
 
+      <Figure src="img/separating.png" caption="Filtration separates an insoluble solid from a liquid." />
       <DotPoint id="4.4.1" title="Atoms, compounds and mixtures" progress={progress} setProgress={setProgress}>
         <p>At the smallest level, all matter is made of <Term def="The smallest particle of an element that has the chemical properties of that element. Cannot be broken down further by ordinary chemical means.">atoms</Term>. When atoms of two or more different elements are chemically bonded together in fixed ratios, they form a <Term def="A pure substance made of two or more different elements chemically bonded in fixed ratios. Has new properties different from the original elements.">compound</Term>. Water (H2O) is a compound of hydrogen and oxygen. Importantly, the properties of a compound are completely different from those of its component elements: hydrogen burns, oxygen supports fire, but together they form water, which puts out fires!</p>
         <p>A <Term def="Two or more substances physically combined but NOT chemically bonded. Each substance keeps its own properties. No fixed ratio. Can be separated by physical means.">mixture</Term> is formed when two or more substances are physically combined without any chemical bonding. The key difference: in a compound, properties change and you need a chemical reaction to separate the elements; in a mixture, each component keeps its own properties and can be separated by physical methods like filtering or evaporation.</p>
@@ -1238,6 +1241,7 @@ function Section5({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Solutions and Mixtures",
+  heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "cyan",
   storageKey: "y7.solutions",

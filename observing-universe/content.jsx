@@ -850,6 +850,7 @@ function Section3({ progress, setProgress }) {
         <p className="lead">Our place in the solar system explains almost everything we see in the sky.</p>
       </div>
 
+      <Figure src="img/earth-sun.png" caption="Earth orbits the Sun with its axis tilted — one half in daylight, the other in night." />
       <DotPoint id="1.3.1" title="Historical solar system models" progress={progress} setProgress={setProgress}>
         <p>For over 1,400 years, almost everyone believed Earth sat at the centre of the universe. This was the <Term def="The Earth-centred model of the solar system, developed by Ptolemy around 150 CE.">geocentric model</Term>, developed by the Greek philosopher Ptolemy. It matched everyday experience (the sky looks like it moves around a stationary Earth) and was supported by the Church. But it needed very complicated additions called <Term def="Small circular paths added to orbits in the geocentric model to explain why planets sometimes appear to move backwards in the sky.">epicycles</Term> to explain why planets occasionally appear to move backwards.</p>
         <p>In 1543, the Polish astronomer <Term def="The astronomer who proposed the first widely accepted Sun-centred model of the solar system in 1543.">Nicolaus Copernicus</Term> proposed the <Term def="The Sun-centred model of the solar system.">heliocentric model</Term>, placing the Sun at the centre. Galileo used a telescope in 1609 to find moons orbiting Jupiter (proving not everything circles Earth) and phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: <Term def="The force of attraction between any two objects that have mass.">gravity</Term>.</p>
@@ -897,6 +898,7 @@ function Section4({ progress, setProgress }) {
         <p className="lead">Aboriginal and Torres Strait Islander peoples developed some of the world's oldest and most detailed astronomical knowledge systems.</p>
       </div>
 
+      <Figure src="img/sky-knowledge.png" caption="The Emu in the Sky — a dark-cloud constellation in the Milky Way, central to Aboriginal astronomy." />
       <DotPoint id="1.4.1" title="Moon phases and tides: two knowledge systems" progress={progress} setProgress={setProgress}>
         <p>Aboriginal and Torres Strait Islander peoples across Australia carefully observed the Moon's phases over tens of thousands of years and connected them to practical predictions about tides. The <Term def="An Aboriginal people of Arnhem Land, Northern Territory, with extensive astronomical and ecological knowledge.">Yolngu</Term> people of Arnhem Land describe the Moon filling with water as it waxes (grows) and emptying as it wanes (shrinks), producing a predictable tidal cycle. Coastal communities used this knowledge to plan fishing trips, shellfish gathering, and access to tidal rock platforms.</p>
         <p>Modern science explains the same patterns through the Moon's <Term def="The force of attraction between objects with mass. The Moon's gravity creates tidal bulges in Earth's oceans.">gravitational pull</Term> on Earth's oceans. The strongest tides (<Term def="The strongest tides, occurring at new Moon and full Moon when the Sun and Moon are aligned.">spring tides</Term>) occur at new Moon and full Moon. The weakest tides (<Term def="Relatively weak tides occurring at first and last quarter Moon when the Sun and Moon are at right angles.">neap tides</Term>) occur at quarter phases. Both knowledge systems reach the same practical result: the Moon's phase accurately predicts tidal strength.</p>
@@ -955,6 +957,7 @@ function Section5({ progress, setProgress }) {
         <p className="lead">The James Webb Space Telescope is the most powerful eye we have ever pointed at the cosmos. Find out what it can see and what it has already discovered.</p>
       </div>
 
+      <Figure src="img/jwst.png" caption="The James Webb Space Telescope and its golden hexagonal mirror." />
       <DotPoint id="1.5.1" title="The James Webb Space Telescope" progress={progress} setProgress={setProgress}>
         <p>The <Term def="The most powerful space telescope ever built, launched on 25 December 2021, observing primarily in infrared light.">James Webb Space Telescope (JWST)</Term> was launched on 25 December 2021. It is the result of decades of work by engineers and scientists from three space agencies: NASA (United States), ESA (European Space Agency), and CSA (Canadian Space Agency). Its mirror is 6.5 metres across, nearly three times the size of the <Term def="A space telescope launched in 1990 that observes in visible and ultraviolet light, orbiting 570 km above Earth.">Hubble Space Telescope's</Term> mirror. This gives it far greater <Term def="The ability of a telescope to collect light from faint objects. Larger mirrors gather more light.">light-gathering power</Term>.</p>
         <p>The JWST observes mainly in <Term def="Electromagnetic radiation with wavelengths longer than visible light but shorter than radio waves. Felt as heat.">infrared light</Term>. This lets it see through the dust clouds that block ordinary visible light, revealing hidden star-forming regions and very distant galaxies. It is parked at a special gravitational balance point called <Term def="The second Lagrange point, approximately 1.5 million km from Earth, where the telescope stays in sync with Earth's orbit while remaining on the night side.">Lagrange point L2</Term>, about 1.5 million kilometres from Earth. A five-layer sunshield the size of a tennis court keeps its instruments cold enough to detect the faint infrared glow of the most distant galaxies ever observed.</p>
@@ -989,6 +992,7 @@ function Section5({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Observing the Universe",
+  heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "amber",
   storageKey: "y7.universe",

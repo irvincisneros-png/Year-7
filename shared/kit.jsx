@@ -231,6 +231,10 @@ function buildApp(CFG) {
           <div className="eyebrow">Year {CFG.year} Science · {CFG.strand || "NSW Syllabus"}</div>
           <h1>{CFG.topicTitle}</h1>
           <p className="lead">{CFG.intro}</p>
+          {CFG.heroImage && (
+            <img src={CFG.heroImage} alt={CFG.topicTitle} loading="lazy"
+              style={{ width: "100%", display: "block", marginTop: 20, borderRadius: 14, border: "2px solid var(--border-strong)", boxShadow: "6px 6px 0 var(--border-strong)" }} />
+          )}
           <div className="row" style={{ marginTop: 22, alignItems: "center" }}>
             <button className="btn btn-accent" onClick={() => goTo(cont.id)}>{ctaLabel} <IconArrow size={16} sw={2.5}/></button>
             {CFG.hubHref && <a className="btn btn-ghost" href={CFG.hubHref}>← All Year {CFG.year} topics</a>}

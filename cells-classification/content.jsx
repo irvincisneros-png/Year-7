@@ -781,6 +781,7 @@ function Section31({ progress, setProgress }) {
         <p className="lead">From microscopic bacteria to giant blue whales, scientists use a clever system to sort, name, and study every living thing on Earth.</p>
       </div>
 
+      <Figure src="img/classify.png" caption="Living things can be sorted into groups by the features they share." />
       <DotPoint id="3.1.1" title="Characteristics of living things" progress={progress} setProgress={setProgress}>
         <p>How do you know if something is alive? Scientists use a set of seven key characteristics. If something has all seven, it is living. The easiest way to remember them is the mnemonic <Term def="Movement, Reproduction, Sensitivity, Growth, Respiration, Excretion, Nutrition">MRSGREN</Term>.</p>
         <p>Think about a fire: it moves, it uses fuel, and it grows. But it cannot reproduce on its own, it has no sensitivity to changes around it, and it does not grow in the biological sense. Fire is not alive. A tricky case is a <Term def="A tiny particle of genetic material surrounded by a protein coat; can only reproduce inside a living host cell">virus</Term>: it can reproduce, but only by hijacking a living cell, and it has no <Term def="All of the chemical reactions that keep a cell alive, including releasing energy from food">metabolism</Term> of its own. Most scientists say viruses are not truly alive.</p>
@@ -878,6 +879,7 @@ function Section32({ progress, setProgress }) {
         <p className="lead">Every living thing, from a single bacterium to your own body, is built from cells. Explore what is inside them and how they work.</p>
       </div>
 
+      <Figure src="img/cell.png" caption="A plant cell and an animal cell compared." />
       <DotPoint id="3.2.1" title="Cell theory" progress={progress} setProgress={setProgress}>
         <p><Term def="The three foundational statements of biology: all living things are made of cells; the cell is the basic unit of life; all cells come from pre-existing cells">Cell theory</Term> is one of the most important ideas in all of biology. It has three parts: (1) all living things are made of one or more cells, (2) the cell is the basic structural and functional unit of life, and (3) all cells come from pre-existing cells. That third statement was a big deal because it overturned the old idea of <Term def="The mistaken idea that life could arise spontaneously from non-living matter">spontaneous generation</Term>, which claimed that maggots could appear from nothing in rotting meat.</p>
         <p>Cell theory was built up slowly over about 200 years as microscopes improved. In 1665, <Term def="English scientist who first described cells when examining cork under a microscope in 1665">Robert Hooke</Term> looked at cork under a microscope and called the tiny compartments he saw "cells". In the 1670s, <Term def="Dutch scientist who used improved microscopes to observe living single-celled organisms">Anton van Leeuwenhoek</Term> spotted living single-celled organisms in pond water for the first time. In 1838 and 1839, <Term def="Botanist who proposed in 1838 that all plants are made of cells">Matthias Schleiden</Term> and <Term def="Zoologist who proposed in 1839 that all animals are made of cells">Theodor Schwann</Term> independently concluded that all organisms are made of cells. Then in 1855, <Term def="Scientist who completed cell theory in 1855 by stating all cells come from pre-existing cells">Rudolf Virchow</Term> added the third statement.</p>
@@ -1007,6 +1009,7 @@ function Section33({ progress, setProgress }) {
         <p className="lead">Apply everything you have learned to a real organism. The platypus is one of the most extraordinary animals on Earth and a perfect case study.</p>
       </div>
 
+      <Figure src="img/aussie-organism.png" caption="The platypus — a uniquely Australian mammal." maxWidth="380px" />
       <DotPoint id="3.3.1" title="Researching an organism to connect cells and classification" progress={progress} setProgress={setProgress}>
         <p>A complete understanding of any organism means knowing its classification (kingdom to species), its cell type and organelles, and how it demonstrates all seven characteristics of living things. Choosing an Australian organism lets you also explore adaptations and Indigenous classification. The <Term def="An Australian egg-laying mammal (monotreme) with electroreceptors in its bill for detecting prey">platypus</Term> (<em>Ornithorhynchus anatinus</em>) is an ideal case study. When the first preserved specimen arrived in England in 1799, scientists thought it was a fake taxidermist creation. It was just too unusual to believe.</p>
         <p>The platypus is a <Term def="An egg-laying mammal; the only two Australian monotremes are the platypus and the echidna">monotreme</Term>, an egg-laying mammal. Despite laying eggs, it is clearly a mammal: it has fur, is warm-blooded, has three middle ear bones, and the female feeds her young on milk. Its cells are eukaryotic animal cells with a cell membrane, nucleus, mitochondria, and ribosomes, but no cell wall, no chloroplasts, and no large vacuole. The bill contains about 40,000 <Term def="Sensory cells that detect electric fields; the platypus uses them to find prey in murky water">electroreceptors</Term>, the most sensitive electric-field detection system known in any mammal.</p>
@@ -1030,6 +1033,7 @@ function Section33({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Cells and Classification",
+  heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "emerald",
   storageKey: "y7.cellsclassification",
