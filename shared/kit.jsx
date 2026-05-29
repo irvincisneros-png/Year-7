@@ -344,9 +344,9 @@ function buildApp(CFG) {
         <header className="topbar">
           <div className="brand">
             {CFG.hubHref
-              ? <a className="brand-mark" href={CFG.hubHref} aria-label={"All Year " + CFG.year + " topics"}><IconHome size={20}/></a>
-              : <button className="brand-mark" onClick={() => goTo("home")} aria-label="Home"><IconHome size={20}/></button>}
-            <div><div className="brand-title">{CFG.topicTitle}</div><div className="brand-sub">Year {CFG.year} Science · Interactive</div></div>
+              ? <a className="brand-mark" href={CFG.hubHref} aria-label={"All Year " + CFG.year + " topics"}>{(CFG.topicTitle || "?").trim().charAt(0).toUpperCase()}</a>
+              : <button className="brand-mark" onClick={() => goTo("home")} aria-label="Home">{(CFG.topicTitle || "?").trim().charAt(0).toUpperCase()}</button>}
+            <div><div className="brand-title">{CFG.topicTitle}</div><div className="brand-sub">Year {CFG.year} notebook</div></div>
           </div>
           <nav className="tabs" aria-label="Sections">
             <button className={"tab" + (view === "home" ? " active" : "")} onClick={() => goTo("home")}><IconHome size={15}/><span>Overview</span></button>

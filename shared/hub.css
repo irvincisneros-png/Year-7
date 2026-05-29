@@ -1,77 +1,408 @@
 /* ============================================================
-   Year landing hub — sits on top of kit.css
+   Year landing hub -- sits on top of kit.css
+   Playful lab-notebook restyle: sketch cards, Fraunces headings,
+   Caveat eyebrow, hard offset ink shadows, tag pills.
    ============================================================ */
-.hub { min-height: 100vh; display: flex; flex-direction: column; }
 
+/* ---- Root layout ---- */
+.hub {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  /* Paper texture: dot grid + ruled teal lines */
+  background-image:
+    radial-gradient(circle at 0 0, rgba(0,0,0,0.025) 1px, transparent 1.5px),
+    repeating-linear-gradient(0deg, rgba(15,118,110,0.05) 0 1px, transparent 1px 32px);
+  background-size: 4px 4px, 100% 32px;
+}
+
+/* ---- Sticky top bar ---- */
 .hub-top {
   position: sticky; top: 0; z-index: 40;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 12px 24px;
-  background: oklch(from var(--bg) l c h / 0.8);
-  backdrop-filter: saturate(1.6) blur(14px); -webkit-backdrop-filter: saturate(1.6) blur(14px);
-  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--paper) 85%, transparent);
+  backdrop-filter: saturate(1.6) blur(14px);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px);
+  border-bottom: 2px solid var(--ink);
 }
 .hub-top .brand { display: flex; align-items: center; gap: 11px; }
-.hub-wrap { max-width: 1080px; margin: 0 auto; width: 100%; padding: 32px 24px 80px; }
+.hub-top .brand-mark {
+  width: 36px; height: 36px;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.hub-top .brand-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.hub-top .brand-sub {
+  font-family: var(--font-hand);
+  font-size: 0.8rem;
+  color: var(--accent);
+}
 
-/* Hero */
+.hub-wrap { max-width: 1080px; margin: 0 auto; width: 100%; padding: 40px 24px 80px; }
+
+/* ---- Settings popover (icon-btn + seg preserved from kit.css) ---- */
+.hub-top .icon-btn {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  box-shadow: 2px 2px 0 var(--ink);
+  color: var(--ink);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform 120ms;
+}
+.hub-top .icon-btn:hover { transform: translateY(-2px); }
+
+/* ---- Hero section ---- */
 .hub-hero {
   position: relative; overflow: hidden;
-  border-radius: var(--r-xl); padding: 54px 48px; margin-bottom: 36px;
-  background: linear-gradient(135deg, var(--accent-soft) 0%, oklch(from var(--accent-soft) calc(l + 0.015) calc(c*0.55) calc(h + 60)) 100%);
-  border: 1px solid var(--border);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-xl);
+  padding: 54px 48px; margin-bottom: 36px;
+  background: var(--paper);
+  box-shadow: var(--shadow-2);
 }
-.hub-hero::before { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, oklch(from var(--accent) l c h / 0.22), transparent 70%); }
-.hub-hero::after { content: ""; position: absolute; left: 30%; bottom: -120px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, oklch(from var(--accent-deep) l c h / 0.14), transparent 70%); }
-.hub-eyebrow { font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: var(--accent-deep); position: relative; }
-.hub-hero h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); margin: 10px 0 14px; max-width: 18ch; position: relative; }
-.hub-hero .hub-lede { font-size: 1.18rem; color: var(--ink-2); max-width: 56ch; position: relative; }
-.hub-hero .hub-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 24px; position: relative; }
-.hub-hero .hub-meta .m { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--ink-2); font-weight: 600; }
-.hub-hero .hub-meta .m b { font-family: var(--font-mono); color: var(--accent-deep); }
+/* Subtle tinted wash behind the text -- uses per-topic accent-soft if set */
+.hub-hero::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--accent-soft, rgba(15,118,110,0.08)) 0%, transparent 65%);
+  pointer-events: none;
+}
+/* Decorative corner circle */
+.hub-hero::after {
+  content: "";
+  position: absolute; right: -60px; top: -60px;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%);
+  pointer-events: none;
+}
 
-.hub-section-head { margin: 6px 0 16px; }
-.hub-section-head h2 { font-size: 1.7rem; }
-.hub-section-head p { color: var(--ink-muted); }
+/* Eyebrow in Caveat / coral */
+.hub-eyebrow {
+  font-family: var(--font-hand);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #ef6b4b; /* coral -- always the eyebrow color per spec */
+  position: relative;
+  margin-bottom: 6px;
+}
 
-/* Topic grid */
-.hub-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+/* Main hero heading in Fraunces */
+.hub-hero h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 4px 0 14px;
+  max-width: 18ch;
+  color: var(--ink);
+  position: relative;
+}
+/* Accent the last word / period via the generated accent class on .hub */
+.hub-hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hub-hero .hub-lede {
+  font-family: var(--font-body, var(--font-body));
+  font-size: 1.1rem;
+  color: var(--ink-2);
+  max-width: 54ch;
+  position: relative;
+  line-height: 1.65;
+}
+.hub-hero .hub-meta {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-top: 24px; position: relative;
+}
+.hub-hero .hub-meta .m {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.88rem; color: var(--ink-2); font-weight: 600;
+}
+.hub-hero .hub-meta .m b {
+  font-family: var(--font-mono);
+  color: var(--accent-deep, var(--accent));
+}
+
+/* ---- Section head ---- */
+.hub-section-head { margin: 6px 0 20px; }
+.hub-section-head h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.hub-section-head h2::after {
+  content: ".";
+  color: var(--accent);
+}
+.hub-section-head p { color: var(--ink-muted, var(--muted)); font-size: 0.95rem; }
+
+/* ---- Topic grid ---- */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+
+/* Sketch card */
 .hub-card {
-  position: relative; overflow: hidden; text-align: left;
-  background: var(--paper); border: 1px solid var(--border); border-radius: var(--r-lg);
-  padding: 26px; cursor: pointer; text-decoration: none; color: inherit;
+  position: relative; overflow: visible; text-align: left;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-lg);
+  padding: 28px 26px 22px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
   display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 6px 0 -3px var(--ink), 0 8px 22px rgba(27,26,23,0.12);
   transition: transform 140ms cubic-bezier(.34,1.4,.5,1), box-shadow 140ms;
 }
-.hub-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-3); }
-.hub-card .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 7px; background: var(--accent); }
-.hub-card .hub-card-emoji { font-size: 2rem; width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--accent-soft); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.5); }
-.hub-card .hub-card-num { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
-.hub-card h3 { font-size: 1.5rem; }
-.hub-card .hub-card-blurb { color: var(--ink-2); font-size: 0.95rem; flex: 1; }
+.hub-card:hover {
+  transform: translateY(-4px) rotate(0.4deg);
+  box-shadow: 0 10px 0 -4px var(--ink), 0 16px 32px rgba(27,26,23,0.16);
+}
+
+/* Accent stripe -- keep it as a thin left bar */
+.hub-card .stripe {
+  position: absolute; left: 0; top: 12px; bottom: 12px; width: 5px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Emoji badge -- bordered tile */
+.hub-card .hub-card-emoji {
+  font-size: 2rem;
+  width: 56px; height: 56px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft, #d9ebe8);
+  box-shadow: 3px 3px 0 var(--ink);
+  flex-shrink: 0;
+}
+
+/* Card kicker / number in Caveat */
+.hub-card .hub-card-num {
+  font-family: var(--font-hand);
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.hub-card h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.45rem;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: 0;
+}
+.hub-card .hub-card-blurb {
+  color: var(--ink-2);
+  font-size: 0.93rem;
+  flex: 1;
+  line-height: 1.55;
+}
+
+/* Tag pills with ink border + hard shadow */
 .hub-card .hub-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.hub-card .hub-card-foot { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-.hub-card .hub-card-foot .bar { flex: 1; height: 7px; border-radius: 99px; background: var(--bg-2); overflow: hidden; }
-.hub-card .hub-card-foot .bar > div { height: 100%; background: var(--accent); transition: width 300ms; }
-.hub-card .hub-card-foot .pct { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-muted); }
-.hub-card .open-row { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--accent-deep); font-size: 0.9rem; }
-.hub-card.soon { cursor: default; opacity: 0.92; }
-.hub-card.soon:hover { transform: none; box-shadow: var(--shadow-1); }
-.hub-card .soon-pill { position: absolute; right: 18px; top: 18px; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: var(--bg-2); color: var(--ink-muted); padding: 4px 9px; border-radius: 999px; }
+.hub-card .hub-card-tags .chip {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
 
-/* Banner / how */
-.hub-strip { margin-top: 36px; background: var(--paper); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 26px 30px; }
-.hub-strip h2 { font-size: 1.5rem; margin-bottom: 6px; }
-.hub-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+/* Progress bar */
+.hub-card .hub-card-foot {
+  display: flex; align-items: center; gap: 10px; margin-top: 4px;
+}
+.hub-card .hub-card-foot .bar {
+  flex: 1; height: 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
+  background: var(--bg, #f7f1e3);
+  overflow: hidden;
+}
+.hub-card .hub-card-foot .bar > div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 300ms;
+}
+.hub-card .hub-card-foot .pct {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-muted, var(--muted));
+}
+
+/* "Open topic" affordance */
+.hub-card .open-row {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--accent-deep, var(--accent));
+  font-size: 0.88rem;
+  margin-top: 4px;
+}
+.hub-card .open-row svg { color: var(--accent); }
+
+/* Coming-soon state */
+.hub-card.soon { cursor: default; opacity: 0.88; }
+.hub-card.soon:hover { transform: none; box-shadow: 0 6px 0 -3px var(--ink), 0 8px 22px rgba(27,26,23,0.12); }
+.hub-card .soon-pill {
+  position: absolute; right: 18px; top: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  color: var(--muted, #6b6a64);
+  padding: 4px 10px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* ---- UDL strip ---- */
+.hub-strip {
+  margin-top: 36px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow-1);
+}
+.hub-strip h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.hub-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px; margin-top: 18px;
+}
 .hub-feature { display: flex; flex-direction: column; gap: 6px; }
-.hub-feature .fi { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-deep); }
-.hub-feature h4 { margin: 0; }
-.hub-feature p { margin: 0; font-size: 0.88rem; color: var(--ink-muted); }
+.hub-feature .fi {
+  width: 44px; height: 44px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft, #d9ebe8);
+  color: var(--accent-deep, var(--accent));
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.hub-feature h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0;
+  color: var(--ink);
+}
+.hub-feature p {
+  margin: 0;
+  font-size: 0.87rem;
+  color: var(--ink-muted, var(--muted));
+  line-height: 1.5;
+}
 
-.hub-footer { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-muted); }
+/* ---- Footer ---- */
+.hub-footer {
+  margin-top: 40px; padding-top: 22px;
+  border-top: 2px dashed var(--accent);
+  font-size: 0.82rem;
+  color: var(--ink-muted, var(--muted));
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  display: flex; flex-direction: column; gap: 4px;
+}
 
+/* ---- Settings popover (preserved behavior) ---- */
+.settings-pop {
+  position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 220px;
+  box-shadow: 4px 4px 0 var(--ink);
+  z-index: 50;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: 0.82rem; color: var(--ink);
+}
+.settings-row label { font-weight: 600; }
+.seg {
+  display: flex; gap: 3px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.seg button {
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+.seg button.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---- Dark mode -- rely on kit.css [data-theme=dark] tokens ---- */
+[data-theme=dark] .hub {
+  background-image:
+    radial-gradient(circle at 0 0, rgba(0,0,0,0.04) 1px, transparent 1.5px),
+    repeating-linear-gradient(0deg, rgba(15,118,110,0.04) 0 1px, transparent 1px 32px);
+  background-size: 4px 4px, 100% 32px;
+}
+[data-theme=dark] .hub-card {
+  box-shadow: 0 6px 0 -3px rgba(0,0,0,0.5), 0 8px 22px rgba(0,0,0,0.3);
+}
+[data-theme=dark] .hub-card:hover {
+  box-shadow: 0 10px 0 -4px rgba(0,0,0,0.6), 0 16px 32px rgba(0,0,0,0.4);
+}
+[data-theme=dark] .hub-card.soon:hover {
+  box-shadow: 0 6px 0 -3px rgba(0,0,0,0.5), 0 8px 22px rgba(0,0,0,0.3);
+}
+
+/* ---- Responsive ---- */
 @media (max-width: 760px) {
-  .hub-grid, .hub-feature-grid { grid-template-columns: 1fr; }
-  .hub-hero { padding: 36px 24px; }
+  .hub-grid { grid-template-columns: 1fr; }
+  .hub-feature-grid { grid-template-columns: 1fr; }
+  .hub-hero { padding: 36px 22px; }
   .hub-wrap { padding: 20px 14px 60px; }
+  .hub-strip { padding: 22px 18px; }
 }
