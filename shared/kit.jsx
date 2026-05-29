@@ -5,7 +5,7 @@
    files can use them as globals (Babel-standalone friendly).
    ============================================================ */
 /* global React, ReactDOM */
-const { useState, useEffect, useRef, useMemo, useCallback } = React;
+const { useState, useEffect, useRef, useMemo, useCallback, useContext } = React;
 
 /* ---------- persistence ---------- */
 function useLocalStorage(key, initial) {
@@ -15,6 +15,37 @@ function useLocalStorage(key, initial) {
   });
   useEffect(() => { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }, [key, v]);
   return [v, setV];
+}
+
+/* Topic-wide context so leaf components (quizzes, etc.) can derive a stable
+   localStorage key without every content.jsx having to pass the topic key. */
+const TopicContext = React.createContext({ skey: null });
+
+/* tiny stable string hash -> short base36, for per-question storage keys */
+function hashStr(s) {
+  s = String(s == null ? "" : s);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return (h >>> 0).toString(36);
+}
+function answerKey(skey, kind, num, question) {
+  return (skey || "anon") + "." + kind + "." + (num == null ? "" : num) + "." + hashStr(question);
+}
+
+/* Respect the OS "reduce motion" setting in JS-driven animations
+   (a CSS media query can't stop a setInterval). content.jsx can call this. */
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(() => {
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
+  });
+  useEffect(() => {
+    let mq;
+    try { mq = window.matchMedia("(prefers-reduced-motion: reduce)"); } catch { return; }
+    const on = () => setReduced(mq.matches);
+    if (mq.addEventListener) mq.addEventListener("change", on); else mq.addListener(on);
+    return () => { if (mq.removeEventListener) mq.removeEventListener("change", on); else mq.removeListener(on); };
+  }, []);
+  return reduced;
 }
 
 /* ---------- icons ---------- */
@@ -63,11 +94,32 @@ function Figure({ num, caption, src, alt, children, maxWidth }) {
 }
 
 function Term({ children, def }) {
-  return <span className="term" tabIndex={0}>{children}<span className="term-pop">{def}</span></span>;
+  const [show, setShow] = useState(false);
+  const ref = useRef(null);
+  const popId = useMemo(() => "term-" + hashStr(String(def) + String(children)), [def, children]);
+  useEffect(() => {
+    if (!show) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setShow(false); };
+    const onKey = (e) => { if (e.key === "Escape") setShow(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("touchstart", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("touchstart", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [show]);
+  // rendered as a button so it is keyboard-focusable and tap-toggles on touch;
+  // hover still reveals the definition via CSS for mouse users.
+  return (
+    <button type="button" ref={ref} className={"term" + (show ? " show" : "")}
+      aria-expanded={show} aria-describedby={popId} onClick={() => setShow(s => !s)}>
+      {children}<span className="term-pop" id={popId} role="tooltip">{def}</span>
+    </button>
+  );
 }
 
 function MCQ({ num, question, options, correct, explain }) {
-  const [chosen, setChosen] = useState(null);
+  const { skey } = useContext(TopicContext);
+  // the chosen answer is saved per question so it survives navigation / refresh
+  const [chosen, setChosen] = useLocalStorage(answerKey(skey, "mcq", num, question), null);
   const locked = chosen !== null;
   return (
     <div className="quiz-card">
@@ -87,21 +139,32 @@ function MCQ({ num, question, options, correct, explain }) {
           );
         })}
       </div>
-      {locked && <div className="quiz-feedback">{chosen === correct ? "Correct. " : "Not quite. "}{explain}</div>}
+      {locked && (
+        <div className="quiz-feedback" role="status" aria-live="polite">
+          {chosen === correct ? "Correct. " : "Not quite. "}{explain}
+          {chosen !== correct && (
+            <div style={{ marginTop: 10 }}>
+              <button className="reveal-btn" onClick={() => setChosen(null)}>Try again</button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function WrittenQ({ num, question, model }) {
-  const [val, setVal] = useState("");
+  const { skey } = useContext(TopicContext);
+  // the typed answer is saved so it is never lost on navigation / refresh
+  const [val, setVal] = useLocalStorage(answerKey(skey, "wq", num, question), "");
   const [show, setShow] = useState(false);
   return (
     <div className="quiz-card">
       <div className="quiz-q"><span className="quiz-q-num">{num || "?"}</span><span>{question}</span></div>
       <textarea className="response-box" value={val} onChange={e => setVal(e.target.value)} placeholder="Type your answer here…"/>
       {model && <>
-        <button className="reveal-btn" onClick={() => setShow(s => !s)}>{show ? "Hide model answer" : "Show model answer"}</button>
-        {show && <div className="model-answer"><strong>Model answer. </strong>{model}</div>}
+        <button className="reveal-btn" onClick={() => setShow(s => !s)} aria-expanded={show}>{show ? "Hide model answer" : "Show model answer"}</button>
+        {show && <div className="model-answer" role="region" aria-label="Model answer"><strong>Model answer. </strong>{model}</div>}
       </>}
     </div>
   );
@@ -150,9 +213,15 @@ function SegToggle({ options, value, onChange }) {
 function Stat({ value, label }) {
   return <div className="stat"><div className="stat-val">{value}</div><div className="stat-label">{label}</div></div>;
 }
-function Reveal({ children, label = "Reveal" }) {
+function Reveal({ children, label = "Reveal hidden answer" }) {
   const [shown, setShown] = useState(false);
-  return <span className={"reveal-blur" + (shown ? " shown" : "")} onClick={() => setShown(true)} title={shown ? "" : label}>{children}</span>;
+  // a real button so it is keyboard-focusable and operable with Enter/Space
+  return (
+    <button type="button" className={"reveal-blur" + (shown ? " shown" : "")}
+      onClick={() => setShown(true)} aria-expanded={shown} aria-label={shown ? undefined : label}>
+      {children}
+    </button>
+  );
 }
 function FlipCard({ front, back }) {
   const [f, setF] = useState(false);
@@ -288,16 +357,37 @@ function buildApp(CFG) {
 
   function GlossaryModal({ onClose }) {
     const [q, setQ] = useState("");
+    const modalRef = useRef(null);
+    const lastFocused = useRef(null);
     const entries = useMemo(() => {
       const all = Object.entries(CFG.glossary || {}).sort((a, b) => a[0].localeCompare(b[0]));
       if (!q.trim()) return all;
       const n = q.toLowerCase();
       return all.filter(([t, d]) => t.toLowerCase().includes(n) || String(d).toLowerCase().includes(n));
     }, [q]);
+    useEffect(() => {
+      lastFocused.current = document.activeElement;
+      const onKey = (e) => {
+        if (e.key === "Escape") { onClose(); return; }
+        if (e.key === "Tab" && modalRef.current) {
+          // simple focus trap
+          const f = modalRef.current.querySelectorAll('button, input, [href], textarea, [tabindex]:not([tabindex="-1"])');
+          if (!f.length) return;
+          const first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      };
+      document.addEventListener("keydown", onKey);
+      return () => {
+        document.removeEventListener("keydown", onKey);
+        try { lastFocused.current && lastFocused.current.focus(); } catch {}
+      };
+    }, [onClose]);
     return (
       <div className="modal-scrim" onClick={onClose}>
-        <div className="modal" onClick={e => e.stopPropagation()}>
-          <div className="modal-header"><h2 style={{ fontSize: "1.4rem" }}>Glossary</h2><button className="icon-btn" onClick={onClose} aria-label="Close"><IconX/></button></div>
+        <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-label="Glossary" onClick={e => e.stopPropagation()}>
+          <div className="modal-header"><h2 style={{ fontSize: "1.4rem" }}>Glossary</h2><button className="icon-btn" onClick={onClose} aria-label="Close glossary"><IconX/></button></div>
           <input className="gloss-search" placeholder="Search terms…" value={q} onChange={e => setQ(e.target.value)} autoFocus/>
           <dl className="gloss-list">
             {entries.map(([t, d]) => <div className="gloss-entry" key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
@@ -338,12 +428,35 @@ function buildApp(CFG) {
     }, []);
     useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); setMob(false); }, [view]);
 
+    // close the settings popover on Escape or a click/tap outside it
+    useEffect(() => {
+      if (!setOpen) return;
+      const onKey = (e) => { if (e.key === "Escape") setSetOpen(false); };
+      const onDown = (e) => { if (!e.target.closest(".settings-pop") && !e.target.closest("[data-settings-toggle]")) setSetOpen(false); };
+      document.addEventListener("keydown", onKey);
+      document.addEventListener("mousedown", onDown);
+      document.addEventListener("touchstart", onDown);
+      return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); document.removeEventListener("touchstart", onDown); };
+    }, [setOpen]);
+
+    const clearProgress = () => {
+      if (!confirm("Reset all progress and saved answers for this topic?")) return;
+      setProgress({});
+      try {
+        Object.keys(localStorage).forEach(k => {
+          if (k.indexOf(SKEY + ".mcq.") === 0 || k.indexOf(SKEY + ".wq.") === 0) localStorage.removeItem(k);
+        });
+      } catch {}
+    };
+
     const goTo = (id) => { window.location.hash = id; setView(id); };
     const done = ALL_POINTS.filter(p => progress[p]).length;
     const pct = ALL_POINTS.length ? Math.round(100 * done / ALL_POINTS.length) : 0;
     const sec = SECTIONS.find(s => s.id === view);
+    const ctxVal = useMemo(() => ({ skey: SKEY }), []);
 
     return (
+      <TopicContext.Provider value={ctxVal}>
       <div className={"app accent-" + ((sec && sec.accent) || CFG.accent)}>
         <header className="topbar">
           <div className="brand">
@@ -364,15 +477,15 @@ function buildApp(CFG) {
           <div className="topbar-actions">
             <div className="progress-chip" title={`${done} of ${ALL_POINTS.length} complete`}><div className="progress-ring"><Ring pct={pct}/></div><span className="progress-text">{pct}%</span></div>
             {CFG.glossary && <button className="icon-btn" onClick={() => setGlOpen(true)} aria-label="Glossary" title="Glossary"><IconBook/></button>}
-            <button className="icon-btn" onClick={() => setSetOpen(o => !o)} aria-label="Reading settings" title="Reading settings"><IconGear/></button>
+            <button className="icon-btn" data-settings-toggle onClick={() => setSetOpen(o => !o)} aria-label="Reading settings" aria-expanded={setOpen} title="Reading settings"><IconGear/></button>
             <button className="icon-btn mobile-only" onClick={() => setMob(m => !m)} aria-label="Menu"><IconMenu/></button>
             {setOpen && (
-              <div className="settings-pop" onMouseLeave={() => setSetOpen(false)}>
+              <div className="settings-pop" role="dialog" aria-label="Reading settings">
                 <div className="settings-row"><label>Theme</label><div className="seg"><button className={!dark ? "on" : ""} onClick={() => setDark(false)}>Light</button><button className={dark ? "on" : ""} onClick={() => setDark(true)}>Dark</button></div></div>
                 <div className="settings-row"><label>Text size</label><div className="seg">{["sm","md","lg","xl"].map(s => <button key={s} className={size === s ? "on" : ""} onClick={() => setSize(s)} style={{ fontSize: { sm: 11, md: 13, lg: 15, xl: 17 }[s] }}>A</button>)}</div></div>
                 <div className="settings-row"><label>Readable font</label><div className="seg"><button className={!dys ? "on" : ""} onClick={() => setDys(false)}>Default</button><button className={dys ? "on" : ""} onClick={() => setDys(true)}>Hyperlegible</button></div></div>
                 <div className="settings-row"><label>Print this topic</label><button className="ghost-btn" onClick={() => window.print()}>Print</button></div>
-                <div className="settings-row"><label>Reset progress</label><button className="danger-btn" onClick={() => { if (confirm("Reset all progress for this topic?")) setProgress({}); }}>Reset</button></div>
+                <div className="settings-row"><label>Reset progress</label><button className="danger-btn" onClick={clearProgress}>Reset</button></div>
               </div>
             )}
           </div>
@@ -402,6 +515,7 @@ function buildApp(CFG) {
 
         {glOpen && <GlossaryModal onClose={() => setGlOpen(false)}/>}
       </div>
+      </TopicContext.Provider>
     );
   };
 }
@@ -409,10 +523,12 @@ function buildApp(CFG) {
 function mountTopicApp(CFG) {
   const App = buildApp(CFG);
   ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  try { window.__mounted = true; } catch {}
 }
 
 Object.assign(window, {
-  useLocalStorage, Icon, IconCheck, IconX, IconArrow, IconHome, IconBook, IconGear, IconMenu,
+  useLocalStorage, useReducedMotion, TopicContext, hashStr, answerKey,
+  Icon, IconCheck, IconX, IconArrow, IconHome, IconBook, IconGear, IconMenu,
   DotPoint, Callout, Figure, Term, MCQ, WrittenQ, QGroup, Interactive,
   Slider, SegToggle, Stat, Reveal, FlipCard, MatchBuckets, Ring,
   buildApp, mountTopicApp,

@@ -25,6 +25,17 @@ function YearHub(CFG) {
       r.dataset.theme = dark ? "dark" : "light"; r.dataset.size = size; r.dataset.dyslexic = dys ? "true" : "false";
     }, [dark, size, dys]);
 
+    // close the settings popover on Escape or a click/tap outside it
+    useEffectH(() => {
+      if (!open) return;
+      const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+      const onDown = (e) => { if (!e.target.closest(".settings-pop") && !e.target.closest("[data-settings-toggle]")) setOpen(false); };
+      document.addEventListener("keydown", onKey);
+      document.addEventListener("mousedown", onDown);
+      document.addEventListener("touchstart", onDown);
+      return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); document.removeEventListener("touchstart", onDown); };
+    }, [open]);
+
     const totals = useMemoH(() => {
       let done = 0, total = 0;
       CFG.topics.forEach(t => { const p = topicProgress(t); done += p.done; total += p.total; });
@@ -39,9 +50,9 @@ function YearHub(CFG) {
             <div><div className="brand-title">{CFG.schoolTitle || "Junior Science"}</div><div className="brand-sub">Year {CFG.year} · NSW Stage {CFG.stage || (CFG.year <= 8 ? 4 : 5)}</div></div>
           </div>
           <div style={{ position: "relative" }}>
-            <button className="icon-btn" onClick={() => setOpen(o => !o)} aria-label="Display settings" title="Display settings"><IconGear/></button>
+            <button className="icon-btn" data-settings-toggle onClick={() => setOpen(o => !o)} aria-label="Display settings" aria-expanded={open} title="Display settings"><IconGear/></button>
             {open && (
-              <div className="settings-pop" onMouseLeave={() => setOpen(false)}>
+              <div className="settings-pop" role="dialog" aria-label="Display settings">
                 <div className="settings-row"><label>Theme</label><div className="seg"><button className={!dark ? "on" : ""} onClick={() => setDark(false)}>Light</button><button className={dark ? "on" : ""} onClick={() => setDark(true)}>Dark</button></div></div>
                 <div className="settings-row"><label>Text size</label><div className="seg">{["sm","md","lg","xl"].map(s => <button key={s} className={size === s ? "on" : ""} onClick={() => setSize(s)} style={{ fontSize: { sm: 11, md: 13, lg: 15, xl: 17 }[s] }}>A</button>)}</div></div>
                 <div className="settings-row"><label>Readable font</label><div className="seg"><button className={!dys ? "on" : ""} onClick={() => setDys(false)}>Default</button><button className={dys ? "on" : ""} onClick={() => setDys(true)}>Hyperlegible</button></div></div>
@@ -115,5 +126,6 @@ function YearHub(CFG) {
 function mountYearHub(CFG) {
   const Hub = YearHub(CFG);
   ReactDOM.createRoot(document.getElementById("root")).render(<Hub/>);
+  try { window.__mounted = true; } catch {}
 }
 window.mountYearHub = mountYearHub;

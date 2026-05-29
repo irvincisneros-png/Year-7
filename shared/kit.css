@@ -52,6 +52,11 @@
   --accent:      var(--blue);
   --accent-deep: var(--blue-deep);
   --accent-soft: var(--blue-soft);
+  /* --accent-mid / --surface: referenced by content.jsx SVG interactives.
+     --accent-mid is re-declared in every accent preset below so it tracks the
+     active accent; this :root entry is the default fallback. */
+  --accent-mid:  color-mix(in srgb, var(--accent) 55%, var(--accent-soft));
+  --surface:     var(--card);
 
   /* Typography */
   --font-display: 'Fraunces', Georgia, serif;
@@ -96,6 +101,23 @@
 .accent-cyan    { --accent: var(--cyan);    --accent-deep: var(--cyan-deep);    --accent-soft: var(--cyan-soft); }
 .accent-lime    { --accent: var(--lime);    --accent-deep: var(--lime-deep);    --accent-soft: var(--lime-soft); }
 .accent-slate   { --accent: var(--slate);   --accent-deep: var(--slate-deep);   --accent-soft: var(--slate-soft); }
+
+/* --accent-mid per accent: a mid tone between accent and accent-soft.
+   Re-declared per accent so SVG interactives (var(--accent-mid)) track the
+   active topic/section accent rather than the default. */
+[data-accent="orange"],  .accent-orange  { --accent-mid: color-mix(in srgb, var(--orange) 55%,  var(--orange-soft)  45%); }
+[data-accent="amber"],   .accent-amber   { --accent-mid: color-mix(in srgb, var(--amber) 55%,   var(--amber-soft)   45%); }
+[data-accent="teal"],    .accent-teal    { --accent-mid: color-mix(in srgb, var(--teal) 55%,    var(--teal-soft)    45%); }
+[data-accent="blue"],    .accent-blue    { --accent-mid: color-mix(in srgb, var(--blue) 55%,    var(--blue-soft)    45%); }
+[data-accent="purple"],  .accent-purple  { --accent-mid: color-mix(in srgb, var(--purple) 55%,  var(--purple-soft)  45%); }
+[data-accent="violet"],  .accent-violet  { --accent-mid: color-mix(in srgb, var(--violet) 55%,  var(--violet-soft)  45%); }
+[data-accent="green"],   .accent-green   { --accent-mid: color-mix(in srgb, var(--green) 55%,   var(--green-soft)   45%); }
+[data-accent="emerald"], .accent-emerald { --accent-mid: color-mix(in srgb, var(--emerald) 55%, var(--emerald-soft) 45%); }
+[data-accent="pink"],    .accent-pink    { --accent-mid: color-mix(in srgb, var(--pink) 55%,    var(--pink-soft)    45%); }
+[data-accent="red"],     .accent-red     { --accent-mid: color-mix(in srgb, var(--red) 55%,     var(--red-soft)     45%); }
+[data-accent="cyan"],    .accent-cyan    { --accent-mid: color-mix(in srgb, var(--cyan) 55%,    var(--cyan-soft)    45%); }
+[data-accent="lime"],    .accent-lime    { --accent-mid: color-mix(in srgb, var(--lime) 55%,    var(--lime-soft)    45%); }
+[data-accent="slate"],   .accent-slate   { --accent-mid: color-mix(in srgb, var(--slate) 55%,   var(--slate-soft)   45%); }
 
 /* ---- Dark mode (warm, not blue-grey) ---- */
 [data-theme="dark"] {
@@ -337,11 +359,13 @@ img { max-width: 100%; }
 [data-theme="dark"] .callout { background: rgba(255,255,255,0.04); }
 
 /* ============================================================ Glossary terms */
-.term { border-bottom: 1.5px dashed var(--accent-deep); cursor: help; position: relative; color: inherit; }
+.term { border-bottom: 1.5px dashed var(--accent-deep); cursor: help; position: relative; color: inherit;
+  /* rendered as a <button> for keyboard + touch access -- reset to inline text */
+  display: inline; border-top: none; border-left: none; border-right: none; background: none; padding: 0; font: inherit; }
 .term:hover { color: var(--accent-deep); }
 .term-pop { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 14px; border-radius: 10px; font-size: 0.82rem; min-width: 200px; max-width: 280px; z-index: 50; line-height: 1.45; box-shadow: var(--shadow-2); pointer-events: none; opacity: 0; transition: opacity 100ms; font-family: var(--font-body); font-weight: 400; }
 .term-pop::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--ink); }
-.term:hover .term-pop, .term:focus .term-pop { opacity: 1; }
+.term:hover .term-pop, .term:focus .term-pop, .term.show .term-pop { opacity: 1; }
 
 /* ============================================================ Tables */
 .data-table, .dp-body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.93rem; }
@@ -474,8 +498,11 @@ select, input[type="number"], input[type="text"] { font-family: inherit; font-si
 .tl-year { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-deep); font-weight: 600; }
 
 /* ============================================================ Reveal / flip */
-.reveal-blur { filter: blur(7px); user-select: none; transition: filter 200ms; cursor: pointer; }
+.reveal-blur { filter: blur(7px); user-select: none; transition: filter 200ms; cursor: pointer;
+  /* rendered as a <button> for keyboard access -- reset to inline text */
+  display: inline; border: none; background: none; padding: 0; margin: 0; font: inherit; color: inherit; text-align: inherit; }
 .reveal-blur.shown { filter: none; }
+.reveal-blur:focus-visible { filter: none; outline: 2.5px solid var(--accent); outline-offset: 2px; }
 .progressbar { height: 7px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
 .progressbar > div { height: 100%; background: var(--green); transition: width 240ms; }
 
