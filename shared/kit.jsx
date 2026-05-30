@@ -626,6 +626,15 @@ function buildApp(CFG) {
       } catch (e) { alert("That code didn't look right — please check you copied all of it and try again."); }
     };
 
+    // Shared/library computer: wipe saved progress + answers for EVERY topic on
+    // this device so the next student starts clean. Keeps display settings.
+    // No accounts, no passwords — just clears this browser's local data.
+    const clearDevice = () => {
+      if (!confirm("Start fresh on this device?\n\nThis clears saved progress and answers for ALL topics on this computer (your display settings are kept). Use this on a shared/library computer. It can't be undone.")) return;
+      try { Object.keys(localStorage).forEach(k => { if (/^y\d+\./.test(k)) localStorage.removeItem(k); }); } catch {}
+      location.reload();
+    };
+
     const goTo = (id) => { window.location.hash = id; setView(id); };
     const done = ALL_POINTS.filter(p => progress[p]).length;
     const pct = ALL_POINTS.length ? Math.round(100 * done / ALL_POINTS.length) : 0;
@@ -666,6 +675,7 @@ function buildApp(CFG) {
                 <div className="settings-row"><label>Save progress code</label><button className="ghost-btn" onClick={exportProgress}>Copy</button></div>
                 <div className="settings-row"><label>Load progress code</label><button className="ghost-btn" onClick={importProgress}>Paste</button></div>
                 <div className="settings-row"><label>Reset progress</label><button className="danger-btn" onClick={clearProgress}>Reset</button></div>
+                <div className="settings-row"><label>Start fresh (shared computer)</label><button className="danger-btn" onClick={clearDevice}>Clear device</button></div>
               </div>
             )}
           </div>

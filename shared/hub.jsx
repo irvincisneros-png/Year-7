@@ -36,6 +36,12 @@ function YearHub(CFG) {
       return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); document.removeEventListener("touchstart", onDown); };
     }, [open]);
 
+    const clearDevice = () => {
+      if (!confirm("Start fresh on this device?\n\nThis clears saved progress and answers for ALL topics on this computer (your display settings are kept). Use this on a shared/library computer. It can't be undone.")) return;
+      try { Object.keys(localStorage).forEach(k => { if (/^y\d+\./.test(k)) localStorage.removeItem(k); }); } catch {}
+      window.location.reload();
+    };
+
     const totals = useMemoH(() => {
       let done = 0, total = 0;
       CFG.topics.forEach(t => { const p = topicProgress(t); done += p.done; total += p.total; });
@@ -56,6 +62,7 @@ function YearHub(CFG) {
                 <div className="settings-row"><label>Theme</label><div className="seg"><button className={!dark ? "on" : ""} onClick={() => setDark(false)}>Light</button><button className={dark ? "on" : ""} onClick={() => setDark(true)}>Dark</button></div></div>
                 <div className="settings-row"><label>Text size</label><div className="seg">{["sm","md","lg","xl"].map(s => <button key={s} className={size === s ? "on" : ""} onClick={() => setSize(s)} style={{ fontSize: { sm: 11, md: 13, lg: 15, xl: 17 }[s] }}>A</button>)}</div></div>
                 <div className="settings-row"><label>Readable font</label><div className="seg"><button className={!dys ? "on" : ""} onClick={() => setDys(false)}>Default</button><button className={dys ? "on" : ""} onClick={() => setDys(true)}>Hyperlegible</button></div></div>
+                <div className="settings-row"><label>Start fresh (shared computer)</label><button className="danger-btn" onClick={clearDevice}>Clear device</button></div>
               </div>
             )}
           </div>
