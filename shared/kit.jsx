@@ -336,6 +336,7 @@ function buildApp(CFG) {
           <div className="row" style={{ marginTop: 22, alignItems: "center" }}>
             <button className="btn btn-accent" onClick={() => goTo(cont.id)}>{ctaLabel} <IconArrow size={16} sw={2.5}/></button>
             {CFG.hubHref && <a className="btn btn-ghost" href={CFG.hubHref}>← All Year {CFG.year} topics</a>}
+            <a className="btn btn-ghost" href="/">⌂ All year groups</a>
             <div className="spacer"/>
             <div className="row" style={{ alignItems: "center", gap: 10 }}>
               <Ring pct={pct} size={46} sw={5}/>
@@ -688,6 +689,7 @@ function buildApp(CFG) {
               <button className={"mobile-tab" + (view === "home" ? " active" : "")} onClick={() => goTo("home")}><span className="tab-id">⌂</span><span className="tab-label">Overview</span></button>
               {SECTIONS.map(s => <button key={s.id} className={"mobile-tab accent-" + (s.accent || CFG.accent) + (view === s.id ? " active" : "")} onClick={() => goTo(s.id)}><span className="tab-id">{s.id}</span><span className="tab-label">{s.label}</span><span className="tab-progress">{(s.points||[]).filter(p => progress[p]).length}/{(s.points||[]).length}</span></button>)}
               {CFG.hubHref && <a className="mobile-tab" href={CFG.hubHref} style={{ marginTop: 8 }}><span className="tab-id">↩</span><span className="tab-label">All Year {CFG.year} topics</span></a>}
+              <a className="mobile-tab" href="/"><span className="tab-id">⌂</span><span className="tab-label">All year groups</span></a>
             </div>
           </div>
         )}

@@ -55,7 +55,9 @@ function YearHub(CFG) {
             <div className="brand-mark"><IconHome size={20}/></div>
             <div><div className="brand-title">{CFG.schoolTitle || "Junior Science"}</div><div className="brand-sub">Year {CFG.year} · NSW Stage {CFG.stage || (CFG.year <= 8 ? 4 : 5)}</div></div>
           </div>
-          <div style={{ position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <a className="icon-btn" href="/" aria-label="All year groups — Junior Science home" title="All year groups" style={{ width: "auto", padding: "0 14px", gap: 8, textDecoration: "none" }}><IconHome size={16}/><span style={{ fontSize: "0.85rem", fontWeight: 600 }}>All years</span></a>
+            <div style={{ position: "relative" }}>
             <button className="icon-btn" data-settings-toggle onClick={() => setOpen(o => !o)} aria-label="Display settings" aria-expanded={open} title="Display settings"><IconGear/></button>
             {open && (
               <div className="settings-pop" role="dialog" aria-label="Display settings">
@@ -65,6 +67,7 @@ function YearHub(CFG) {
                 <div className="settings-row"><label>Start fresh (shared computer)</label><button className="danger-btn" onClick={clearDevice}>Clear device</button></div>
               </div>
             )}
+            </div>
           </div>
         </header>
 
