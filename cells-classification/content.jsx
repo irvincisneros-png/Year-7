@@ -21,7 +21,7 @@ function MrsgrenFlashcards() {
   const [flipped, setFlipped] = useState(false);
   const card = cards[idx];
   return (
-    <Interactive title="MRSGREN flashcards" subtitle="Click a card to flip it. Use the arrows to move between characteristics.">
+    <Interactive title="MRSGREN flashcards" subtitle="Click a card to flip it. Use the arrows to move between characteristics." takeaway="All seven MRSGREN characteristics must be present for something to be classified as a living thing, and each characteristic has a specific meaning quite different from everyday language.">
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
         <div
           onClick={() => setFlipped(f => !f)}
@@ -66,7 +66,7 @@ function MrsgrenFlashcards() {
 /* Living vs Non-living sorter */
 function LivingThingsSorter() {
   return (
-    <Interactive title="Living or non-living?" subtitle="Sort each item into the correct bucket by clicking it.">
+    <Interactive title="Living or non-living?" subtitle="Sort each item into the correct bucket by clicking it." takeaway="Some things that seem alive, like a candle flame, fail the MRSGREN test, while some living things, like viruses, are genuinely debated by scientists.">
       <MatchBuckets
         items={[
           { id: "a", label: "Mushroom", bucket: "living" },
@@ -91,7 +91,7 @@ function LivingThingsSorter() {
 /* Kingdom classification sorter */
 function KingdomSorter() {
   return (
-    <Interactive title="Kingdom sorter" subtitle="Place each organism into its correct kingdom.">
+    <Interactive title="Kingdom sorter" subtitle="Place each organism into its correct kingdom." takeaway="Life is divided into six kingdoms, and placing an organism in the correct one depends on its cell type, how it obtains nutrients, and its body structure.">
       <MatchBuckets
         items={[
           { id: "a", label: "Mushroom", bucket: "fungi" },
@@ -213,7 +213,7 @@ function DichotomousKeyGame() {
   const currentStep = steps[step];
 
   return (
-    <Interactive title="Dichotomous key challenge" subtitle="Pick a mystery Australian invertebrate and use the key to identify it.">
+    <Interactive title="Dichotomous key challenge" subtitle="Pick a mystery Australian invertebrate and use the key to identify it." takeaway="A dichotomous key identifies unknown organisms by working through a series of paired questions, so one wrong observation at any step leads to a wrong answer at the end.">
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {!currentCreature ? (
           <div style={{ textAlign: "center" }}>
@@ -297,7 +297,7 @@ function AdaptationsExplorer() {
   const org = organisms[selected];
   const typeColour = { Structural: "var(--accent-deep)", Physiological: "#7c3aed", Behavioural: "#d97706" };
   return (
-    <Interactive title="Australian adaptations explorer" subtitle="Choose an organism to see how it survives its habitat.">
+    <Interactive title="Australian adaptations explorer" subtitle="Choose an organism to see how it survives its habitat." takeaway="Adaptations can be structural, physiological, or behavioural, and each feature of an organism directly reflects the challenges of its particular habitat.">
       <div className="seg-toggle" style={{ marginBottom: 16 }}>
         {organisms.map((o, i) => (
           <button key={i} className={"itab" + (selected === i ? " active" : "")} onClick={() => setSelected(i)}>{o.name}</button>
@@ -335,7 +335,7 @@ function PlantCellDiagram() {
   ];
   const info = active ? organelles.find(o => o.id === active) : null;
   return (
-    <Interactive title="Clickable plant cell" subtitle="Tap any labelled part to learn what it does.">
+    <Interactive title="Clickable plant cell" subtitle="Tap any labelled part to learn what it does." takeaway="Plant cells have three structures not found in animal cells: a cellulose cell wall, chloroplasts for photosynthesis, and a large central vacuole for water storage and support.">
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <svg viewBox="0 0 480 380" width="100%" style={{ maxWidth: 480, display: "block", margin: "0 auto" }}>
           {/* Cell wall outer */}
@@ -398,7 +398,7 @@ function AnimalCellDiagram() {
   ];
   const info = active ? organelles.find(o => o.id === active) : null;
   return (
-    <Interactive title="Clickable animal cell" subtitle="Tap any part to discover its function. Notice what is missing compared to a plant cell.">
+    <Interactive title="Clickable animal cell" subtitle="Tap any part to discover its function. Notice what is missing compared to a plant cell." takeaway="Animal cells share a membrane, cytoplasm, nucleus, and mitochondria with plant cells but lack a cell wall, chloroplasts, and a large central vacuole.">
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <svg viewBox="0 0 480 340" width="100%" style={{ maxWidth: 480, display: "block", margin: "0 auto" }}>
           {/* Cell membrane (irregular shape) */}
@@ -503,7 +503,7 @@ function VirtualMicroscope() {
   const gridY = 190 - totalH / 2;
 
   return (
-    <Interactive title="Virtual microscope" subtitle="Choose a cell type and adjust the magnification to explore what you would see.">
+    <Interactive title="Virtual microscope" subtitle="Choose a cell type and adjust the magnification to explore what you would see." takeaway="Increasing magnification reveals more detail inside cells, and each cell type (plant, animal, bacterium, yeast) has distinctive features that let you identify it under a microscope.">
       <div className="ctrl-row" style={{ marginBottom: 12 }}>
         {Object.keys(cells).map(k => (
           <button key={k} className={"btn " + (cellType === k ? "btn-accent" : "btn-ghost")} onClick={() => setCellType(k)}>
@@ -591,7 +591,7 @@ function EnergyEquationSim() {
   };
   const eq = mode === "resp" ? resp : photo;
   return (
-    <Interactive title="Photosynthesis vs respiration" subtitle="Switch between the two processes to compare organelle, reactants, and products.">
+    <Interactive title="Photosynthesis vs respiration" subtitle="Switch between the two processes to compare organelle, reactants, and products." takeaway="Photosynthesis and cellular respiration are essentially opposite reactions: photosynthesis builds glucose from carbon dioxide and water using light, while respiration breaks glucose down to release energy as ATP.">
       <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 16 }}>
         <button className={"btn " + (mode === "resp" ? "btn-accent" : "btn-ghost")} onClick={() => setMode("resp")}>Respiration</button>
         <button className={"btn " + (mode === "photo" ? "btn-accent" : "btn-ghost")} onClick={() => setMode("photo")}>Photosynthesis</button>
@@ -633,7 +633,7 @@ function EnergyEquationSim() {
 /* Specialised cells matcher */
 function SpecialisedCellMatcher() {
   return (
-    <Interactive title="Match specialised cells to their function" subtitle="Click each cell to place it in the right bucket.">
+    <Interactive title="Match specialised cells to their function" subtitle="Click each cell to place it in the right bucket." takeaway="In multicellular organisms, each specialised cell type has a unique structure that suits it perfectly for its one job, from carrying oxygen to transmitting nerve signals.">
       <MatchBuckets
         items={[
           { id: "a", label: "Red blood cell", bucket: "transport" },
@@ -738,7 +738,7 @@ function ClassificationBuilder() {
   ];
   const widths = [380, 340, 300, 260, 220, 180, 140];
   return (
-    <Interactive title="Classification hierarchy explorer" subtitle="Switch organism to compare their ranks. Notice where they share levels and where they split apart.">
+    <Interactive title="Classification hierarchy explorer" subtitle="Switch organism to compare their ranks. Notice where they share levels and where they split apart." takeaway="The seven-rank classification hierarchy goes from the broadest group (Kingdom) down to the most specific (Species), and organisms that share lower ranks are more closely related.">
       <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 16 }}>
         {Object.keys(presets).map(k => (
           <button key={k} className={"btn " + (preset === k ? "btn-accent" : "btn-ghost")} onClick={() => setPreset(k)}>

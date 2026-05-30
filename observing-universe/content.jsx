@@ -22,7 +22,7 @@ function InquiryCycleAnim() {
   const r = 100;
   const cx = 160, cy = 160;
   return (
-    <Interactive title="The scientific inquiry cycle" subtitle="Watch how each step flows into the next. Tap a step to explore it.">
+    <Interactive title="The scientific inquiry cycle" subtitle="Watch how each step flows into the next. Tap a step to explore it." takeaway="Science is a repeating cycle that begins with observation, builds through investigation and analysis, and produces knowledge that is tested and extended by other scientists.">
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "center" }}>
         <svg viewBox="0 0 320 320" width="240" height="240" style={{ flexShrink: 0 }}>
           {steps.map((s, i) => {
@@ -81,7 +81,7 @@ function InquiryCycleAnim() {
    ===================================================================== */
 function BranchSorter() {
   return (
-    <Interactive title="Sort the science topics" subtitle="Which branch does each topic belong to? Click to assign.">
+    <Interactive title="Sort the science topics" subtitle="Which branch does each topic belong to? Click to assign." takeaway="Every science question fits into one or more branches, and many space science questions require biology, chemistry, physics, and geology all working together.">
       <MatchBuckets
         items={[
           { id: "a", label: "Gravity pulling planets into orbit", bucket: "physics" },
@@ -113,7 +113,7 @@ function InstrumentSim() {
   const displayed = type === "analog" ? analogRead : digitalRead;
   const precision = type === "analog" ? "0.5 degrees C" : "0.1 degrees C";
   return (
-    <Interactive title="Analog vs digital thermometer" subtitle="Switch between instruments and see how precision changes.">
+    <Interactive title="Analog vs digital thermometer" subtitle="Switch between instruments and see how precision changes." takeaway="Digital instruments give a smaller reading error and finer precision than analog instruments reading the same temperature.">
       <div className="ctrl-row">
         <SegToggle
           options={[{ value: "analog", label: "Analog" }, { value: "digital", label: "Digital" }]}
@@ -183,7 +183,7 @@ function ObsInferPred() {
   const reveal = (i) => setRevealed(r => r.map((v, j) => j === i ? true : v));
   const sc = scenarios[idx];
   return (
-    <Interactive title="From observation to prediction" subtitle="Reveal how scientists move from what they see to what they test.">
+    <Interactive title="From observation to prediction" subtitle="Reveal how scientists move from what they see to what they test." takeaway="Every scientific investigation starts with a direct observation, moves to an inference about its cause, then produces a testable prediction that can be checked with new evidence.">
       <div className="ctrl-row" style={{ marginBottom: 12 }}>
         <SegToggle
           options={scenarios.map((_, i) => ({ value: i, label: `Example ${i + 1}` }))}
@@ -234,7 +234,7 @@ function SolarModelSim() {
   const sunAngle = toRad(angle * 0.8);
   const cx = 160, cy = 160;
   return (
-    <Interactive title="Geocentric vs heliocentric model" subtitle="Switch between models and watch the animation.">
+    <Interactive title="Geocentric vs heliocentric model" subtitle="Switch between models and watch the animation." takeaway="In the geocentric model everything orbits Earth, but in the heliocentric model Earth and the other planets all orbit the Sun, a change that was accepted only after new telescope evidence disproved the older idea.">
       <div className="ctrl-row" style={{ marginBottom: 12 }}>
         <SegToggle
           options={[{ value: "geo", label: "Geocentric (Earth centre)" }, { value: "helio", label: "Heliocentric (Sun centre)" }]}
@@ -306,7 +306,7 @@ function DayNightSim() {
   const dotY = cy + r * (Math.sin(dotAngle) * Math.cos(latRad) * 0.3 + Math.sin(latRad) * 0.95);
   const isDay = Math.cos(dotAngle - lightAngle) > 0;
   return (
-    <Interactive title="Day and night rotation" subtitle="Earth spins once every 24 hours. Watch your city move through day and night.">
+    <Interactive title="Day and night rotation" subtitle="Earth spins once every 24 hours. Watch your city move through day and night." takeaway="Day and night are caused by Earth spinning on its axis every 24 hours, so one half faces the Sun while the other half is in darkness.">
       <div className="ctrl-row">
         <Slider label="Your latitude" min={-70} max={70} step={1} value={lat} onChange={setLat} unit=" deg" />
         <button className="btn btn-ghost" onClick={() => setPaused(p => !p)}>{paused ? "Play" : "Pause"}</button>
@@ -363,7 +363,7 @@ function SeasonsSim() {
   const ep = earthPositions[pos];
   const tiltDir = [1, 0, -1, 0][pos];
   return (
-    <Interactive title="Why do we have seasons?" subtitle="Move Earth around its orbit and watch how the tilt affects sunlight.">
+    <Interactive title="Why do we have seasons?" subtitle="Move Earth around its orbit and watch how the tilt affects sunlight." takeaway="Seasons are caused by Earth's 23.5-degree axial tilt, which means each hemisphere takes turns leaning towards the Sun and receiving more direct sunlight — not by how close Earth is to the Sun.">
       <div className="ctrl-row">
         <SegToggle
           options={positions.map((p, i) => ({ value: i, label: p.label }))}
@@ -447,7 +447,7 @@ function MoonPhaseSim() {
     );
   }
   return (
-    <Interactive title="Moon phase visualiser" subtitle="Drag the slider through the lunar month and watch the Moon's appearance change.">
+    <Interactive title="Moon phase visualiser" subtitle="Drag the slider through the lunar month and watch the Moon's appearance change." takeaway="The Moon's phases are caused by the changing angle between the Sun, Moon, and Earth as the Moon orbits Earth roughly every 29.5 days, so we see different amounts of the sunlit half.">
       <Slider label="Day in lunar cycle" min={0} max={29} step={0.5} value={day} onChange={setDay} unit=" days" />
       <svg viewBox="0 0 280 220" width="100%" style={{ maxWidth: 380, display: "block", margin: "0 auto" }}>
         <circle cx={cx} cy={cy} r={18} fill="#f7b731" />
@@ -487,7 +487,7 @@ function EclipseAligner() {
   const solarEclipse = moonOffset < 6;
   const lunarEclipse = moonOffset > 26;
   return (
-    <Interactive title="Eclipse aligner" subtitle="Slide the Moon into perfect alignment to cause an eclipse. Watch the shadow form.">
+    <Interactive title="Eclipse aligner" subtitle="Slide the Moon into perfect alignment to cause an eclipse. Watch the shadow form." takeaway="Eclipses only happen when the Sun, Earth, and Moon line up precisely, which is rare because the Moon's orbit is tilted about 5 degrees so most new and full Moons pass above or below the shadow.">
       <Slider label="Moon's orbital position" min={-30} max={60} step={1} value={moonOffset} onChange={setMoonOffset} />
       <svg viewBox="0 0 340 200" width="100%" style={{ maxWidth: 420, display: "block", margin: "8px auto" }}>
         <defs>
@@ -540,7 +540,7 @@ function SkyCalendarSim() {
   ];
   const [active, setActive] = useState(null);
   return (
-    <Interactive title="Indigenous sky calendar" subtitle="Click a month to see which astronomical signals Aboriginal and Torres Strait Islander peoples used.">
+    <Interactive title="Indigenous sky calendar" subtitle="Click a month to see which astronomical signals Aboriginal and Torres Strait Islander peoples used." takeaway="Aboriginal and Torres Strait Islander peoples used predictable changes in the night sky, such as the rising of star clusters and the shape of the Milky Way, as a reliable calendar to signal seasons, food availability, and ecological events.">
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 14 }}>
         {months.map((m, i) => {
           const ev = events.find(e => e.month === i);
@@ -590,7 +590,7 @@ function TelescopeCompare() {
   const sc = scopes[selected];
   const mirrorSizes = { eye: 5, hubble: 40, jwst: 90 };
   return (
-    <Interactive title="Telescope capability explorer" subtitle="Compare what each tool can see. Select an instrument below.">
+    <Interactive title="Telescope capability explorer" subtitle="Compare what each tool can see. Select an instrument below." takeaway="Larger mirrors and the ability to detect infrared light let the JWST see far fainter and more distant objects than either the unaided eye or the Hubble Space Telescope.">
       <div className="ctrl-row" style={{ marginBottom: 12 }}>
         <SegToggle
           options={[{ value: "eye", label: "Unaided eye" }, { value: "hubble", label: "Hubble" }, { value: "jwst", label: "JWST" }]}

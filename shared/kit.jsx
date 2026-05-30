@@ -207,13 +207,14 @@ function QGroup({ title, children }) {
   );
 }
 
-function Interactive({ title, subtitle, children }) {
+function Interactive({ title, subtitle, takeaway, children }) {
   return (
     <div className="interactive">
       <div className="interactive-label">Interactive</div>
       {title && <div className="interactive-title">{title}</div>}
       {subtitle && <div className="interactive-sub">{subtitle}</div>}
       {children}
+      {takeaway && <div className="interactive-takeaway"><strong>What this shows. </strong>{takeaway}</div>}
     </div>
   );
 }
