@@ -350,7 +350,7 @@ function buildApp(CFG) {
             const d = (s.points||[]).filter(p => progress[p]).length;
             const sp = s.points && s.points.length ? Math.round(100 * d / s.points.length) : 0;
             return (
-              <button key={s.id} className={"card accent-" + (s.accent || CFG.accent)} style={{ textAlign: "left", cursor: "pointer", borderLeft: "5px solid var(--accent)", display: "flex", flexDirection: "column", gap: 8 }} onClick={() => goTo(s.id)}>
+              <button key={s.id} className="card" style={{ textAlign: "left", cursor: "pointer", borderLeft: "5px solid var(--accent)", display: "flex", flexDirection: "column", gap: 8 }} onClick={() => goTo(s.id)}>
                 <div className="between"><span className="chip accent">{s.id}</span><span className="muted" style={{ fontSize: "0.8rem", fontVariantNumeric: "tabular-nums" }}>{d}/{(s.points||[]).length}</span></div>
                 <h3 style={{ fontSize: "1.3rem" }}>{s.label}</h3>
                 {s.blurb && <p className="muted" style={{ fontSize: "0.92rem", margin: 0 }}>{s.blurb}</p>}
@@ -571,6 +571,7 @@ function buildApp(CFG) {
       r.dataset.theme = dark ? "dark" : "light";
       r.dataset.size = size;
       r.dataset.dyslexic = dys ? "true" : "false";
+      r.dataset.branch = CFG.branch || "general";
     }, [dark, size, dys]);
 
     useEffect(() => {
@@ -645,7 +646,7 @@ function buildApp(CFG) {
 
     return (
       <TopicContext.Provider value={ctxVal}>
-      <div className={"app accent-" + ((sec && sec.accent) || CFG.accent)}>
+      <div className="app">
         <header className="topbar">
           <div className="brand">
             {CFG.hubHref
@@ -656,7 +657,7 @@ function buildApp(CFG) {
           <nav className="tabs" aria-label="Sections">
             <button className={"tab" + (view === "home" ? " active" : "")} onClick={() => goTo("home")}><IconHome size={15}/><span>Overview</span></button>
             {SECTIONS.map(s => (
-              <button key={s.id} className={"tab accent-" + (s.accent || CFG.accent) + (view === s.id ? " active" : "")} onClick={() => goTo(s.id)}>
+              <button key={s.id} className={"tab" + (view === s.id ? " active" : "")} onClick={() => goTo(s.id)}>
                 <span className="tab-id">{s.id}</span><span>{s.label}</span>
                 <span className="tab-progress">{(s.points||[]).filter(p => progress[p]).length}/{(s.points||[]).length}</span>
               </button>
@@ -687,7 +688,7 @@ function buildApp(CFG) {
           <div className="mobile-drawer" onClick={() => setMob(false)}>
             <div className="mobile-drawer-inner" onClick={e => e.stopPropagation()}>
               <button className={"mobile-tab" + (view === "home" ? " active" : "")} onClick={() => goTo("home")}><span className="tab-id">⌂</span><span className="tab-label">Overview</span></button>
-              {SECTIONS.map(s => <button key={s.id} className={"mobile-tab accent-" + (s.accent || CFG.accent) + (view === s.id ? " active" : "")} onClick={() => goTo(s.id)}><span className="tab-id">{s.id}</span><span className="tab-label">{s.label}</span><span className="tab-progress">{(s.points||[]).filter(p => progress[p]).length}/{(s.points||[]).length}</span></button>)}
+              {SECTIONS.map(s => <button key={s.id} className={"mobile-tab" + (view === s.id ? " active" : "")} onClick={() => goTo(s.id)}><span className="tab-id">{s.id}</span><span className="tab-label">{s.label}</span><span className="tab-progress">{(s.points||[]).filter(p => progress[p]).length}/{(s.points||[]).length}</span></button>)}
               {CFG.hubHref && <a className="mobile-tab" href={CFG.hubHref} style={{ marginTop: 8 }}><span className="tab-id">↩</span><span className="tab-label">All Year {CFG.year} topics</span></a>}
               <a className="mobile-tab" href="/"><span className="tab-id">⌂</span><span className="tab-label">All year groups</span></a>
             </div>

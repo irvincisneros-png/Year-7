@@ -992,6 +992,7 @@ function Section5({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Observing the Universe",
+  branch: "earth-space",
   heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "amber",

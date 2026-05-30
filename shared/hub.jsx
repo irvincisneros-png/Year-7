@@ -22,7 +22,7 @@ function YearHub(CFG) {
     const [open, setOpen] = useStateH(false);
     useEffectH(() => {
       const r = document.documentElement;
-      r.dataset.theme = dark ? "dark" : "light"; r.dataset.size = size; r.dataset.dyslexic = dys ? "true" : "false";
+      r.dataset.theme = dark ? "dark" : "light"; r.dataset.size = size; r.dataset.dyslexic = dys ? "true" : "false"; r.dataset.branch = "general";
     }, [dark, size, dys]);
 
     // close the settings popover on Escape or a click/tap outside it
@@ -49,7 +49,7 @@ function YearHub(CFG) {
     }, []);
 
     return (
-      <div className={"hub accent-" + CFG.accent}>
+      <div className="hub">
         <header className="hub-top">
           <div className="brand">
             <div className="brand-mark"><IconHome size={20}/></div>
@@ -108,8 +108,8 @@ function YearHub(CFG) {
                 </>
               );
               return live
-                ? <a key={t.title} className={"hub-card accent-" + (t.accent || CFG.accent)} href={t.href}>{Inner}</a>
-                : <div key={t.title} className={"hub-card soon accent-" + (t.accent || CFG.accent)}>{Inner}</div>;
+                ? <a key={t.title} className={"hub-card branch-" + (t.branch || "general")} href={t.href}>{Inner}</a>
+                : <div key={t.title} className={"hub-card soon branch-" + (t.branch || "general")}>{Inner}</div>;
             })}
           </div>
 

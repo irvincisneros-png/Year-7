@@ -1241,6 +1241,7 @@ function Section5({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Solutions and Mixtures",
+  branch: "chemistry",
   heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "cyan",

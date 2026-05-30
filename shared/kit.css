@@ -7,12 +7,12 @@
    ============================================================ */
 
 :root {
-  /* Surfaces (warm paper) */
-  --bg:            #ffffff;
-  --bg-2:          #f3ece0;
-  --paper:         #f7f1e3;
-  --card:          #f7f1e3;
-  --border:        #e3d9bf;
+  /* Surfaces (neutral by default; tinted per science branch via [data-branch]) */
+  --bg:            #eef0f3;
+  --bg-2:          #e6e9ef;
+  --paper:         #ffffff;
+  --card:          #ffffff;
+  --border:        #dadfe7;
   --border-strong: #1b1a17;
 
   /* Ink */
@@ -147,6 +147,50 @@
   --font-display: "Atkinson Hyperlegible", "Verdana", system-ui, sans-serif;
 }
 
+/* ============================================================
+   Science-branch palettes (sci-themed-resources schema).
+   `data-branch` on <html> tints the whole topic page; `.branch-*`
+   tints individual topic cards on the neutral hub.
+   Accent applies in light + dark; surface tints apply in light mode only
+   (dark mode keeps its own dark scheme, branch identity via accent).
+   ============================================================ */
+[data-branch="biology"]       { --accent:#2f7d4f; --accent-deep:#1f5a38; --accent-soft:#e2efe6; }
+[data-branch="chemistry"]     { --accent:#1f5aa6; --accent-deep:#163f73; --accent-soft:#dde8f5; }
+[data-branch="physics"]       { --accent:#a8680c; --accent-deep:#7c4e08; --accent-soft:#f6ebd4; }
+[data-branch="earth-space"]   { --accent:#4b46a8; --accent-deep:#322a7a; --accent-soft:#e6e4f5; }
+[data-branch="environmental"] { --accent:#0f766e; --accent-deep:#0a574f; --accent-soft:#d9ebe8; }
+[data-branch="general"]       { --accent:#5d6b7d; --accent-deep:#3c4655; --accent-soft:#e5e9ef; }
+[data-branch="change"]        { --accent:#7a3a9b; --accent-deep:#5d2a78; --accent-soft:#efe7f0;
+  --rainbow:linear-gradient(90deg,#d44d36,#c98a16,#357d40,#2a64a4,#6d3490); }
+
+[data-theme="light"][data-branch="biology"]       { --bg:#eef4f0; --bg-2:#e1ece5; --border:#d8e5dd; }
+[data-theme="light"][data-branch="chemistry"]     { --bg:#eaf0f7; --bg-2:#dde7f3; --border:#d0dcee; }
+[data-theme="light"][data-branch="physics"]       { --bg:#f3f2ee; --bg-2:#ece8df; --border:#e3ded1; }
+[data-theme="light"][data-branch="earth-space"]   { --bg:#eeeef8; --bg-2:#e2e2f2; --border:#d5d5ee; }
+[data-theme="light"][data-branch="environmental"] { --bg:#e8f2f0; --bg-2:#d8e9e5; --border:#cadfd9; }
+[data-theme="light"][data-branch="general"]       { --bg:#eef0f3; --bg-2:#e6e9ef; --border:#dadfe7; }
+[data-theme="light"][data-branch="change"]        { --bg:#f5f2f6; --bg-2:#ece6ee; --border:#e2d8e6; }
+
+/* Hub topic cards: branch accent + a faint branch wash (neutral hub page) */
+.hub-card.branch-biology       { --accent:#2f7d4f; --accent-deep:#1f5a38; --accent-soft:#e2efe6; background:#f2f8f4; }
+.hub-card.branch-chemistry     { --accent:#1f5aa6; --accent-deep:#163f73; --accent-soft:#dde8f5; background:#eef4fb; }
+.hub-card.branch-physics       { --accent:#a8680c; --accent-deep:#7c4e08; --accent-soft:#f6ebd4; background:#faf6ec; }
+.hub-card.branch-earth-space   { --accent:#4b46a8; --accent-deep:#322a7a; --accent-soft:#e6e4f5; background:#f3f2fc; }
+.hub-card.branch-environmental { --accent:#0f766e; --accent-deep:#0a574f; --accent-soft:#d9ebe8; background:#eef6f4; }
+.hub-card.branch-general       { --accent:#5d6b7d; --accent-deep:#3c4655; --accent-soft:#e5e9ef; background:#f4f6f8; }
+.hub-card.branch-change        { --accent:#7a3a9b; --accent-deep:#5d2a78; --accent-soft:#efe7f0; background:#f8f4f9;
+  --rainbow:linear-gradient(90deg,#d44d36,#c98a16,#357d40,#2a64a4,#6d3490); }
+[data-theme="dark"] .hub-card[class*="branch-"] { background: var(--card); }
+
+/* Rainbow accents for Year 8 "Change" (spans energy, reactions, geology) */
+[data-branch="change"] .btn-accent { background: var(--rainbow); }
+[data-branch="change"] .btn-accent:hover { background: var(--rainbow); filter: brightness(0.95); }
+[data-branch="change"] .progressbar > div { background: var(--rainbow) !important; }
+[data-branch="change"] .dp-id { background: var(--rainbow); color: #fff; }
+[data-branch="change"] .topic-head::before { content:""; position:absolute; left:0; right:0; top:0; height:6px; background: var(--rainbow); }
+.hub-card.branch-change .stripe { background: var(--rainbow) !important; }
+.hub-card.branch-change .bar > div { background: var(--rainbow) !important; }
+
 /* ============================================================ Base */
 * { box-sizing: border-box; }
 html, body {
@@ -192,8 +236,8 @@ img { max-width: 100%; }
   border-radius: 8px;
   border: 2px solid var(--ink);
   display: flex; align-items: center; justify-content: center;
-  background: #d99e1e;
-  color: var(--ink);
+  background: var(--accent);
+  color: #fff;
   font-family: var(--font-display);
   font-weight: 800;
   flex-shrink: 0;

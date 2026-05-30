@@ -1033,6 +1033,7 @@ function Section33({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Cells and Classification",
+  branch: "biology",
   heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "emerald",
