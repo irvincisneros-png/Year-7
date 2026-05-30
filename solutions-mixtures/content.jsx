@@ -106,7 +106,7 @@ function ParticleStateAnim() {
   };
 
   return (
-    <Interactive title="Particle motion in the three states" subtitle="Click a state to see how particles behave.">
+    <Interactive title="Particle motion in the three states" subtitle="Click a state to see how particles behave." takeaway="The state of a substance depends on how its particles are arranged and how much energy they have: solid particles vibrate in fixed positions, liquid particles slide past each other, and gas particles move rapidly in all directions.">
       <div className="ctrl-row" style={{ justifyContent: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
         {["solid", "liquid", "gas"].map(s => (
           <button key={s} className={state === s ? "btn btn-accent" : "btn btn-ghost"}
@@ -183,7 +183,7 @@ function HeatingCurveExplorer() {
     : "#3b82f6";
 
   return (
-    <Interactive title="Heating curve explorer" subtitle="Drag the slider to move through time and watch the temperature and phase change.">
+    <Interactive title="Heating curve explorer" subtitle="Drag the slider to move through time and watch the temperature and phase change." takeaway="The flat sections on a heating curve show that during a change of state the temperature stays constant because the added energy breaks forces between particles rather than speeding them up.">
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: W, display: "block", margin: "0 auto" }}>
         <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="var(--ink-muted)" strokeWidth="1.2" />
         <line x1={padL} y1={H - padB} x2={W - padR} y2={H - padB} stroke="var(--ink-muted)" strokeWidth="1.2" />
@@ -225,7 +225,7 @@ function DensityCalc() {
   const floats = parseFloat(density) < 1.0;
 
   return (
-    <Interactive title="Density calculator" subtitle="Enter mass and volume to calculate density and find out if it floats.">
+    <Interactive title="Density calculator" subtitle="Enter mass and volume to calculate density and find out if it floats." takeaway="An object floats in water when its density is less than 1.00 g/mL and sinks when it is greater, because buoyancy depends on density, not just mass.">
       <div className="ctrl-row">
         <Slider label="Mass" min={1} max={300} value={mass} onChange={setMass} unit=" g" />
         <Slider label="Volume" min={1} max={300} value={vol} onChange={setVol} unit=" mL" />
@@ -275,7 +275,7 @@ function DissolvingSim() {
   const particleAlpha = pct / 100;
 
   return (
-    <Interactive title="Dissolving simulation" subtitle="See how temperature and stirring affect how quickly a solute dissolves.">
+    <Interactive title="Dissolving simulation" subtitle="See how temperature and stirring affect how quickly a solute dissolves." takeaway="Increasing temperature and stirring both speed up dissolving because they increase how often water particles collide with the surface of the solute.">
       <div className="ctrl-row">
         <Slider label="Water temperature" min={20} max={100} step={5} value={temp} onChange={v => { setTemp(v); reset(); }} unit=" C" />
       </div>
@@ -362,7 +362,7 @@ function SolubilityGraph() {
   }
 
   return (
-    <Interactive title="Solubility vs temperature" subtitle="Select a solute and drag the temperature slider to read off solubility.">
+    <Interactive title="Solubility vs temperature" subtitle="Select a solute and drag the temperature slider to read off solubility." takeaway="For most solid solutes, solubility increases with temperature, but the effect is dramatic for some substances (like potassium nitrate) and barely noticeable for others (like salt).">
       <SegToggle
         options={[{ value: "kno3", label: "KNO3" }, { value: "nacl", label: "NaCl" }, { value: "sugar", label: "Sugar" }]}
         value={solute} onChange={setSolute} />
@@ -422,7 +422,7 @@ function ConcentrationMatcher() {
     { id: "supersaturated", label: "Supersaturated" },
   ];
   return (
-    <Interactive title="Classify the solutions" subtitle="Drag each scenario into the correct category.">
+    <Interactive title="Classify the solutions" subtitle="Drag each scenario into the correct category." takeaway="Dilute and concentrated describe how much solute is present, while saturated means no more solute can dissolve at that temperature, and supersaturated holds more than the normal maximum.">
       <MatchBuckets items={items} buckets={buckets} />
     </Interactive>
   );
@@ -470,7 +470,7 @@ function SeparationPicker() {
 
   if (done) {
     return (
-      <Interactive title="Separation technique picker" subtitle="How well did you go?">
+      <Interactive title="Separation technique picker" subtitle="How well did you go?" takeaway="The right separation technique for any mixture depends on the physical difference between the components, such as particle size, solubility, boiling point, or magnetic properties.">
         <div style={{ textAlign: "center", padding: "1rem" }}>
           <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-deep)" }}>{score} / {scenarios.length}</div>
           <p>{score === scenarios.length ? "Perfect! You matched every technique!" : "Good effort! Review the ones you missed."}</p>
@@ -481,7 +481,7 @@ function SeparationPicker() {
   }
 
   return (
-    <Interactive title="Separation technique picker" subtitle={`Question ${idx + 1} of ${scenarios.length}. Pick the best technique.`}>
+    <Interactive title="Separation technique picker" subtitle={`Question ${idx + 1} of ${scenarios.length}. Pick the best technique.`} takeaway="The right separation technique for any mixture depends on the physical difference between the components, such as particle size, solubility, boiling point, or magnetic properties.">
       <div style={{ background: "var(--surface-raised)", borderRadius: "10px", padding: "0.85rem 1rem", marginBottom: "0.75rem" }}>
         <p style={{ margin: 0, fontWeight: 600 }}>Mixture: <span style={{ color: "var(--accent-deep)" }}>{scenario.mix}</span></p>
       </div>
@@ -546,7 +546,7 @@ function ChromatographySim() {
   const solventPixel = baselineY - solvent * (baselineY - frontY);
 
   return (
-    <Interactive title="Paper chromatography simulation" subtitle="Watch the dyes separate as the solvent travels up the paper.">
+    <Interactive title="Paper chromatography simulation" subtitle="Watch the dyes separate as the solvent travels up the paper." takeaway="In chromatography, different substances travel different distances up the paper because they have different solubilities in the solvent, and each substance's Rf value can be used to identify it.">
       <div className="ctrl-row" style={{ marginBottom: "0.5rem" }}>
         <button className={running ? "btn btn-ghost" : "btn btn-accent"} onClick={() => setRunning(r => !r)}>
           {running ? "Pause" : "Run chromatography"}
@@ -623,7 +623,7 @@ function PollutionTreatment() {
   const allCorrect = placed.length === correct.length && placed.every(id => correct.includes(id));
 
   return (
-    <Interactive title="Build a water treatment plant" subtitle="Select the steps in the right order to clean polluted water.">
+    <Interactive title="Build a water treatment plant" subtitle="Select the steps in the right order to clean polluted water." takeaway="Real water treatment uses a sequence of steps because each technique targets a different type of pollutant: physical filtration removes solids, activated carbon removes dissolved organics, and disinfection kills microbes.">
       <p style={{ fontSize: "0.9rem" }}>Click the steps in the correct treatment order, then press Check.</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
         {allSteps.map(s => (
@@ -1058,7 +1058,7 @@ function Section4({ progress, setProgress }) {
       <DotPoint id="4.4.2" title="Classifying matter as pure or impure" progress={progress} setProgress={setProgress}>
         <p>Scientists sort all matter into <Term def="Contains only one type of particle. Either an element (one type of atom) or a compound (one type of molecule). Has a sharp, precise melting point.">pure substances</Term> and <Term def="Contains two or more substances physically combined. Also called a mixture. Melts over a range of temperatures, not at a single fixed point.">impure substances (mixtures)</Term>. A pure substance can be an element (all one type of atom, like pure gold) or a compound (atoms bonded in a fixed ratio, like water). Pure substances have consistent properties and a sharp, precise melting point.</p>
         <p>Mixtures are either <Term def="A mixture where composition is uniform throughout. A solution is a good example. You cannot see separate components.">homogeneous</Term> (uniform composition throughout, like air or salt solution) or <Term def="A mixture where composition is not uniform. You can see visibly different components, like soil or salad.">heterogeneous</Term> (non-uniform, like soil or salad). One clue for purity is the melting point: a pure substance melts at a single exact temperature, while a mixture melts over a range of temperatures.</p>
-        <Interactive title="Classify that material" subtitle="For each material, think: is it pure or a mixture? Homogeneous or heterogeneous?">
+        <Interactive title="Classify that material" subtitle="For each material, think: is it pure or a mixture? Homogeneous or heterogeneous?" takeaway="Pure substances (elements and compounds) have a single uniform composition, while mixtures can be homogeneous (looking uniform, like salt water) or heterogeneous (visibly different parts, like soil).">
           <MatchBuckets
             items={[
               { id: "a", label: "Distilled water", bucket: "pure" },
@@ -1128,7 +1128,7 @@ function Section4({ progress, setProgress }) {
         <Callout kind="key" title="Science is not only Western">
           These techniques are based on careful observation and testing over thousands of years. They demonstrate the same scientific thinking as laboratory methods: understanding physical properties and using them to separate useful materials from unwanted ones.
         </Callout>
-        <Interactive title="Match the traditional technique to its scientific principle" subtitle="Drag each technique to the property it exploits.">
+        <Interactive title="Match the traditional technique to its scientific principle" subtitle="Drag each technique to the property it exploits." takeaway="Traditional separation techniques like winnowing, leaching, and basket sieving rely on exactly the same physical properties (density, solubility, particle size) as modern laboratory methods.">
           <MatchBuckets
             items={[
               { id: "a", label: "Winnowing (blowing husks from grain)", bucket: "density" },
@@ -1241,6 +1241,7 @@ function Section5({ progress, setProgress }) {
 mountTopicApp({
   year: 7,
   topicTitle: "Solutions and Mixtures",
+  branch: "chemistry",
   heroImage: "img/hero.png",
   strand: "Stage 4 · NSW Science",
   accent: "cyan",
