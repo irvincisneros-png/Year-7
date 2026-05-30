@@ -48,6 +48,30 @@ function useReducedMotion() {
   return reduced;
 }
 
+/* Per-topic quiz results (for the end-of-topic review / "redo what you got
+   wrong"). Stored separately from the per-question answers so we can list
+   wrong answers by section without re-rendering every question. */
+function recordMCQResult(skey, qkey, ok, section) {
+  if (!skey) return;
+  try {
+    var k = skey + ".results";
+    var m = JSON.parse(localStorage.getItem(k) || "{}");
+    m[qkey] = { ok: !!ok, section: section || null };
+    localStorage.setItem(k, JSON.stringify(m));
+  } catch (e) {}
+}
+function readMCQResults(skey) {
+  try { return JSON.parse(localStorage.getItem(skey + ".results") || "{}"); } catch (e) { return {}; }
+}
+function clearMCQResults(skey, pred) {
+  try {
+    var k = skey + ".results";
+    var m = JSON.parse(localStorage.getItem(k) || "{}");
+    Object.keys(m).forEach(function (qk) { if (pred(m[qk], qk)) { delete m[qk]; } });
+    localStorage.setItem(k, JSON.stringify(m));
+  } catch (e) {}
+}
+
 /* ---------- icons ---------- */
 const Icon = ({ d, size = 18, fill = "none", sw = 2, children }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor"
@@ -60,6 +84,7 @@ const IconHome = (p) => <Icon {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 
 const IconBook = (p) => <Icon {...p}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></Icon>;
 const IconGear = (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H7a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></Icon>;
 const IconMenu = (p) => <Icon {...p}><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></Icon>;
+const IconSearch = (p) => <Icon {...p}><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></Icon>;
 
 /* ---------- content primitives ---------- */
 function DotPoint({ id, title, children, progress, setProgress }) {
@@ -117,10 +142,13 @@ function Term({ children, def }) {
 }
 
 function MCQ({ num, question, options, correct, explain }) {
-  const { skey } = useContext(TopicContext);
+  const { skey, section } = useContext(TopicContext);
+  const qkey = answerKey(skey, "mcq", num, question);
   // the chosen answer is saved per question so it survives navigation / refresh
-  const [chosen, setChosen] = useLocalStorage(answerKey(skey, "mcq", num, question), null);
+  const [chosen, setChosen] = useLocalStorage(qkey, null);
   const locked = chosen !== null;
+  const choose = (i) => { setChosen(i); recordMCQResult(skey, qkey, i === correct, section); };
+  const tryAgain = () => { setChosen(null); clearMCQResults(skey, function (_, qk) { return qk === qkey; }); };
   return (
     <div className="quiz-card">
       <div className="quiz-q"><span className="quiz-q-num">{num || "?"}</span><span>{question}</span></div>
@@ -130,7 +158,7 @@ function MCQ({ num, question, options, correct, explain }) {
           if (locked && i === correct) cls += " correct";
           else if (locked && i === chosen) cls += " wrong";
           return (
-            <button key={i} className={cls} onClick={() => !locked && setChosen(i)} disabled={locked}>
+            <button key={i} className={cls} onClick={() => !locked && choose(i)} disabled={locked}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, opacity: 0.6, minWidth: 14 }}>{String.fromCharCode(65 + i)}</span>
               <span style={{ flex: 1 }}>{o}</span>
               {locked && i === correct && <IconCheck size={16} sw={2.5}/>}
@@ -144,7 +172,7 @@ function MCQ({ num, question, options, correct, explain }) {
           {chosen === correct ? "Correct. " : "Not quite. "}{explain}
           {chosen !== correct && (
             <div style={{ marginTop: 10 }}>
-              <button className="reveal-btn" onClick={() => setChosen(null)}>Try again</button>
+              <button className="reveal-btn" onClick={tryAgain}>Try again</button>
             </div>
           )}
         </div>
@@ -331,6 +359,26 @@ function buildApp(CFG) {
           })}
         </div>
 
+        {(() => {
+          const r = readMCQResults(SKEY);
+          const vals = Object.values(r);
+          if (!vals.length) return null;
+          const answered = vals.length;
+          const ok = vals.filter(v => v && v.ok).length;
+          const wrong = answered - ok;
+          return (
+            <section style={{ marginTop: 30 }}>
+              <div className="card between" style={{ alignItems: "center" }}>
+                <div>
+                  <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Your quiz results</h3>
+                  <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.92rem" }}>{ok} of {answered} correct{wrong > 0 ? ` · ${wrong} to revisit` : ""}.</p>
+                </div>
+                <button className="btn btn-accent" onClick={() => goTo("review")}>Review{wrong > 0 ? ` (${wrong})` : ""} <IconArrow size={15} sw={2.5}/></button>
+              </div>
+            </section>
+          );
+        })()}
+
         <section style={{ marginTop: 32 }}>
           <h2 style={{ marginBottom: 6 }}>How to use this site</h2>
           <p className="muted">Read a little, play a little, then check yourself. Everything saves automatically in this browser.</p>
@@ -398,6 +446,112 @@ function buildApp(CFG) {
     );
   }
 
+  function SearchModal({ onClose, goTo }) {
+    const [q, setQ] = useState("");
+    const modalRef = useRef(null);
+    const lastFocused = useRef(null);
+    useEffect(() => {
+      lastFocused.current = document.activeElement;
+      const onKey = (e) => {
+        if (e.key === "Escape") { onClose(); return; }
+        if (e.key === "Tab" && modalRef.current) {
+          const f = modalRef.current.querySelectorAll('button, input, [href], [tabindex]:not([tabindex="-1"])');
+          if (!f.length) return;
+          const first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      };
+      document.addEventListener("keydown", onKey);
+      return () => { document.removeEventListener("keydown", onKey); try { lastFocused.current && lastFocused.current.focus(); } catch {} };
+    }, [onClose]);
+    const n = q.trim().toLowerCase();
+    const secHits = !n ? [] : SECTIONS.filter(s => ((s.label || "") + " " + (s.blurb || "") + " " + s.id).toLowerCase().includes(n));
+    const glossHits = !n ? [] : Object.entries(CFG.glossary || {}).filter(([t, d]) => (t + " " + d).toLowerCase().includes(n)).slice(0, 10);
+    const go = (id) => { onClose(); goTo(id); };
+    return (
+      <div className="modal-scrim" onClick={onClose}>
+        <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-label="Search this topic" onClick={e => e.stopPropagation()}>
+          <div className="modal-header"><h2 style={{ fontSize: "1.4rem" }}>Search this topic</h2><button className="icon-btn" onClick={onClose} aria-label="Close search"><IconX/></button></div>
+          <input className="gloss-search" placeholder="Search section topics and key terms…" value={q} onChange={e => setQ(e.target.value)} autoFocus/>
+          <div className="gloss-list">
+            {!n && <p className="muted" style={{ padding: "4px 2px" }}>Type to search section topics and glossary terms.</p>}
+            {n && !secHits.length && !glossHits.length && <p className="muted center" style={{ padding: 20 }}>No matches.</p>}
+            {secHits.length > 0 && <div style={{ marginBottom: 10 }}>
+              <div className="search-group-h">Sections</div>
+              {secHits.map(s => (
+                <button key={s.id} className="search-hit" onClick={() => go(s.id)}>
+                  <span className="chip accent">{s.id}</span>
+                  <span><strong>{s.label}</strong>{s.blurb ? <span className="muted"> — {s.blurb}</span> : null}</span>
+                </button>
+              ))}
+            </div>}
+            {glossHits.length > 0 && <div>
+              <div className="search-group-h">Key terms</div>
+              <dl style={{ margin: 0 }}>
+                {glossHits.map(([t, d]) => <div className="gloss-entry" key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
+              </dl>
+            </div>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Review({ goTo }) {
+    const results = readMCQResults(SKEY);
+    const entries = Object.entries(results);
+    const answered = entries.length;
+    const correct = entries.filter(([, v]) => v && v.ok).length;
+    const wrong = entries.filter(([, v]) => v && v.ok === false);
+    const bySection = {};
+    wrong.forEach(([k, v]) => { const sid = v.section || "?"; (bySection[sid] = bySection[sid] || []).push(k); });
+    const sectionLabel = (id) => { const s = SECTIONS.find(x => x.id === id); return s ? s.label : id; };
+    const retrySection = (sid) => {
+      (bySection[sid] || []).forEach(k => { try { localStorage.removeItem(k); } catch {} });
+      clearMCQResults(SKEY, (v) => (v.section || "?") === sid && v.ok === false);
+      if (SECTIONS.find(x => x.id === sid)) goTo(sid); else goTo("home");
+    };
+    return (
+      <div className="fade-in">
+        <section className="topic-head" style={{ marginBottom: 24 }}>
+          <div className="eyebrow">Check your understanding</div>
+          <h1>Review</h1>
+          <p className="lead">
+            {answered === 0
+              ? "You haven't answered any quiz questions yet. Work through the sections and your results will show up here."
+              : `You've answered ${answered} quiz question${answered === 1 ? "" : "s"} — ${correct} correct.`}
+          </p>
+          <div className="row" style={{ marginTop: 16 }}>
+            <button className="btn btn-ghost" onClick={() => goTo("home")}>← Back to overview</button>
+          </div>
+        </section>
+        {wrong.length === 0 ? (
+          answered > 0 && <Callout kind="success" title="Nothing to review">Nice work — you've answered every question correctly so far.</Callout>
+        ) : (
+          <>
+            <h2 style={{ marginBottom: 6 }}>Questions to revisit</h2>
+            <p className="muted">These are the sections where you got a question wrong. Retry resets those questions so you can have another go.</p>
+            <div className="col" style={{ marginTop: 14 }}>
+              {Object.keys(bySection).map(sid => (
+                <div key={sid} className="card between">
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{sectionLabel(sid)}</div>
+                    <div className="muted" style={{ fontSize: "0.86rem" }}>{bySection[sid].length} to revisit</div>
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => goTo(sid)}>Go to section</button>
+                    <button className="btn btn-accent btn-sm" onClick={() => retrySection(sid)}>Retry these <IconArrow size={14} sw={2.5}/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
   return function App() {
     const [progress, setProgress] = useLocalStorage(SKEY + ".progress", {});
     const [size, setSize] = useLocalStorage("jsci.size", "md");
@@ -406,6 +560,7 @@ function buildApp(CFG) {
     const [view, setView] = useState("home");
     const [setOpen, setSetOpen] = useState(false);
     const [glOpen, setGlOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     const [mob, setMob] = useState(false);
     const scroller = useRef(null);
 
@@ -444,16 +599,38 @@ function buildApp(CFG) {
       setProgress({});
       try {
         Object.keys(localStorage).forEach(k => {
-          if (k.indexOf(SKEY + ".mcq.") === 0 || k.indexOf(SKEY + ".wq.") === 0) localStorage.removeItem(k);
+          if (k.indexOf(SKEY + ".mcq.") === 0 || k.indexOf(SKEY + ".wq.") === 0 || k === SKEY + ".results") localStorage.removeItem(k);
         });
       } catch {}
+    };
+
+    // Carry progress between devices: export every key for this topic as a
+    // shareable code, and import it back. No account / server needed.
+    const exportProgress = () => {
+      try {
+        const data = {};
+        Object.keys(localStorage).forEach(k => { if (k.indexOf(SKEY) === 0) data[k] = localStorage.getItem(k); });
+        const code = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+        try { if (navigator.clipboard) navigator.clipboard.writeText(code); } catch {}
+        window.prompt("Your progress code (copied to clipboard). On another device, choose “Load progress code” and paste it.", code);
+      } catch (e) { alert("Sorry, a progress code could not be created on this device."); }
+    };
+    const importProgress = () => {
+      const code = window.prompt("Paste your progress code here:");
+      if (!code) return;
+      try {
+        const data = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+        Object.keys(data).forEach(k => { if (k.indexOf(SKEY) === 0) localStorage.setItem(k, data[k]); });
+        alert("Progress loaded. The page will now reload.");
+        location.reload();
+      } catch (e) { alert("That code didn't look right — please check you copied all of it and try again."); }
     };
 
     const goTo = (id) => { window.location.hash = id; setView(id); };
     const done = ALL_POINTS.filter(p => progress[p]).length;
     const pct = ALL_POINTS.length ? Math.round(100 * done / ALL_POINTS.length) : 0;
     const sec = SECTIONS.find(s => s.id === view);
-    const ctxVal = useMemo(() => ({ skey: SKEY }), []);
+    const ctxVal = useMemo(() => ({ skey: SKEY, section: view }), [view]);
 
     return (
       <TopicContext.Provider value={ctxVal}>
@@ -476,6 +653,7 @@ function buildApp(CFG) {
           </nav>
           <div className="topbar-actions">
             <div className="progress-chip" title={`${done} of ${ALL_POINTS.length} complete`}><div className="progress-ring"><Ring pct={pct}/></div><span className="progress-text">{pct}%</span></div>
+            <button className="icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search this topic" title="Search"><IconSearch/></button>
             {CFG.glossary && <button className="icon-btn" onClick={() => setGlOpen(true)} aria-label="Glossary" title="Glossary"><IconBook/></button>}
             <button className="icon-btn" data-settings-toggle onClick={() => setSetOpen(o => !o)} aria-label="Reading settings" aria-expanded={setOpen} title="Reading settings"><IconGear/></button>
             <button className="icon-btn mobile-only" onClick={() => setMob(m => !m)} aria-label="Menu"><IconMenu/></button>
@@ -485,6 +663,8 @@ function buildApp(CFG) {
                 <div className="settings-row"><label>Text size</label><div className="seg">{["sm","md","lg","xl"].map(s => <button key={s} className={size === s ? "on" : ""} onClick={() => setSize(s)} style={{ fontSize: { sm: 11, md: 13, lg: 15, xl: 17 }[s] }}>A</button>)}</div></div>
                 <div className="settings-row"><label>Readable font</label><div className="seg"><button className={!dys ? "on" : ""} onClick={() => setDys(false)}>Default</button><button className={dys ? "on" : ""} onClick={() => setDys(true)}>Hyperlegible</button></div></div>
                 <div className="settings-row"><label>Print this topic</label><button className="ghost-btn" onClick={() => window.print()}>Print</button></div>
+                <div className="settings-row"><label>Save progress code</label><button className="ghost-btn" onClick={exportProgress}>Copy</button></div>
+                <div className="settings-row"><label>Load progress code</label><button className="ghost-btn" onClick={importProgress}>Paste</button></div>
                 <div className="settings-row"><label>Reset progress</label><button className="danger-btn" onClick={clearProgress}>Reset</button></div>
               </div>
             )}
@@ -504,6 +684,7 @@ function buildApp(CFG) {
         <main className="main-scroll" ref={scroller}>
           <div className="content-wrap">
             {view === "home" && <Home progress={progress} goTo={goTo}/>}
+            {view === "review" && <Review goTo={goTo}/>}
             {sec && <div className="fade-in">{sec.render({ progress, setProgress })}</div>}
             {sec && <TopicNav id={view} goTo={goTo}/>}
             <footer className="site-footer">
@@ -514,6 +695,7 @@ function buildApp(CFG) {
         </main>
 
         {glOpen && <GlossaryModal onClose={() => setGlOpen(false)}/>}
+        {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} goTo={goTo}/>}
       </div>
       </TopicContext.Provider>
     );
