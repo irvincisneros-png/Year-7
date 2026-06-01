@@ -72,6 +72,144 @@ function clearMCQResults(skey, pred) {
   } catch (e) {}
 }
 
+/* ---------- completion stats + downloadable certificate ---------- */
+const BRANCH_ACCENT = {
+  biology: "#2e7d56", chemistry: "#1f6f8b", physics: "#b9770e",
+  "earth-space": "#5b53b0", earthspace: "#5b53b0", astronomy: "#5b53b0",
+  environmental: "#1f8b7d", change: "#7a3a9b", general: "#475569"
+};
+function readAttempts(qkey) {
+  try { return JSON.parse(localStorage.getItem(qkey + ".att") || "0") || 0; } catch (e) { return 0; }
+}
+function gatherTopicStats(skey, done, total) {
+  const results = readMCQResults(skey);
+  const qkeys = Object.keys(results);
+  let correct = 0, totalAttempts = 0, firstTry = 0;
+  qkeys.forEach(function (k) {
+    const ok = !!(results[k] && results[k].ok);
+    const att = readAttempts(k) || 1;
+    if (ok) correct++;
+    totalAttempts += att;
+    if (ok && att === 1) firstTry++;
+  });
+  const answered = qkeys.length;
+  return {
+    sectionsDone: done, sectionsTotal: total,
+    answered: answered, correct: correct, wrong: answered - correct,
+    totalAttempts: totalAttempts || answered, firstTry: firstTry,
+    accuracy: answered ? Math.round(100 * correct / answered) : 0,
+    firstTryPct: answered ? Math.round(100 * firstTry / answered) : 0
+  };
+}
+function certCode(name, skey, stats) {
+  const basis = String(name || "").trim().toLowerCase() + "|" + skey + "|" +
+    stats.sectionsDone + "/" + stats.sectionsTotal + "|" + stats.correct + "/" + stats.answered;
+  const h = hashStr(basis).toUpperCase();
+  let sum = 0; for (let i = 0; i < basis.length; i++) sum += basis.charCodeAt(i);
+  const cs = (sum % 36).toString(36).toUpperCase();
+  const abbr = String(skey || "whs").replace(/[^a-z0-9]/gi, "").slice(-4).toUpperCase();
+  return "WHS-" + abbr + "-" + h + cs;
+}
+function _rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function downloadCertificatePNG(opts) {
+  const W = 2000, H = 1414;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const accent = opts.accent || "#1f6f8b";
+  const ink = "#1f2933", soft = "#52606d", line = "#dce1e7";
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = ink; ctx.lineWidth = 10; ctx.strokeRect(40, 40, W - 80, H - 80);
+  ctx.strokeStyle = accent; ctx.lineWidth = 4; ctx.strokeRect(70, 70, W - 140, H - 140);
+  ctx.fillStyle = accent; ctx.fillRect(70, 70, W - 140, 16);
+  // diagonal repeating watermark (harder to alter cleanly)
+  ctx.save();
+  ctx.globalAlpha = 0.05; ctx.fillStyle = ink;
+  ctx.translate(W / 2, H / 2); ctx.rotate(-Math.PI / 6);
+  ctx.font = "bold 42px Helvetica, Arial, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var unit = "WOONONA HS · VERIFIED · " + opts.code + " · ";
+  var wmLine = ""; while (wmLine.length < 130) wmLine += unit;
+  for (var wy = -1500; wy <= 1500; wy += 120) ctx.fillText(wmLine, 0, wy);
+  ctx.restore();
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "center";
+  ctx.fillStyle = soft; ctx.font = "600 34px Helvetica, Arial, sans-serif";
+  ctx.fillText("WOONONA HIGH SCHOOL · JUNIOR SCIENCE", W / 2, 205);
+  ctx.fillStyle = ink; ctx.font = "bold 94px Georgia, 'Times New Roman', serif";
+  ctx.fillText("Certificate of Completion", W / 2, 305);
+  ctx.strokeStyle = accent; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 260, 350); ctx.lineTo(W / 2 + 260, 350); ctx.stroke();
+  ctx.fillStyle = soft; ctx.font = "italic 38px Georgia, serif";
+  ctx.fillText("This certifies that", W / 2, 445);
+  ctx.fillStyle = ink; ctx.font = "bold 88px Georgia, serif";
+  ctx.fillText(opts.name, W / 2, 545);
+  var nameW = Math.min(W - 320, Math.max(520, ctx.measureText(opts.name).width + 140));
+  ctx.strokeStyle = line; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W / 2 - nameW / 2, 580); ctx.lineTo(W / 2 + nameW / 2, 580); ctx.stroke();
+  ctx.fillStyle = soft; ctx.font = "36px Georgia, serif";
+  ctx.fillText("has successfully completed", W / 2, 650);
+  ctx.fillStyle = accent; ctx.font = "bold 58px Georgia, serif";
+  ctx.fillText(opts.topicTitle, W / 2, 722);
+  ctx.fillStyle = soft; ctx.font = "32px Helvetica, Arial, sans-serif";
+  ctx.fillText("Year " + opts.year + " Science" + (opts.strand ? " · " + opts.strand : ""), W / 2, 772);
+  var boxes = [
+    [opts.stats.sectionsDone + " / " + opts.stats.sectionsTotal, "Sections completed"],
+    [opts.stats.correct + " / " + opts.stats.answered, "Questions correct"],
+    [String(opts.stats.totalAttempts), "Total attempts"],
+    [opts.stats.firstTryPct + "%", "Right first try"]
+  ];
+  var bw = 360, gap = 28, bh = 175;
+  var bx0 = W / 2 - (boxes.length * bw + (boxes.length - 1) * gap) / 2, by = 835;
+  for (var i = 0; i < boxes.length; i++) {
+    var x = bx0 + i * (bw + gap);
+    ctx.fillStyle = "#f4f6f8"; _rr(ctx, x, by, bw, bh, 14); ctx.fill();
+    ctx.strokeStyle = line; ctx.lineWidth = 2; _rr(ctx, x, by, bw, bh, 14); ctx.stroke();
+    ctx.fillStyle = accent; ctx.font = "bold 62px Georgia, serif"; ctx.textAlign = "center";
+    ctx.fillText(boxes[i][0], x + bw / 2, by + 92);
+    ctx.fillStyle = soft; ctx.font = "27px Helvetica, Arial, sans-serif";
+    ctx.fillText(boxes[i][1], x + bw / 2, by + 140);
+  }
+  ctx.textAlign = "left"; ctx.fillStyle = ink; ctx.font = "bold 34px Helvetica, Arial, sans-serif";
+  ctx.fillText(opts.dateStr, 165, 1175);
+  ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(165, 1130); ctx.lineTo(585, 1130); ctx.stroke();
+  ctx.fillStyle = soft; ctx.font = "26px Helvetica, Arial, sans-serif"; ctx.fillText("Date of completion", 165, 1212);
+  ctx.textAlign = "right"; ctx.fillStyle = ink; ctx.font = "bold 30px 'Courier New', monospace";
+  ctx.fillText(opts.code, W - 165, 1175);
+  ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W - 585, 1130); ctx.lineTo(W - 165, 1130); ctx.stroke();
+  ctx.fillStyle = soft; ctx.font = "26px Helvetica, Arial, sans-serif"; ctx.fillText("Verification code", W - 165, 1212);
+  var sx = W / 2, sy = 1150, sr = 96;
+  ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fillStyle = accent; ctx.fill();
+  ctx.beginPath(); ctx.arc(sx, sy, sr - 13, 0, Math.PI * 2); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
+  ctx.font = "bold 27px Helvetica, Arial, sans-serif"; ctx.fillText("VERIFIED", sx, sy - 4);
+  ctx.font = "bold 19px Helvetica, Arial, sans-serif"; ctx.fillText("WHS SCIENCE", sx, sy + 26);
+  var fname = String(opts.topicTitle || "topic").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() + "-certificate.png";
+  function fallbackDownload() {
+    try {
+      var a = document.createElement("a"); a.href = canvas.toDataURL("image/png"); a.download = fname;
+      document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 1500);
+    } catch (e2) { alert("Sorry, the certificate could not be generated on this device."); }
+  }
+  try {
+    canvas.toBlob(function (blob) {
+      if (!blob) { fallbackDownload(); return; }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a"); a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { try { URL.revokeObjectURL(url); a.remove(); } catch (e) {} }, 1500);
+    }, "image/png");
+  } catch (e) { fallbackDownload(); }
+}
+
 /* ---------- icons ---------- */
 const Icon = ({ d, size = 18, fill = "none", sw = 2, children }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor"
@@ -87,21 +225,64 @@ const IconMenu = (p) => <Icon {...p}><line x1="4" y1="7" x2="20" y2="7"/><line x
 const IconSearch = (p) => <Icon {...p}><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></Icon>;
 
 /* ---------- content primitives ---------- */
+/* DotPoints auto-complete: a section that contains auto-markable questions
+   (MCQs) ticks itself once every one of them is answered correctly; a section
+   with no such questions ticks once it has been scrolled into view. Students
+   can still tick/untick the circle by hand. This is what fills the ring — so
+   simply working through the content now advances progress (it used to require
+   a manual click on every section, which left the bar stuck at 0%). */
+const DotPointContext = React.createContext(null);
+
 function DotPoint({ id, title, children, progress, setProgress }) {
   const done = !!(progress && progress[id]);
   const toggle = () => setProgress(p => ({ ...p, [id]: !p[id] }));
+  const reg = useRef({});            // qkey -> true | false | null (null = present but unanswered)
+  const [regTick, setRegTick] = useState(0);
+  const sectionRef = useRef(null);
+
+  const register = useCallback((qkey, ok) => { reg.current[qkey] = ok; setRegTick(t => t + 1); }, []);
+  const unregister = useCallback((qkey) => { delete reg.current[qkey]; setRegTick(t => t + 1); }, []);
+  const ctx = useMemo(() => ({ register, unregister }), [register, unregister]);
+
+  // auto-mark once every registered question is answered correctly
+  useEffect(() => {
+    const vals = Object.values(reg.current);
+    if (vals.length && vals.every(v => v === true)) {
+      setProgress(p => (p[id] ? p : { ...p, [id]: true }));
+    }
+  }, [regTick, id, setProgress]);
+
+  // sections with no auto-markable questions: mark done once scrolled into view
+  useEffect(() => {
+    let io = null;
+    const t = setTimeout(() => {
+      if (Object.keys(reg.current).length > 0) return;   // has questions: handled above
+      const el = sectionRef.current;
+      if (!el) return;
+      try {
+        io = new IntersectionObserver((entries) => {
+          if (entries.some(e => e.isIntersecting)) { setProgress(p => (p[id] ? p : { ...p, [id]: true })); io.disconnect(); }
+        }, { threshold: 0.35 });
+        io.observe(el);
+      } catch (e) { setProgress(p => (p[id] ? p : { ...p, [id]: true })); }
+    }, 700);
+    return () => { clearTimeout(t); try { io && io.disconnect(); } catch (e) {} };
+  }, [id, setProgress]);
+
   return (
-    <section className="dot-point" id={"dp-" + id}>
-      <header className="dp-header">
-        <span className="dp-id">{id}</span>
-        <h3 className="dp-title">{title}</h3>
-        <button className={"dp-check" + (done ? " done" : "")} onClick={toggle}
-          aria-label={done ? "Mark as not done" : "Mark as done"} title={done ? "Done" : "Mark as done"}>
-          {done && <IconCheck size={16} sw={3}/>}
-        </button>
-      </header>
-      <div className="dp-body">{children}</div>
-    </section>
+    <DotPointContext.Provider value={ctx}>
+      <section className="dot-point" id={"dp-" + id} ref={sectionRef}>
+        <header className="dp-header">
+          <span className="dp-id">{id}</span>
+          <h3 className="dp-title">{title}</h3>
+          <button className={"dp-check" + (done ? " done" : "")} onClick={toggle}
+            aria-label={done ? "Mark as not done" : "Mark as done"} title={done ? "Done" : "Mark as done"}>
+            {done && <IconCheck size={16} sw={3}/>}
+          </button>
+        </header>
+        <div className="dp-body">{children}</div>
+      </section>
+    </DotPointContext.Provider>
   );
 }
 
@@ -143,11 +324,21 @@ function Term({ children, def }) {
 
 function MCQ({ num, question, options, correct, explain }) {
   const { skey, section } = useContext(TopicContext);
+  const dp = useContext(DotPointContext);
   const qkey = answerKey(skey, "mcq", num, question);
   // the chosen answer is saved per question so it survives navigation / refresh
   const [chosen, setChosen] = useLocalStorage(qkey, null);
+  // cumulative attempts (kept across "Try again") so the certificate can show
+  // how many tries it took to get everything right
+  const [attempts, setAttempts] = useLocalStorage(qkey + ".att", 0);
   const locked = chosen !== null;
-  const choose = (i) => { setChosen(i); recordMCQResult(skey, qkey, i === correct, section); };
+  // tell the surrounding section whether this question is answered correctly
+  useEffect(() => {
+    if (!dp) return;
+    dp.register(qkey, chosen === null ? null : (chosen === correct));
+    return () => dp.unregister(qkey);
+  }, [dp, qkey, chosen, correct]);
+  const choose = (i) => { setChosen(i); setAttempts(a => (a || 0) + 1); recordMCQResult(skey, qkey, i === correct, section); };
   const tryAgain = () => { setChosen(null); clearMCQResults(skey, function (_, qk) { return qk === qkey; }); };
   return (
     <div className="quiz-card">
@@ -314,6 +505,42 @@ function buildApp(CFG) {
   const ALL_POINTS = SECTIONS.flatMap(s => s.points || []);
   const SKEY = CFG.storageKey;
 
+  function CompletionPanel({ progress }) {
+    const [name, setName] = useLocalStorage("jsci.studentname", "");
+    const done = ALL_POINTS.filter(p => progress[p]).length;
+    const total = ALL_POINTS.length;
+    if (!total || done < total) return null;          // only when the topic is 100% complete
+    const stats = gatherTopicStats(SKEY, done, total);
+    const make = () => {
+      const nm = (name || "").trim();
+      if (!nm) { alert("Please type your name so it can appear on the certificate."); return; }
+      const now = new Date();
+      const dateStr = now.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+      const accent = BRANCH_ACCENT[CFG.branch] || BRANCH_ACCENT.general;
+      downloadCertificatePNG({
+        name: nm, code: certCode(nm, SKEY, stats), stats: stats,
+        topicTitle: CFG.topicTitle, year: CFG.year, strand: CFG.strand, dateStr: dateStr, accent: accent
+      });
+    };
+    return (
+      <section style={{ marginTop: 30 }}>
+        <div className="card" style={{ borderLeft: "5px solid var(--accent)" }}>
+          <div className="row" style={{ alignItems: "center", gap: 14 }}>
+            <div style={{ fontSize: 42, lineHeight: 1 }}>🎓</div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "1.3rem" }}>Topic complete — get your certificate</h3>
+              <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.92rem" }}>You've finished all {total} sections. Download a certificate (PNG image, watermarked, with a verification code) as proof of work — it shows your quiz score and how many attempts it took.</p>
+            </div>
+          </div>
+          <div className="row" style={{ marginTop: 14, gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <input className="gloss-search" style={{ maxWidth: 320, margin: 0 }} placeholder="Type your full name" value={name} onChange={e => setName(e.target.value)} aria-label="Your name for the certificate"/>
+            <button className="btn btn-accent" onClick={make}>Download certificate (PNG)</button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   function Home({ progress, goTo }) {
     const done = ALL_POINTS.filter(p => progress[p]).length;
     const pct = ALL_POINTS.length ? Math.round(100 * done / ALL_POINTS.length) : 0;
@@ -381,13 +608,15 @@ function buildApp(CFG) {
           );
         })()}
 
+        <CompletionPanel progress={progress}/>
+
         <section style={{ marginTop: 32 }}>
           <h2 style={{ marginBottom: 6 }}>How to use this site</h2>
           <p className="muted">Read a little, play a little, then check yourself. Everything saves automatically in this browser.</p>
           <div className="grid-3" style={{ marginTop: 14 }}>
             <div className="card"><h4>1 · Explore</h4><p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>Open any section from the tabs at the top. Read the short explanations and hover highlighted words for definitions.</p></div>
             <div className="card"><h4>2 · Play</h4><p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>Every section has simulations and models you can change. Move sliders, drag things, watch what happens.</p></div>
-            <div className="card"><h4>3 · Check + tick off</h4><p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>Answer the questions for instant feedback, then tick the circle on each section to fill your progress ring.</p></div>
+            <div className="card"><h4>3 · Check as you go</h4><p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>Answer the questions for instant feedback — your progress ring fills automatically as you work through each section.</p></div>
           </div>
         </section>
       </div>
@@ -604,6 +833,7 @@ function buildApp(CFG) {
         Object.keys(localStorage).forEach(k => {
           if (k.indexOf(SKEY + ".mcq.") === 0 || k.indexOf(SKEY + ".wq.") === 0 || k === SKEY + ".results") localStorage.removeItem(k);
         });
+        // .att attempt counters share the .mcq key prefix, so they are cleared above
       } catch {}
     };
 

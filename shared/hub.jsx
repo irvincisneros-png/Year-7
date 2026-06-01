@@ -119,7 +119,7 @@ function YearHub(CFG) {
             <div className="hub-feature-grid">
               <div className="hub-feature"><div className="fi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div><h4>See it your way</h4><p>Switch to dark mode, bump up the text size, or turn on a high-readability font from the gear menu.</p></div>
               <div className="hub-feature"><div className="fi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><h4>Learn by doing</h4><p>Simulations, sliders and models you can tinker with turn every idea into something you can poke at.</p></div>
-              <div className="hub-feature"><div className="fi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h4>Check as you go</h4><p>Instant-feedback quizzes, model answers, and a progress ring that fills as you tick off each section.</p></div>
+              <div className="hub-feature"><div className="fi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h4>Check as you go</h4><p>Instant-feedback quizzes, model answers, and a progress ring that fills automatically as you work through each section.</p></div>
             </div>
           </section>
 
