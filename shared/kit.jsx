@@ -252,21 +252,35 @@ function DotPoint({ id, title, children, progress, setProgress }) {
     }
   }, [regTick, id, setProgress]);
 
-  // sections with no auto-markable questions: mark done once scrolled into view
+  // sections with no auto-markable questions: mark done once scrolled through.
+  // Uses scroll position + getBoundingClientRect rather than IntersectionObserver
+  // so it works for sections TALLER than the viewport and in environments where
+  // innerHeight is unreliable (falls back to a sane viewport height).
   useEffect(() => {
-    let io = null;
-    const t = setTimeout(() => {
-      if (Object.keys(reg.current).length > 0) return;   // has questions: handled above
+    // Poll the section's on-screen position on a timer rather than listening for
+    // scroll events. A timer is reliable everywhere (scroll events can be missed
+    // in some embedded/headless contexts, and requestAnimationFrame is paused in
+    // background tabs); the check itself is a cheap getBoundingClientRect.
+    let done2 = false;
+    const check = () => {
+      if (done2) return true;
+      if (Object.keys(reg.current).length > 0) return true;  // has auto-markable questions: handled above
       const el = sectionRef.current;
-      if (!el) return;
-      try {
-        io = new IntersectionObserver((entries) => {
-          if (entries.some(e => e.isIntersecting)) { setProgress(p => (p[id] ? p : { ...p, [id]: true })); io.disconnect(); }
-        }, { threshold: 0.35 });
-        io.observe(el);
-      } catch (e) { setProgress(p => (p[id] ? p : { ...p, [id]: true })); }
-    }, 700);
-    return () => { clearTimeout(t); try { io && io.disconnect(); } catch (e) {} };
+      if (!el) return false;
+      const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+      const top = el.getBoundingClientRect().top;
+      // fire once the section's top has scrolled up past 55% of the screen,
+      // i.e. the student has read down to/through it
+      if (top < vh * 0.55) {
+        done2 = true;
+        setProgress(p => (p[id] ? p : { ...p, [id]: true }));
+        return true;
+      }
+      return false;
+    };
+    const iv = setInterval(() => { if (check()) clearInterval(iv); }, 400);
+    const t = setTimeout(check, 600);   // also check shortly after mount
+    return () => { clearInterval(iv); clearTimeout(t); };
   }, [id, setProgress]);
 
   return (
