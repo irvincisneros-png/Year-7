@@ -227,7 +227,8 @@ const IconSearch = (p) => <Icon {...p}><circle cx="11" cy="11" r="7"/><line x1="
 /* ---------- content primitives ---------- */
 /* DotPoints auto-complete: a section that contains auto-markable questions
    (MCQs) ticks itself once every one of them is answered correctly; a section
-   with no such questions ticks once it has been scrolled into view. Students
+   with no such questions ticks once it has been on screen for about 6 seconds
+   of reading (so fast scrolling or a tall monitor does not tick it). Students
    can still tick/untick the circle by hand. This is what fills the ring — so
    simply working through the content now advances progress (it used to require
    a manual click on every section, which left the bar stuck at 0%). */
@@ -262,16 +263,20 @@ function DotPoint({ id, title, children, progress, setProgress }) {
     // in some embedded/headless contexts, and requestAnimationFrame is paused in
     // background tabs); the check itself is a cheap getBoundingClientRect.
     let done2 = false;
+    let seenMs = 0;                 // time the section has spent on screen
+    const NEED_MS = 6000;
     const check = () => {
       if (done2) return true;
       if (Object.keys(reg.current).length > 0) return true;  // has auto-markable questions: handled above
       const el = sectionRef.current;
       if (!el) return false;
       const vh = window.innerHeight || document.documentElement.clientHeight || 800;
-      const top = el.getBoundingClientRect().top;
-      // fire once the section's top has scrolled up past 55% of the screen,
-      // i.e. the student has read down to/through it
-      if (top < vh * 0.55) {
+      const r = el.getBoundingClientRect();
+      // count time while the section is in the reading zone (its top above 55%
+      // of the screen and part of it still visible); ignore hidden tabs
+      const visible = r.top < vh * 0.55 && r.bottom > vh * 0.15 && !document.hidden;
+      if (visible) seenMs += 400;
+      if (seenMs >= NEED_MS) {
         done2 = true;
         setProgress(p => (p[id] ? p : { ...p, [id]: true }));
         return true;
@@ -279,8 +284,7 @@ function DotPoint({ id, title, children, progress, setProgress }) {
       return false;
     };
     const iv = setInterval(() => { if (check()) clearInterval(iv); }, 400);
-    const t = setTimeout(check, 600);   // also check shortly after mount
-    return () => { clearInterval(iv); clearTimeout(t); };
+    return () => { clearInterval(iv); };
   }, [id, setProgress]);
 
   return (
@@ -541,6 +545,14 @@ function buildApp(CFG) {
     const total = ALL_POINTS.length;
     if (!total || done < total) return null;          // only when the topic is 100% complete
     const stats = gatherTopicStats(SKEY, done, total);
+    if (!stats.answered) return (
+      <section style={{ marginTop: 30 }}>
+        <div className="card" style={{ borderLeft: "5px solid var(--accent)" }}>
+          <h3 style={{ margin: 0, fontSize: "1.2rem" }}>Almost there — answer the quizzes</h3>
+          <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.92rem" }}>You've been through every section. Answer the quiz questions to unlock your certificate.</p>
+        </div>
+      </section>
+    );
     const make = () => {
       const nm = (name || "").trim();
       if (!nm) { alert("Please type your name so it can appear on the certificate."); return; }
