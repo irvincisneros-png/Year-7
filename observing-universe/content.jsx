@@ -46,7 +46,7 @@ function InquiryCycleAnim() {
                   fontSize={9} fill={isActive ? "var(--accent-deep)" : "var(--ink-muted)"} fontWeight={isActive ? "700" : "400"}>
                   {s.label}
                 </text>
-                {i < steps.length - 1 && (() => {
+                {(() => {
                   const a2 = ((i + 1) / steps.length) * 2 * Math.PI - Math.PI / 2;
                   const x2 = cx + r * Math.cos(a2);
                   const y2 = cy + r * Math.sin(a2);
@@ -113,7 +113,7 @@ function InstrumentSim() {
   const displayed = type === "analog" ? analogRead : digitalRead;
   const precision = type === "analog" ? "0.5 degrees C" : "0.1 degrees C";
   return (
-    <Interactive title="Analog vs digital thermometer" subtitle="Switch between instruments and see how precision changes." takeaway="Digital instruments give a smaller reading error and finer precision than analog instruments reading the same temperature.">
+    <Interactive title="Analog vs digital thermometer" subtitle="Switch between instruments and see how precision changes." takeaway="Digital instruments usually display finer precision than analog scales, which can reduce reading error when measuring the same temperature.">
       <div className="ctrl-row">
         <SegToggle
           options={[{ value: "analog", label: "Analog" }, { value: "digital", label: "Digital" }]}
@@ -151,7 +151,7 @@ function InstrumentSim() {
         <Stat value={Math.abs(displayed - trueVal).toFixed(1)} label="Error from true (deg C)" />
       </div>
       <p className="muted" style={{ marginBottom: 0, marginTop: 8 }}>
-        True temperature is {trueVal} degrees C. Digital instruments give smaller errors and better precision.
+        True temperature is {trueVal} degrees C. In this example, the digital thermometer has the smaller error and finer precision.
       </p>
     </Interactive>
   );
@@ -208,7 +208,8 @@ function ObsInferPred() {
               borderRadius: 10, padding: "10px 14px", fontSize: 14, cursor: "pointer",
               filter: revealed[ri] ? "none" : "blur(5px)", transition: "filter 0.4s",
               userSelect: revealed[ri] ? "auto" : "none" }}
-              onClick={() => reveal(ri)}>
+              role="button" tabIndex={0} onClick={() => reveal(ri)}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); reveal(ri); } }}>
               {revealed[ri] ? row.val : "Tap to reveal"}
             </div>
           )}
@@ -303,8 +304,8 @@ function DayNightSim() {
   const latRad = (lat * Math.PI) / 180;
   const dotAngle = (rotation * Math.PI) / 180 + lightAngle + Math.PI;
   const dotX = cx + r * Math.cos(dotAngle) * Math.cos(latRad);
-  const dotY = cy + r * (Math.sin(dotAngle) * Math.cos(latRad) * 0.3 + Math.sin(latRad) * 0.95);
-  const isDay = Math.cos(dotAngle - lightAngle) > 0;
+  const dotY = cy - r * (Math.sin(latRad) * 0.95) + r * Math.sin(dotAngle) * Math.cos(latRad) * 0.3;
+  const isDay = Math.cos(dotAngle - lightAngle) < 0; /* lightAngle points from the Sun to Earth, so the day side faces the opposite way */
   return (
     <Interactive title="Day and night rotation" subtitle="Earth spins once every 24 hours. Watch your city move through day and night." takeaway="Day and night are caused by Earth spinning on its axis every 24 hours, so one half faces the Sun while the other half is in darkness.">
       <div className="ctrl-row">
@@ -326,7 +327,7 @@ function DayNightSim() {
         <text x={sunX} y={sunY + 38} textAnchor="middle" fontSize={10} fill="#f7b731" fontWeight="700">Sun</text>
         <line x1={sunX - 28} y1={sunY} x2={cx + r} y2={cy} stroke="#ffe06055" strokeWidth={70} />
         <circle cx={cx} cy={cy} r={r} fill="#1a3a5c" />
-        <rect x={cx - r} y={cy - r} width={r} height={r * 2} fill="#4a90d9" clipPath="url(#earthClip)" opacity={0.9} />
+        <rect x={cx} y={cy - r} width={r} height={r * 2} fill="#4a90d9" clipPath="url(#earthClip)" opacity={0.9} />
         <ellipse cx={cx} cy={cy} rx={r} ry={r * 0.35} fill="none" stroke="var(--accent-mid)" strokeWidth={1} strokeDasharray="3,3" opacity={0.5}/>
         <circle cx={cx} cy={cy - r} r={3} fill="var(--accent-mid)" opacity={0.7}/>
         <circle cx={cx} cy={cy + r} r={3} fill="var(--accent-mid)" opacity={0.7}/>
@@ -338,7 +339,7 @@ function DayNightSim() {
         <text x={cx + 20} y={cy + r + 18} fontSize={9} fill="#4a90d9" textAnchor="middle">Day side</text>
       </svg>
       <div className="stat-readout">
-        <Stat value={isDay ? "DAY" : "NIGHT"} label={`Your location (${lat > 0 ? lat + "N" : Math.abs(lat) + "S"})`} />
+        <Stat value={isDay ? "DAY" : "NIGHT"} label={`Your location (${lat > 0 ? lat + "N" : lat < 0 ? Math.abs(lat) + "S" : "equator"})`} />
         <Stat value="24 h" label="One full rotation" />
       </div>
     </Interactive>
@@ -361,7 +362,7 @@ function SeasonsSim() {
     { x: 250, y: 120 }, { x: 120, y: 210 }, { x: 0, y: 120 }, { x: 120, y: 30 },
   ];
   const ep = earthPositions[pos];
-  const tiltDir = [1, 0, -1, 0][pos];
+  const tiltDir = -1; /* Earth's axis points the same way in space all year */
   return (
     <Interactive title="Why do we have seasons?" subtitle="Move Earth around its orbit and watch how the tilt affects sunlight." takeaway="Seasons are caused by Earth's 23.5-degree axial tilt, which means each hemisphere takes turns leaning towards the Sun and receiving more direct sunlight — not by how close Earth is to the Sun.">
       <div className="ctrl-row">
@@ -371,7 +372,7 @@ function SeasonsSim() {
           onChange={v => setPos(Number(v))}
         />
       </div>
-      <svg viewBox="0 0 280 240" width="100%" style={{ maxWidth: 380, display: "block", margin: "8px auto" }}>
+      <svg viewBox="-12 0 304 262" width="100%" style={{ maxWidth: 380, display: "block", margin: "8px auto" }}>
         <circle cx={140} cy={120} r={28} fill="url(#sunGlow2)" />
         <text x={140} y={155} textAnchor="middle" fontSize={10} fill="#f7b731" fontWeight="700">Sun</text>
         <defs>
@@ -419,25 +420,27 @@ function MoonPhaseSim() {
   const [day, setDay] = useState(0);
   const phases = [
     { name: "New Moon", day: 0, lit: 0, side: "none" },
-    { name: "Waxing Crescent", day: 3.7, lit: 0.25, side: "right" },
-    { name: "First Quarter", day: 7.4, lit: 0.5, side: "right" },
-    { name: "Waxing Gibbous", day: 11.1, lit: 0.75, side: "right" },
+    { name: "Waxing Crescent", day: 3.7, lit: 0.25, side: "left" },
+    { name: "First Quarter", day: 7.4, lit: 0.5, side: "left" },
+    { name: "Waxing Gibbous", day: 11.1, lit: 0.75, side: "left" },
     { name: "Full Moon", day: 14.8, lit: 1, side: "full" },
-    { name: "Waning Gibbous", day: 18.5, lit: 0.75, side: "left" },
-    { name: "Last Quarter", day: 22.1, lit: 0.5, side: "left" },
-    { name: "Waning Crescent", day: 25.8, lit: 0.25, side: "left" },
+    { name: "Waning Gibbous", day: 18.5, lit: 0.75, side: "right" },
+    { name: "Last Quarter", day: 22.1, lit: 0.5, side: "right" },
+    { name: "Waning Crescent", day: 25.8, lit: 0.25, side: "right" },
   ];
-  const phase = phases.reduce((best, p) => Math.abs(p.day - day) < Math.abs(best.day - day) ? p : best, phases[0]);
+  const cycDist = p => { const d = Math.abs(p.day - day); return Math.min(d, 29.5 - d); };
+  const phase = phases.reduce((best, p) => cycDist(p) < cycDist(best) ? p : best, phases[0]);
   const moonAngle = (day / 29.5) * 2 * Math.PI;
-  const cx = 140, cy = 100, orbitR = 70;
-  const moonX = cx + orbitR * Math.sin(moonAngle);
-  const moonY = cy - orbitR * Math.cos(moonAngle) * 0.38;
+  const cx = 150, cy = 100, orbitR = 70, sunX = 30;
+  /* new Moon sits between Earth and the Sun (Sun on the left); full Moon is on the far side */
+  const moonX = cx - orbitR * Math.cos(moonAngle);
+  const moonY = cy + orbitR * Math.sin(moonAngle) * 0.38;
   function MoonFace({ x, y, r, litFrac, side }) {
     if (side === "none") return <circle cx={x} cy={y} r={r} fill="#333" stroke="#666" strokeWidth={1}/>;
     if (side === "full") return <circle cx={x} cy={y} r={r} fill="#e8e0c8" stroke="#ccc" strokeWidth={1}/>;
     const lit = Math.max(0.05, litFrac);
     const rx2 = r * Math.abs(2 * lit - 1);
-    const sweep = lit < 0.5 ? (side === "right" ? 1 : 0) : (side === "right" ? 0 : 1);
+    const sweep = lit < 0.5 ? (side === "right" ? 0 : 1) : (side === "right" ? 1 : 0);
     const d = `M ${x} ${y - r} A ${r} ${r} 0 1 ${side === "right" ? 1 : 0} ${x} ${y + r} A ${rx2} ${r} 0 1 ${sweep} ${x} ${y - r} Z`;
     return (
       <g>
@@ -447,17 +450,16 @@ function MoonPhaseSim() {
     );
   }
   return (
-    <Interactive title="Moon phase visualiser" subtitle="Drag the slider through the lunar month and watch the Moon's appearance change." takeaway="The Moon's phases are caused by the changing angle between the Sun, Moon, and Earth as the Moon orbits Earth roughly every 29.5 days, so we see different amounts of the sunlit half.">
+    <Interactive title="Moon phase visualiser" subtitle="Drag the slider through the lunar month and watch the Moon's appearance change. Phases are drawn as seen from Australia." takeaway="The Moon's phases are caused by the changing angle between the Sun, Moon, and Earth as the Moon orbits Earth, so we see different amounts of the sunlit half. The cycle of phases repeats roughly every 29.5 days.">
       <Slider label="Day in lunar cycle" min={0} max={29} step={0.5} value={day} onChange={setDay} unit=" days" />
       <svg viewBox="0 0 280 220" width="100%" style={{ maxWidth: 380, display: "block", margin: "0 auto" }}>
-        <circle cx={cx} cy={cy} r={18} fill="#f7b731" />
-        <text x={cx} y={cy + 28} textAnchor="middle" fontSize={9} fill="#f7b731" fontWeight="700">Sun</text>
+        <circle cx={sunX} cy={cy} r={18} fill="#f7b731" />
+        <text x={sunX} y={cy + 32} textAnchor="middle" fontSize={9} fill="#f7b731" fontWeight="700">Sun</text>
         <ellipse cx={cx} cy={cy} rx={orbitR} ry={orbitR * 0.38} fill="none" stroke="var(--accent-mid)" strokeWidth={1} strokeDasharray="3,3"/>
         <circle cx={cx} cy={cy} r={9} fill="#4a90d9"/>
         <text x={cx + 14} y={cy + 4} fontSize={9} fill="#4a90d9">Earth</text>
         <MoonFace x={moonX} y={moonY} r={11} litFrac={phase.lit} side={phase.side}/>
         <text x={moonX} y={moonY - 18} textAnchor="middle" fontSize={8} fill="var(--ink)">{phase.name}</text>
-        <line x1={cx + 18} y1={cy} x2={cx + 80} y2={cy} stroke="#f7b73133" strokeWidth={40}/>
         <text x={140} y={190} textAnchor="middle" fontSize={10} fill="var(--ink-muted)">Lunar cycle: approximately 29.5 days</text>
         <text x={140} y={205} textAnchor="middle" fontSize={9} fill="var(--accent-deep)">Day {day.toFixed(1)}: {phase.name}</text>
       </svg>
@@ -482,8 +484,8 @@ function EclipseAligner() {
   const cx = 180, cy = 100;
   const sunX = 30, sunY = 100;
   const moonX = cx + moonOffset - 10;
-  const moonY = 100 + (moonOffset < 5 ? 0 : moonOffset > 15 ? 0 : (moonOffset - 10) * 3);
-  const aligned = Math.abs(moonOffset - 0) < 8 || Math.abs(moonOffset - 30) < 8;
+  /* In line with the Sun and Earth for a solar (<= 6) or lunar (>= 26) eclipse; otherwise the Moon passes above the line (tilted orbit) */
+  const moonY = (moonOffset <= 6 || moonOffset >= 26) ? 100 : 100 - 50 * Math.sqrt(Math.sin(Math.PI * (moonOffset - 6) / 20));
   const solarEclipse = moonOffset < 6;
   const lunarEclipse = moonOffset > 26;
   return (
@@ -510,10 +512,10 @@ function EclipseAligner() {
         <circle cx={moonX} cy={moonY} r={10} fill={solarEclipse || lunarEclipse ? "#222" : "#ccc"} stroke="#999" strokeWidth={1.5}/>
         <text x={moonX} y={moonY - 17} textAnchor="middle" fontSize={8} fill="var(--ink-muted)">Moon</text>
         {solarEclipse && (
-          <text x={cx - 20} y={170} textAnchor="middle" fontSize={10} fill="var(--ink)" fontWeight="700">Solar eclipse! Moon blocks sunlight from Earth.</text>
+          <text x={170} y={170} textAnchor="middle" fontSize={10} fill="var(--ink)" fontWeight="700">Solar eclipse! Moon blocks sunlight from Earth.</text>
         )}
         {lunarEclipse && (
-          <text x={cx + 80} y={170} textAnchor="middle" fontSize={10} fill="var(--ink)" fontWeight="700">Lunar eclipse! Earth blocks sunlight from Moon.</text>
+          <text x={170} y={170} textAnchor="middle" fontSize={10} fill="var(--ink)" fontWeight="700">Lunar eclipse! Earth blocks sunlight from Moon.</text>
         )}
         {!solarEclipse && !lunarEclipse && (
           <text x={cx} y={170} textAnchor="middle" fontSize={10} fill="var(--ink-muted)">No eclipse. The Moon is tilted off the shadow line.</text>
@@ -588,7 +590,7 @@ function TelescopeCompare() {
     jwst: { name: "James Webb Space Telescope", mirror: "6.5 m", wavelength: "Primarily infrared", location: "1.5 million km from Earth (L2)", limit: "~mag 34 (infrared)", discovery: "Earliest galaxies, exoplanet atmospheres, hidden star birth", color: "#6c2a8a" },
   };
   const sc = scopes[selected];
-  const mirrorSizes = { eye: 5, hubble: 40, jwst: 90 };
+  const mirrorSizes = { eye: 2, hubble: 20, jwst: 54 };
   return (
     <Interactive title="Telescope capability explorer" subtitle="Compare what each tool can see. Select an instrument below." takeaway="Larger mirrors and the ability to detect infrared light let the JWST see far fainter and more distant objects than either the unaided eye or the Hubble Space Telescope.">
       <div className="ctrl-row" style={{ marginBottom: 12 }}>
@@ -602,7 +604,7 @@ function TelescopeCompare() {
         <svg viewBox="0 0 120 120" width="100" height="100">
           <circle cx={60} cy={60} r={mirrorSizes[selected]} fill={sc.color} opacity={0.7}/>
           <circle cx={60} cy={60} r={mirrorSizes[selected]} fill="none" stroke={sc.color} strokeWidth={2}/>
-          <text x={60} y={65} textAnchor="middle" fontSize={10} fill="#fff" fontWeight="700">{sc.mirror}</text>
+          <text x={60} y={65} textAnchor="middle" fontSize={10} fill="var(--ink)" fontWeight="700">{sc.mirror}</text>
           <text x={60} y={108} textAnchor="middle" fontSize={9} fill="var(--ink-muted)">Mirror size</text>
         </svg>
         <div style={{ flex: 1, minWidth: 180 }}>
@@ -742,8 +744,8 @@ function Section2({ progress, setProgress }) {
       </DotPoint>
 
       <DotPoint id="1.2.3" title="Senses vs instruments" progress={progress} setProgress={setProgress}>
-        <p>Your senses are always with you and need no power, but they have important limits. Senses cannot detect <Term def="Radiation outside the visible spectrum, such as ultraviolet, infrared, and radio waves.">electromagnetic radiation</Term> outside the visible range. They give no precise number. And two people can look at the same star and disagree on its colour or brightness because perception varies from person to person.</p>
-        <p>Scientific instruments produce <Term def="Giving the same result each time when measuring the same quantity under the same conditions.">reliable</Term> and objective measurements. A photometer can measure a star's brightness to within 0.001 magnitudes. No human eye could do that. In astronomy, digital detectors replaced photographic film in the 1980s because they are enormously more sensitive and produce consistent, quantitative data.</p>
+        <p>Your senses are always with you and need no power, but they have important limits. Senses cannot detect <Term def="Waves of energy that include radio waves, infrared, visible light and ultraviolet. Human senses can only detect the visible part.">electromagnetic radiation</Term> outside the visible range. They give no precise number. And two people can look at the same star and disagree on its colour or brightness because perception varies from person to person.</p>
+        <p>Scientific instruments produce <Term def="Giving the same result each time when measuring the same quantity under the same conditions.">reliable</Term> and objective measurements. A photometer can measure a star's brightness to within 0.001 magnitudes. No human eye could do that. In astronomy, digital detectors began replacing photographic film in the 1980s because they are enormously more sensitive and produce consistent, quantitative data.</p>
         <Callout kind="key" title="Reliability means consistency">
           An instrument is reliable if it gives the same result every time you measure the same thing under the same conditions. Human observations are less reliable because mood, fatigue, and expectations affect what we notice.
         </Callout>
@@ -853,7 +855,7 @@ function Section3({ progress, setProgress }) {
       <Figure src="img/earth-sun.png" caption="Earth orbits the Sun with its axis tilted — one half in daylight, the other in night." />
       <DotPoint id="1.3.1" title="Historical solar system models" progress={progress} setProgress={setProgress}>
         <p>For over 1,400 years, almost everyone believed Earth sat at the centre of the universe. This was the <Term def="The Earth-centred model of the solar system, developed by Ptolemy around 150 CE.">geocentric model</Term>, developed by the Greek philosopher Ptolemy. It matched everyday experience (the sky looks like it moves around a stationary Earth) and was supported by the Church. But it needed very complicated additions called <Term def="Small circular paths added to orbits in the geocentric model to explain why planets sometimes appear to move backwards in the sky.">epicycles</Term> to explain why planets occasionally appear to move backwards.</p>
-        <p>In 1543, the Polish astronomer <Term def="The astronomer who proposed the first widely accepted Sun-centred model of the solar system in 1543.">Nicolaus Copernicus</Term> proposed the <Term def="The Sun-centred model of the solar system.">heliocentric model</Term>, placing the Sun at the centre. Galileo used a telescope in 1609 to find moons orbiting Jupiter (proving not everything circles Earth) and phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: <Term def="The force of attraction between any two objects that have mass.">gravity</Term>.</p>
+        <p>In 1543, the Polish astronomer <Term def="The astronomer who proposed a Sun-centred model of the solar system in 1543, which later became widely accepted.">Nicolaus Copernicus</Term> proposed the <Term def="The Sun-centred model of the solar system.">heliocentric model</Term>, placing the Sun at the centre. Galileo used a telescope in 1609 to find moons orbiting Jupiter (proving not everything circles Earth) and phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: <Term def="The force of attraction between any two objects that have mass.">gravity</Term>.</p>
         <SolarModelSim />
         <Callout kind="key" title="Science changes with evidence">
           The geocentric model was replaced not because someone decided to, but because new observations (telescopes) revealed facts the old model could not explain. This is how science is supposed to work.
@@ -864,7 +866,7 @@ function Section3({ progress, setProgress }) {
       </DotPoint>
 
       <DotPoint id="1.3.2" title="Day, night, seasons, and tides" progress={progress} setProgress={setProgress}>
-        <p>Most of the most familiar sky events come from the relative positions and movements of the Sun, Earth, and Moon. <Term def="The daily cycle of light and darkness caused by Earth rotating on its axis once every approximately 24 hours.">Day and night</Term> happen because Earth spins on its axis every 24 hours. The half facing the Sun has day; the other half has night.</p>
+        <p>Most familiar sky events come from the relative positions and movements of the Sun, Earth, and Moon. <Term def="The daily cycle of light and darkness caused by Earth rotating on its axis once every approximately 24 hours.">Day and night</Term> happen because Earth spins on its axis every 24 hours. The half facing the Sun has day; the other half has night.</p>
         <p><Term def="The yearly cycle of changing temperatures and day lengths caused by Earth's axial tilt as it orbits the Sun.">Seasons</Term> are caused by Earth's <Term def="The 23.5-degree lean of Earth's rotational axis relative to the plane of its orbit around the Sun.">axial tilt</Term> of 23.5 degrees. As Earth orbits the Sun, the Southern Hemisphere leans towards the Sun during December to February (our summer), and away during June to August (our winter). It is NOT caused by how close Earth is to the Sun. In fact Earth is slightly closer to the Sun in January.</p>
         <p><Term def="The regular rise and fall of sea levels caused mainly by the Moon's gravitational pull on Earth's oceans.">Tides</Term> are caused mainly by the Moon's gravity pulling on Earth's oceans, creating two bulges of water. Spring tides (the strongest) happen at new Moon and full Moon when the Sun and Moon align. Neap tides (the weakest) happen at quarter Moons when they are at right angles.</p>
         <DayNightSim />
@@ -876,7 +878,7 @@ function Section3({ progress, setProgress }) {
       </DotPoint>
 
       <DotPoint id="1.3.3" title="Lunar phases and eclipses" progress={progress} setProgress={setProgress}>
-        <p>The Moon does not produce its own light. It reflects sunlight. As the Moon orbits Earth over about 29.5 days, we see different amounts of the sunlit half, giving us the familiar cycle of <Term def="The changing appearance of the Moon's lit surface as seen from Earth during its 29.5-day orbit.">lunar phases</Term>: new Moon, waxing crescent, first quarter, waxing gibbous, full Moon, waning gibbous, last quarter, waning crescent.</p>
+        <p>The Moon does not produce its own light. It reflects sunlight. As the Moon orbits Earth, we see different amounts of its sunlit half. The cycle repeats about every 29.5 days, giving us the familiar sequence of <Term def="The changing appearance of the Moon's lit surface as seen from Earth over its 29.5-day cycle.">lunar phases</Term>: new Moon, waxing crescent, first quarter, waxing gibbous, full Moon, waning gibbous, last quarter, waning crescent.</p>
         <p>A <Term def="An event where the Moon passes directly between the Sun and Earth, blocking sunlight from reaching part of Earth.">solar eclipse</Term> happens at new Moon when the Moon lines up perfectly between the Sun and Earth, casting a shadow on Earth. Observers inside the <Term def="The central, darkest part of a shadow where the light source is completely blocked.">umbra</Term> see a total eclipse. A <Term def="An event where Earth passes between the Sun and the Moon, casting Earth's shadow on the Moon.">lunar eclipse</Term> happens at full Moon when Earth's shadow falls on the Moon. The Moon turns reddish because Earth's atmosphere bends red light into the shadow, just like a sunset glow. Eclipses do not happen every month because the Moon's orbit is tilted about 5 degrees from Earth's orbital plane.</p>
         <MoonPhaseSim />
         <EclipseAligner />

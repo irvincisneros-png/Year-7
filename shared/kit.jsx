@@ -5,7 +5,7 @@
    files can use them as globals (Babel-standalone friendly).
    ============================================================ */
 /* global React, ReactDOM */
-const { useState, useEffect, useRef, useMemo, useCallback, useContext } = React;
+const { useState, useEffect, useRef, useMemo, useCallback, useContext, useId } = React;
 
 /* ---------- persistence ---------- */
 function useLocalStorage(key, initial) {
@@ -151,16 +151,16 @@ function downloadCertificatePNG(opts) {
   ctx.fillStyle = soft; ctx.font = "italic 38px Georgia, serif";
   ctx.fillText("This certifies that", W / 2, 445);
   ctx.fillStyle = ink; ctx.font = "bold 88px Georgia, serif";
-  ctx.fillText(opts.name, W / 2, 545);
-  var nameW = Math.min(W - 320, Math.max(520, ctx.measureText(opts.name).width + 140));
+  ctx.fillText(opts.name, W / 2, 545, W - 320);   // maxWidth squeezes very long names to fit inside the border
+  var nameW = Math.min(W - 320, Math.max(520, Math.min(W - 320, ctx.measureText(opts.name).width) + 140));
   ctx.strokeStyle = line; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(W / 2 - nameW / 2, 580); ctx.lineTo(W / 2 + nameW / 2, 580); ctx.stroke();
   ctx.fillStyle = soft; ctx.font = "36px Georgia, serif";
   ctx.fillText("has successfully completed", W / 2, 650);
   ctx.fillStyle = accent; ctx.font = "bold 58px Georgia, serif";
-  ctx.fillText(opts.topicTitle, W / 2, 722);
+  ctx.fillText(opts.topicTitle, W / 2, 722, W - 320);
   ctx.fillStyle = soft; ctx.font = "32px Helvetica, Arial, sans-serif";
-  ctx.fillText("Year " + opts.year + " Science" + (opts.strand ? " · " + opts.strand : ""), W / 2, 772);
+  ctx.fillText("Year " + opts.year + " Science" + (opts.strand ? " · " + opts.strand : ""), W / 2, 772, W - 320);
   var boxes = [
     [opts.stats.sectionsDone + " / " + opts.stats.sectionsTotal, "Sections completed"],
     [opts.stats.correct + " / " + opts.stats.answered, "Questions correct"],
@@ -316,7 +316,8 @@ function Figure({ num, caption, src, alt, children, maxWidth }) {
 function Term({ children, def }) {
   const [show, setShow] = useState(false);
   const ref = useRef(null);
-  const popId = useMemo(() => "term-" + hashStr(String(def) + String(children)), [def, children]);
+  // useId keeps ids unique even when the same term + definition appears more than once on a page
+  const popId = "term-" + useId();
   useEffect(() => {
     if (!show) return;
     const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setShow(false); };
@@ -394,7 +395,7 @@ function WrittenQ({ num, question, model }) {
   return (
     <div className="quiz-card">
       <div className="quiz-q"><span className="quiz-q-num">{num || "?"}</span><span>{question}</span></div>
-      <textarea className="response-box" value={val} onChange={e => setVal(e.target.value)} placeholder="Type your answer here…"/>
+      <textarea className="response-box" value={val} onChange={e => setVal(e.target.value)} placeholder="Type your answer here…" aria-label={"Your answer" + (num ? " to question " + num : "")}/>
       {model && <>
         <button className="reveal-btn" onClick={() => setShow(s => !s)} aria-expanded={show}>{show ? "Hide model answer" : "Show model answer"}</button>
         {show && <div className="model-answer" role="region" aria-label="Model answer"><strong>Model answer. </strong>{model}</div>}
@@ -426,10 +427,11 @@ function Interactive({ title, subtitle, takeaway, children }) {
 
 /* ---------- interactive building blocks ---------- */
 function Slider({ label, min, max, step = 1, value, onChange, unit = "", fmt }) {
+  const sid = "sl-" + useId();
   return (
     <div className="ctrl">
-      <label>{label}<span className="val">{fmt ? fmt(value) : value}{unit}</span></label>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))}/>
+      <label htmlFor={sid}>{label}<span className="val">{fmt ? fmt(value) : value}{unit}</span></label>
+      <input id={sid} type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))}/>
     </div>
   );
 }
@@ -439,7 +441,7 @@ function SegToggle({ options, value, onChange }) {
       {options.map(o => {
         const val = typeof o === "object" ? o.value : o;
         const lab = typeof o === "object" ? o.label : o;
-        return <button key={val} className={value === val ? "on" : ""} onClick={() => onChange(val)}>{lab}</button>;
+        return <button key={val} type="button" className={value === val ? "on" : ""} aria-pressed={value === val} onClick={() => onChange(val)}>{lab}</button>;
       })}
     </div>
   );
@@ -460,7 +462,7 @@ function Reveal({ children, label = "Reveal hidden answer" }) {
 function FlipCard({ front, back }) {
   const [f, setF] = useState(false);
   return (
-    <button className="card" style={{ cursor: "pointer", minHeight: 90, textAlign: "left", width: "100%" }} onClick={() => setF(v => !v)}>
+    <button type="button" className="card" style={{ cursor: "pointer", minHeight: 90, textAlign: "left", width: "100%" }} aria-pressed={f} onClick={() => setF(v => !v)}>
       <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-muted)", marginBottom: 6 }}>{f ? "Answer" : "Tap to flip"}</div>
       <div>{f ? back : front}</div>
     </button>
@@ -474,29 +476,43 @@ function MatchBuckets({ items, buckets }) {
   const allPlaced = items.every(it => placed[it.id]);
   const allCorrect = allPlaced && items.every(it => placed[it.id] === it.bucket);
   const drop = (b) => { if (drag) { setPlaced(p => ({ ...p, [drag]: b })); setDrag(null); setOver(null); } };
+  // keyboard: Enter / Space act like a click on chips and drop zones
+  const keyAct = (fn) => (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(e); } };
+  const pick = (id) => setDrag(d => (d === id ? null : id));
+  const unplace = (id) => setPlaced(p => { const n = { ...p }; delete n[id]; return n; });
   return (
     <div>
       <div className="row" style={{ marginBottom: 14 }}>
         {items.filter(it => !placed[it.id]).map(it => (
-          <span key={it.id} className="drag-chip" draggable onDragStart={() => setDrag(it.id)} onClick={() => setDrag(drag === it.id ? null : it.id)} style={drag === it.id ? { borderColor: "var(--accent)", boxShadow: "var(--shadow-2)" } : {}}>{it.label}</span>
+          <span key={it.id} className="drag-chip" draggable role="button" tabIndex={0} aria-pressed={drag === it.id}
+            aria-label={it.label + (drag === it.id ? " (selected, now choose a group)" : ". Press Enter to pick up, then choose a group.")}
+            onDragStart={() => setDrag(it.id)} onDragEnd={() => { setDrag(null); setOver(null); }}
+            onClick={() => pick(it.id)} onKeyDown={keyAct(() => pick(it.id))}
+            style={drag === it.id ? { borderColor: "var(--accent)", boxShadow: "var(--shadow-2)" } : {}}>{it.label}</span>
         ))}
-        {items.every(it => placed[it.id]) && <span className="chip ok">All placed</span>}
+        {allPlaced && <span className="chip ok">All placed</span>}
       </div>
       <div className="grid-2">
         {buckets.map(b => (
-          <div key={b.id} className={"drop-zone" + (over === b.id ? " over" : "")}
-            onDragOver={e => { e.preventDefault(); setOver(b.id); }} onDragLeave={() => setOver(null)} onDrop={() => drop(b.id)} onClick={() => drag && drop(b.id)}>
+          <div key={b.id} className={"drop-zone" + (over === b.id ? " over" : "")} role="group" aria-label={"Group: " + b.label}
+            tabIndex={drag ? 0 : undefined}
+            onDragOver={e => { e.preventDefault(); setOver(b.id); }} onDragLeave={() => setOver(null)} onDrop={() => drop(b.id)}
+            onClick={() => drag && drop(b.id)} onKeyDown={e => { if (e.target === e.currentTarget) keyAct(() => drop(b.id))(e); }}>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.label}</div>
             <div className="row">
               {items.filter(it => placed[it.id] === b.id).map(it => {
                 const ok = it.bucket === b.id;
-                return <span key={it.id} className="drag-chip" style={{ borderColor: ok ? "var(--green-deep)" : "var(--red)", background: ok ? "var(--green-soft)" : "var(--red-soft)" }} onClick={() => setPlaced(p => { const n = { ...p }; delete n[it.id]; return n; })}>{it.label} {ok ? "✓" : "✕"}</span>;
+                return <span key={it.id} className="drag-chip" role="button" tabIndex={0}
+                  aria-label={it.label + (ok ? ", correct" : ", incorrect") + ". Press Enter to move it back."}
+                  style={{ borderColor: ok ? "var(--green-deep)" : "var(--red)", background: ok ? "var(--green-soft)" : "var(--red-soft)" }}
+                  onClick={e => { e.stopPropagation(); unplace(it.id); }}
+                  onKeyDown={e => { e.stopPropagation(); keyAct(() => unplace(it.id))(e); }}>{it.label} {ok ? "✓" : "✕"}</span>;
               })}
             </div>
           </div>
         ))}
       </div>
-      {allPlaced && <div className="quiz-feedback" style={{ marginTop: 12 }}>{allCorrect ? "Every item is in the right place. Well done." : "Some items are misplaced. Tap a placed chip to send it back and try again."}</div>}
+      {allPlaced && <div className="quiz-feedback" role="status" aria-live="polite" style={{ marginTop: 12 }}>{allCorrect ? "Every item is in the right place. Well done." : "Some items are misplaced. Tap a placed chip to send it back and try again."}</div>}
     </div>
   );
 }
@@ -505,7 +521,7 @@ function MatchBuckets({ items, buckets }) {
 function Ring({ pct, size = 22, sw = 2.5, stroke = "var(--accent)" }) {
   const r = (size - sw) / 2 - 0.5, c = 2 * Math.PI * r;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border)" strokeWidth={sw}/>
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={stroke} strokeWidth={sw}
         strokeDasharray={`${(pct/100)*c} ${c}`} transform={`rotate(-90 ${size/2} ${size/2})`} strokeLinecap="round"/>
@@ -658,10 +674,18 @@ function buildApp(CFG) {
       const n = q.toLowerCase();
       return all.filter(([t, d]) => t.toLowerCase().includes(n) || String(d).toLowerCase().includes(n));
     }, [q]);
+    // remember the opener once and return focus to it when the modal closes
     useEffect(() => {
       lastFocused.current = document.activeElement;
+      return () => { try { lastFocused.current && lastFocused.current.focus(); } catch {} };
+    }, []);
+    // onClose is a fresh function every parent render, so keep it in a ref and
+    // register the key handler only once
+    const closeRef = useRef(onClose);
+    closeRef.current = onClose;
+    useEffect(() => {
       const onKey = (e) => {
-        if (e.key === "Escape") { onClose(); return; }
+        if (e.key === "Escape") { closeRef.current(); return; }
         if (e.key === "Tab" && modalRef.current) {
           // simple focus trap
           const f = modalRef.current.querySelectorAll('button, input, [href], textarea, [tabindex]:not([tabindex="-1"])');
@@ -672,11 +696,8 @@ function buildApp(CFG) {
         }
       };
       document.addEventListener("keydown", onKey);
-      return () => {
-        document.removeEventListener("keydown", onKey);
-        try { lastFocused.current && lastFocused.current.focus(); } catch {}
-      };
-    }, [onClose]);
+      return () => document.removeEventListener("keydown", onKey);
+    }, []);
     return (
       <div className="modal-scrim" onClick={onClose}>
         <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-label="Glossary" onClick={e => e.stopPropagation()}>
@@ -695,10 +716,18 @@ function buildApp(CFG) {
     const [q, setQ] = useState("");
     const modalRef = useRef(null);
     const lastFocused = useRef(null);
+    // remember the opener once and return focus to it when the modal closes
     useEffect(() => {
       lastFocused.current = document.activeElement;
+      return () => { try { lastFocused.current && lastFocused.current.focus(); } catch {} };
+    }, []);
+    // onClose is a fresh function every parent render, so keep it in a ref and
+    // register the key handler only once
+    const closeRef = useRef(onClose);
+    closeRef.current = onClose;
+    useEffect(() => {
       const onKey = (e) => {
-        if (e.key === "Escape") { onClose(); return; }
+        if (e.key === "Escape") { closeRef.current(); return; }
         if (e.key === "Tab" && modalRef.current) {
           const f = modalRef.current.querySelectorAll('button, input, [href], [tabindex]:not([tabindex="-1"])');
           if (!f.length) return;
@@ -708,8 +737,8 @@ function buildApp(CFG) {
         }
       };
       document.addEventListener("keydown", onKey);
-      return () => { document.removeEventListener("keydown", onKey); try { lastFocused.current && lastFocused.current.focus(); } catch {} };
-    }, [onClose]);
+      return () => document.removeEventListener("keydown", onKey);
+    }, []);
     const n = q.trim().toLowerCase();
     const secHits = !n ? [] : SECTIONS.filter(s => ((s.label || "") + " " + (s.blurb || "") + " " + s.id).toLowerCase().includes(n));
     const glossHits = !n ? [] : Object.entries(CFG.glossary || {}).filter(([t, d]) => (t + " " + d).toLowerCase().includes(n)).slice(0, 10);
@@ -798,7 +827,8 @@ function buildApp(CFG) {
   }
 
   return function App() {
-    const [progress, setProgress] = useLocalStorage(SKEY + ".progress", {});
+    const [progressRaw, setProgress] = useLocalStorage(SKEY + ".progress", {});
+    const progress = progressRaw && typeof progressRaw === "object" ? progressRaw : {};   // guard against a corrupted stored value
     const [size, setSize] = useLocalStorage("jsci.size", "md");
     const [dark, setDark] = useLocalStorage("jsci.dark", false);
     const [dys, setDys] = useLocalStorage("jsci.dyslexic", false);
@@ -821,7 +851,7 @@ function buildApp(CFG) {
       const fromHash = () => {
         const h = decodeURIComponent(window.location.hash.replace("#", ""));
         if (!h || h === "home") { setView("home"); return; }
-        if (SECTIONS.find(s => s.id === h)) setView(h);
+        if (h === "review" || SECTIONS.find(s => s.id === h)) setView(h);
       };
       fromHash();
       window.addEventListener("hashchange", fromHash);
@@ -842,13 +872,16 @@ function buildApp(CFG) {
 
     const clearProgress = () => {
       if (!confirm("Reset all progress and saved answers for this topic?")) return;
-      setProgress({});
       try {
+        localStorage.setItem(SKEY + ".progress", "{}");
         Object.keys(localStorage).forEach(k => {
           if (k.indexOf(SKEY + ".mcq.") === 0 || k.indexOf(SKEY + ".wq.") === 0 || k === SKEY + ".results") localStorage.removeItem(k);
         });
         // .att attempt counters share the .mcq key prefix, so they are cleared above
       } catch {}
+      // reload so answered quizzes / typed answers already on screen reset too
+      // (their state lives in memory, not just in localStorage)
+      location.reload();
     };
 
     // Carry progress between devices: export every key for this topic as a
@@ -899,9 +932,9 @@ function buildApp(CFG) {
             <div><div className="brand-title">{CFG.topicTitle}</div><div className="brand-sub">Year {CFG.year} notebook</div></div>
           </div>
           <nav className="tabs" aria-label="Sections">
-            <button className={"tab" + (view === "home" ? " active" : "")} onClick={() => goTo("home")}><IconHome size={15}/><span>Overview</span></button>
+            <button className={"tab" + (view === "home" ? " active" : "")} aria-current={view === "home" ? "page" : undefined} onClick={() => goTo("home")}><IconHome size={15}/><span>Overview</span></button>
             {SECTIONS.map(s => (
-              <button key={s.id} className={"tab" + (view === s.id ? " active" : "")} onClick={() => goTo(s.id)}>
+              <button key={s.id} className={"tab" + (view === s.id ? " active" : "")} aria-current={view === s.id ? "page" : undefined} onClick={() => goTo(s.id)}>
                 <span className="tab-id">{s.id}</span><span>{s.label}</span>
                 <span className="tab-progress">{(s.points||[]).filter(p => progress[p]).length}/{(s.points||[]).length}</span>
               </button>

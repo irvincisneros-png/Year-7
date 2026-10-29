@@ -37,7 +37,7 @@
       btn.style.cssText =
         "padding:11px 18px;border-radius:999px;border:1.5px solid #1b1a17;font-weight:700;font-size:14px;cursor:pointer;" +
         "box-shadow:0 4px 0 -2px #1b1a17,0 8px 22px rgba(27,26,23,.18);" +
-        (done ? "background:#3f8a4a;color:#fff;" : "background:#fff;color:#1b1a17;");
+        (done ? "background:#2e6837;color:#fff;" : "background:#fff;color:#1b1a17;");
     }
     btn.onclick = function () { setDone(!isDone()); render(); };
     render();

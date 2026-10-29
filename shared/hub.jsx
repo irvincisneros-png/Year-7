@@ -10,6 +10,7 @@ function topicProgress(topic) {
   if (!topic.storageKey || !topic.points || !topic.points.length) return { done: 0, total: (topic.points||[]).length, pct: 0 };
   let prog = {};
   try { const raw = localStorage.getItem(topic.storageKey + ".progress"); if (raw) prog = JSON.parse(raw); } catch {}
+  if (!prog || typeof prog !== "object") prog = {};   // guard against a corrupted value such as "null"
   const done = topic.points.filter(p => prog[p]).length;
   return { done, total: topic.points.length, pct: topic.points.length ? Math.round(100 * done / topic.points.length) : 0 };
 }

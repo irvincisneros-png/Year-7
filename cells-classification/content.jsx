@@ -25,6 +25,8 @@ function MrsgrenFlashcards() {
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
         <div
           onClick={() => setFlipped(f => !f)}
+          role="button" tabIndex={0} aria-label={"Flashcard: " + card.name + ". Press to flip."}
+          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(f => !f); } }}
           style={{
             width: "100%", maxWidth: 420, minHeight: 160, borderRadius: 16,
             background: flipped ? "var(--accent-deep)" : "var(--accent-soft)",
@@ -245,7 +247,7 @@ function DichotomousKeyGame() {
               <div>
                 <Callout kind={correct ? "success" : "warn"} title={correct ? "Correct identification!" : "Not quite right"}>
                   You identified: <strong>{result}</strong>.
-                  {!correct && <span> The correct answer was: <strong>{currentCreature.answer}</strong>. Go back and try the key again.</span>}
+                  {!correct && <span> The correct answer was: <strong>{currentCreature.answer}</strong>. Check your observations and try another.</span>}
                 </Callout>
                 <button className="btn btn-accent" style={{ marginTop: 12 }} onClick={pickCreature}>Try another</button>
               </div>
@@ -325,11 +327,11 @@ function AdaptationsExplorer() {
 function PlantCellDiagram() {
   const [active, setActive] = useState(null);
   const organelles = [
-    { id: "wall", label: "Cell wall", cx: 240, cy: 148, desc: "Made of cellulose. Provides rigid structural support and prevents the cell from bursting. ONLY in plant cells." },
-    { id: "membrane", label: "Cell membrane", cx: 240, cy: 164, desc: "A thin, flexible layer that controls what enters and leaves the cell. Found in ALL cells." },
-    { id: "nucleus", label: "Nucleus", cx: 148, cy: 210, desc: "The control centre of the cell. Contains DNA, which carries instructions for all cell activities." },
+    { id: "wall", label: "Cell wall", cx: 240, cy: 62, desc: "Made of cellulose. Provides rigid structural support and prevents the cell from bursting. Found in plant cells but not animal cells." },
+    { id: "membrane", label: "Cell membrane", cx: 240, cy: 306, desc: "A thin, flexible layer that controls what enters and leaves the cell. Found in ALL cells." },
+    { id: "nucleus", label: "Nucleus", cx: 148, cy: 168, desc: "The control centre of the cell. Contains DNA, which carries instructions for all cell activities." },
     { id: "vacuole", label: "Large vacuole", cx: 240, cy: 240, desc: "Stores water and waste. Creates turgor pressure to keep the cell firm and the plant upright." },
-    { id: "chloroplast", label: "Chloroplast", cx: 320, cy: 195, desc: "The site of photosynthesis. Contains chlorophyll (green pigment) that absorbs light energy. ONLY in plant cells." },
+    { id: "chloroplast", label: "Chloroplast", cx: 320, cy: 195, desc: "The site of photosynthesis. Contains chlorophyll (green pigment) that absorbs light energy. Found in plant cells (and algae) but not animal cells." },
     { id: "mitochondria", label: "Mitochondria", cx: 160, cy: 280, desc: "The powerhouse. Carries out aerobic respiration to release energy (ATP) from glucose." },
     { id: "cytoplasm", label: "Cytoplasm", cx: 310, cy: 290, desc: "Gel-like fluid filling the cell. The medium for most chemical reactions. Suspends all organelles." },
   ];
@@ -390,7 +392,7 @@ function PlantCellDiagram() {
 function AnimalCellDiagram() {
   const [active, setActive] = useState(null);
   const organelles = [
-    { id: "membrane", label: "Cell membrane", cx: 240, cy: 100, desc: "Controls entry and exit of substances. In animal cells this is the outermost layer (no cell wall outside it)." },
+    { id: "membrane", label: "Cell membrane", cx: 240, cy: 57, desc: "Controls entry and exit of substances. In animal cells this is the outermost layer (no cell wall outside it)." },
     { id: "nucleus", label: "Nucleus", cx: 240, cy: 185, desc: "Contains DNA and acts as the control centre. Usually sits near the centre of an animal cell." },
     { id: "cytoplasm", label: "Cytoplasm", cx: 140, cy: 240, desc: "Fills most of the cell. The site of many reactions. Organelles float in cytoplasm." },
     { id: "mitochondria", label: "Mitochondria", cx: 330, cy: 215, desc: "Releases energy via aerobic respiration. Animal cells can have thousands of mitochondria." },
@@ -577,7 +579,7 @@ function EnergyEquationSim() {
     products: ["Carbon dioxide", "Water", "Energy (ATP)"],
     colour: "#f59e0b",
     organelle: "Mitochondria",
-    where: "All living eukaryotic cells",
+    where: "All living cells",
     when: "Continuously, day and night",
   };
   const photo = {
@@ -586,7 +588,7 @@ function EnergyEquationSim() {
     products: ["Glucose", "Oxygen"],
     colour: "#22c55e",
     organelle: "Chloroplasts",
-    where: "Plant cells and algae only",
+    where: "Cells with chloroplasts (plants and algae)",
     when: "Only when light is available",
   };
   const eq = mode === "resp" ? resp : photo;
@@ -607,7 +609,7 @@ function EnergyEquationSim() {
         <text x="240" y="38" textAnchor="middle" fontSize="24" fill="var(--ink)">&#x2192;</text>
         {eq.products.map((p, i) => (
           <g key={p} transform={`translate(${260 + i * (eq.products.length > 2 ? 73 : 100)}, 10)`}>
-            <rect width="68" height="44" rx="10" fill={eq.colour + "22"} stroke={eq.colour} strokeWidth="1.5}"/>
+            <rect width="68" height="44" rx="10" fill={eq.colour + "22"} stroke={eq.colour} strokeWidth="1.5"/>
             <text x="34" y="27" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--ink)">{p}</text>
           </g>
         ))}
@@ -706,8 +708,8 @@ function PlatypusClassificationSVG() {
           return (
             <g key={r.rank}>
               <rect x={x} y={y} width={w} height="30" rx="8" fill={r.colour}/>
-              <text x="50" y={y + 20} fontSize="11" fontWeight="700" fill="#064e3b">{r.rank}</text>
-              <text x={440 - 12} y={y + 20} textAnchor="end" fontSize="11" fill="#064e3b" fontStyle={i >= 5 ? "italic" : "normal"}>
+              <text x={x + 10} y={y + 20} fontSize="11" fontWeight="700" fill={i >= 4 ? "#fff" : "#064e3b"}>{r.rank}</text>
+              <text x={x + w - 10} y={y + 20} textAnchor="end" fontSize="11" fill={i >= 4 ? "#fff" : "#064e3b"} fontStyle={i >= 5 ? "italic" : "normal"}>
                 {i >= 5 ? r.value : r.value}
               </text>
             </g>
@@ -825,10 +827,10 @@ function Section31({ progress, setProgress }) {
         <p>Classification is based on what scientists can observe. By comparing <Term def="Physical features of an organism's body used to compare and classify it">structural features</Term> such as number of legs, body segments, skin type, and reproductive structures, you can work out which organisms are closely related. Features shared because of a common ancestor are called <Term def="Structures in different species that share a common evolutionary origin, even if they look different today">homologous structures</Term>. For example, your arm, a bat's wing, and a whale's flipper all share the same basic bone arrangement.</p>
         <p>Among the <Term def="The animal phylum with an exoskeleton, jointed limbs, and segmented body">arthropods</Term>, you can identify four groups by counting legs and segments: insects (6 legs, 3 body regions), arachnids (8 legs, 2 body regions, no antennae), crustaceans (10 or more legs, 2 pairs of antennae), and myriapods (many legs, one pair of antennae).</p>
         <Callout kind="key" title="Arthropod ID shortcut">
-          6 legs = insect. 8 legs, no antennae = arachnid. 10+ legs, 2 pairs of antennae = crustacean. Many legs per segment = myriapod.
+          6 legs = insect. 8 legs, no antennae = arachnid. 10+ legs, 2 pairs of antennae = crustacean. Many legs, 1 pair of antennae = myriapod.
         </Callout>
         <QGroup title="Check yourself">
-          <MCQ num={6} question="You find a bush invertebrate with 8 legs and no antennae. Which class does it belong to?" options={["Insecta", "Arachnida", "Crustacean", "Myriapoda"]} correct={1} explain="8 legs and no antennae are the defining features of Arachnida (spiders, scorpions, mites, ticks)."/>
+          <MCQ num={6} question="You find a bush invertebrate with 8 legs and no antennae. Which class does it belong to?" options={["Insecta", "Arachnida", "Crustacea", "Myriapoda"]} correct={1} explain="8 legs and no antennae are the defining features of Arachnida (spiders, scorpions, mites, ticks)."/>
         </QGroup>
       </DotPoint>
 
@@ -903,7 +905,7 @@ function Section32({ progress, setProgress }) {
 
       <DotPoint id="3.2.3" title="Functions of key cell structures" progress={progress} setProgress={setProgress}>
         <p>Every structure in a cell has a specific job. The <Term def="A thin phospholipid layer surrounding every cell that acts as a selective barrier">cell membrane</Term> acts like a selective gate, letting in oxygen and glucose while letting out waste like carbon dioxide. The <Term def="Gel-like fluid filling the cell; site of many chemical reactions; suspends organelles">cytoplasm</Term> is the medium where most reactions happen. The <Term def="The control centre of the cell; contains DNA and directs all activities including growth and reproduction">nucleus</Term> is the control centre, holding the DNA instructions for everything the cell does.</p>
-        <p><Term def="Organelles that carry out aerobic respiration; release energy as ATP from glucose">Mitochondria</Term> are the powerhouses of the cell. They take in glucose and oxygen, and release energy in a usable form called <Term def="Adenosine triphosphate; the energy currency used to power all cell activities">ATP</Term>. You can think of ATP as a rechargeable battery that powers all cell work. <Term def="Organelles in plant cells that carry out photosynthesis; contain chlorophyll which absorbs light energy">Chloroplasts</Term> are only in plant cells. They capture light energy and use it to build glucose from carbon dioxide and water, a process called <Term def="The process by which plants use light energy, carbon dioxide and water to make glucose and oxygen">photosynthesis</Term>.</p>
+        <p><Term def="Organelles that carry out aerobic respiration; release energy as ATP from glucose">Mitochondria</Term> are the powerhouses of the cell. They take in glucose and oxygen, and release energy in a usable form called <Term def="Adenosine triphosphate; the energy currency used to power all cell activities">ATP</Term>. You can think of ATP as a rechargeable battery that powers all cell work. <Term def="Organelles in plant cells that carry out photosynthesis; contain chlorophyll which absorbs light energy">Chloroplasts</Term> are found in plant cells and algae, but not in animal cells. They capture light energy and use it to build glucose from carbon dioxide and water, a process called <Term def="The process by which plants use light energy, carbon dioxide and water to make glucose and oxygen">photosynthesis</Term>.</p>
         <Callout kind="key" title="Structure = function">
           In biology, a cell's shape and contents always match its job. Lots of mitochondria = lots of energy needed. Lots of chloroplasts = makes lots of food via photosynthesis.
         </Callout>
@@ -924,7 +926,7 @@ function Section32({ progress, setProgress }) {
 
       <DotPoint id="3.2.5" title="Observing cells with microscopes" progress={progress} setProgress={setProgress}>
         <p>The compound microscope magnifies specimens by passing light through a series of lenses. Total magnification = eyepiece lens magnification x objective lens magnification. A 10x eyepiece with a 40x objective gives 400x total magnification. To prepare a <Term def="A microscope slide where a sample is placed in a drop of water and covered with a coverslip">wet mount slide</Term>, you place your sample in a drop of water on a glass slide, then lower a coverslip slowly to avoid trapping air bubbles.</p>
-        <p>Stains make structures easier to see. <Term def="A yellow-brown stain that makes cell walls and starch visible in plant cells">Iodine solution</Term> is used for plant cells, while <Term def="A blue stain that makes the nucleus of animal and fungal cells visible">methylene blue</Term> is used for animal and fungal cells. Scientific drawings of cells must be in pencil, with clear outlines, ruled label lines, a title, and the magnification stated. Never shade or add artistic detail. Only draw what you actually see.</p>
+        <p>Stains make structures easier to see. <Term def="A yellow-brown stain that makes the nucleus and starch grains easier to see in plant cells">Iodine solution</Term> is used for plant cells, while <Term def="A blue stain that makes the nucleus of animal and fungal cells visible">methylene blue</Term> is used for animal and fungal cells. Scientific drawings of cells must be in pencil, with clear outlines, ruled label lines, a title, and the magnification stated. Never shade or add artistic detail. Only draw what you actually see.</p>
         <VirtualMicroscope/>
         <Callout kind="tip" title="Biological drawing rules">
           Pencil only. Clear, single outlines. No shading. Label lines with a ruler. Write labels horizontally. Include a title and magnification. Only draw what you observe.
@@ -948,7 +950,7 @@ function Section32({ progress, setProgress }) {
 
       <DotPoint id="3.2.7" title="Drawing single-celled organisms" progress={progress} setProgress={setProgress}>
         <p>Many organisms consist of just one cell that does everything a living thing needs to do. These <Term def="Organisms whose entire body is a single cell that carries out all life processes">unicellular organisms</Term> include bacteria (<Term def="Organisms whose cells lack a membrane-bound nucleus">prokaryotes</Term>) and a range of eukaryotic organisms called <Term def="A diverse group of mostly single-celled eukaryotic organisms including Amoeba, Paramecium, Euglena, and algae">protists</Term>. Despite being tiny, they can be surprisingly complex inside.</p>
-        <p>Common examples you might view under a microscope include: <Term def="A protist that moves using pseudopodia (false feet) and has no fixed shape">Amoeba</Term> (irregular shape, moves by flowing pseudopodia), <Term def="A slipper-shaped protist covered in cilia for swimming">Paramecium</Term> (slipper shape, covered in cilia), <Term def="A protist with both a flagellum and chloroplasts; can photosynthesize or feed as an animal depending on light">Euglena</Term> (has both a flagellum and chloroplasts), and yeast (oval fungal cells that bud off daughter cells). When drawing them, follow all the rules of biological drawing. Because they move quickly, you may need to use a still image or slow the sample by adding a drop of methyl cellulose.</p>
+        <p>Common examples you might view under a microscope include: <Term def="A protist that moves using pseudopodia (false feet) and has no fixed shape">Amoeba</Term> (irregular shape, moves by flowing pseudopodia), <Term def="A slipper-shaped protist covered in cilia for swimming">Paramecium</Term> (slipper shape, covered in cilia), <Term def="A protist with both a flagellum and chloroplasts; can photosynthesise or feed as an animal depending on light">Euglena</Term> (has both a flagellum and chloroplasts), and yeast (oval fungal cells that bud off daughter cells). When drawing them, follow all the rules of biological drawing. Because they move quickly, you may need to use a still image or slow the sample by adding a drop of methyl cellulose.</p>
         <Callout kind="fact" title="Euglena: both plant and animal?">
           Euglena has chloroplasts like a plant AND can feed on organic matter like an animal. Scientists call this mixotrophic nutrition. It shows that the line between kingdoms is not always sharp.
         </Callout>
@@ -977,12 +979,12 @@ function Section32({ progress, setProgress }) {
 
       <DotPoint id="3.2.10" title="Structure and function in specialised cells" progress={progress} setProgress={setProgress}>
         <p>A core principle of biology is that <Term def="The idea that the specific physical features of a cell directly allow it to carry out its particular function">structure determines function</Term>. Look at any specialised cell and you can predict its job from its shape and contents. A <Term def="A male reproductive cell with a long flagellum, mitochondria-rich mid-piece, and DNA-packed head, designed to swim to an egg">sperm cell</Term> has a streamlined head packed with DNA, a mid-section loaded with mitochondria, and a long <Term def="A whip-like extension of a cell used for movement">flagellum</Term> for swimming. Every feature serves its purpose: the shape cuts through fluid, the mitochondria power the flagellum, and the head delivers DNA to the egg.</p>
-        <p>A red blood cell is a biconcave disc with no nucleus and is packed with <Term def="The oxygen-carrying protein in red blood cells">haemoglobin</Term>. The indented shape increases surface area for oxygen to diffuse in and out, and the lack of a nucleus leaves more room for haemoglobin. Intestinal epithelial cells have tiny finger-like projections called <Term def="Tiny finger-like projections on the surface of intestinal cells that increase surface area for nutrient absorption">microvilli</Term> that increase their absorption surface area by up to 600 times.</p>
+        <p>A red blood cell is a biconcave disc with no nucleus and is packed with <Term def="The oxygen-carrying protein in red blood cells">haemoglobin</Term>. The indented shape increases surface area for oxygen to diffuse in and out, and the lack of a nucleus leaves more room for haemoglobin. Intestinal epithelial cells have tiny finger-like projections called <Term def="Tiny finger-like projections on the surface of intestinal cells that increase surface area for nutrient absorption">microvilli</Term> that greatly increase their surface area for absorbing nutrients.</p>
         <Callout kind="key" title="Structure tells you the function">
           Many mitochondria means high energy demand. Long thin extension means high surface area for absorption. Biconcave disc shape means designed for carrying gases. You can read a cell's job from how it looks.
         </Callout>
         <QGroup title="Check yourself">
-          <MCQ num={12} question="A root hair cell has a long, thin extension projecting into the soil. How does this structural feature help the cell do its job?" options={["It allows the cell to photosynthesize underground", "It greatly increases surface area, speeding up absorption of water and minerals from soil", "It helps the cell produce more mitochondria", "It protects the cell from predators"]} correct={1} explain="The long thin extension dramatically increases the surface area of the cell membrane in contact with soil water. More surface area means faster absorption of water and dissolved mineral ions by diffusion and active transport."/>
+          <MCQ num={12} question="A root hair cell has a long, thin extension projecting into the soil. How does this structural feature help the cell do its job?" options={["It allows the cell to photosynthesise underground", "It greatly increases surface area, speeding up absorption of water and minerals from soil", "It helps the cell produce more mitochondria", "It protects the cell from predators"]} correct={1} explain="The long thin extension dramatically increases the surface area of the cell membrane in contact with soil water. More surface area means faster absorption of water and dissolved mineral ions by diffusion and active transport."/>
         </QGroup>
       </DotPoint>
 

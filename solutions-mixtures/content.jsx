@@ -193,7 +193,7 @@ function HeatingCurveExplorer() {
             <text x={padL - 6} y={ty(v) + 4} textAnchor="end" fontSize="9" fill="var(--ink-muted)">{v}</text>
           </g>
         ))}
-        <text x={padL - 28} y={H / 2 + 4} fontSize="9" fill="var(--ink-muted)" transform={`rotate(-90,${padL - 28},${H / 2})`}>Temp (C)</text>
+        <text x={padL - 28} y={H / 2 + 4} fontSize="9" fill="var(--ink-muted)" transform={`rotate(-90,${padL - 28},${H / 2})`}>Temp (°C)</text>
         <text x={W / 2} y={H - 2} fontSize="9" textAnchor="middle" fill="var(--ink-muted)">Time (min)</text>
         <line x1={tx(0)} y1={ty(0)} x2={W - padR} y2={ty(0)} stroke="var(--ink-muted)" strokeWidth="0.7" strokeDasharray="3,3" />
         <line x1={tx(0)} y1={ty(100)} x2={W - padR} y2={ty(100)} stroke="var(--ink-muted)" strokeWidth="0.7" strokeDasharray="3,3" />
@@ -204,11 +204,11 @@ function HeatingCurveExplorer() {
         <Slider label="Time" min={0} max={16} step={0.1} value={time} onChange={setTime} unit=" min" />
       </div>
       <div className="stat-readout" style={{ marginTop: "0.5rem" }}>
-        <Stat value={temp.toFixed(0)} label="Temperature (C)" />
+        <Stat value={temp.toFixed(0)} label="Temperature (°C)" />
         <Stat value={phaseLabel} label="Phase" />
       </div>
       <Callout kind="key" title="Why the flat lines?">
-        At 0 C and 100 C the temperature stays flat even though heat is still being added. The energy is used to break bonds between particles, not to speed them up.
+        At 0 °C and 100 °C the temperature stays flat even though heat is still being added. The energy is used to overcome the forces between particles, not to speed them up.
       </Callout>
     </Interactive>
   );
@@ -222,7 +222,8 @@ function DensityCalc() {
   const [vol, setVol] = useState(50);
 
   const density = vol > 0 ? (mass / vol).toFixed(3) : "0.000";
-  const floats = parseFloat(density) < 1.0;
+  const floats = mass / vol < 1.0;
+  const neutral = mass === vol;
 
   return (
     <Interactive title="Density calculator" subtitle="Enter mass and volume to calculate density and find out if it floats." takeaway="An object floats in water when its density is less than 1.00 g/mL and sinks when it is greater, because buoyancy depends on density, not just mass.">
@@ -232,10 +233,10 @@ function DensityCalc() {
       </div>
       <div className="stat-readout">
         <Stat value={density} label="Density (g/mL)" />
-        <Stat value={floats ? "Floats" : "Sinks"} label="In water" />
+        <Stat value={neutral ? "Hovers (same as water)" : floats ? "Floats" : "Sinks"} label="In water" />
       </div>
       <p className="muted" style={{ marginBottom: 0 }}>
-        Water has a density of 1.00 g/mL. Any object less dense than that floats; anything denser sinks.
+        Water has a density of 1.00 g/mL. Any object less dense than that floats; anything denser sinks; an object with exactly the same density hovers.
       </p>
     </Interactive>
   );
@@ -277,7 +278,7 @@ function DissolvingSim() {
   return (
     <Interactive title="Dissolving simulation" subtitle="See how temperature and stirring affect how quickly a solute dissolves." takeaway="Increasing temperature and stirring both speed up dissolving because they increase how often water particles collide with the surface of the solute.">
       <div className="ctrl-row">
-        <Slider label="Water temperature" min={20} max={100} step={5} value={temp} onChange={v => { setTemp(v); reset(); }} unit=" C" />
+        <Slider label="Water temperature" min={20} max={100} step={5} value={temp} onChange={v => { setTemp(v); reset(); }} unit=" °C" />
       </div>
       <div className="ctrl-row" style={{ gap: "0.75rem", margin: "0.5rem 0" }}>
         <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
@@ -316,7 +317,7 @@ function DissolvingSim() {
       </svg>
       <div className="stat-readout">
         <Stat value={pct.toFixed(0) + "%"} label="Dissolved" />
-        <Stat value={dissolved ? "Saturated soon!" : "Dissolving..."} label="Status" />
+        <Stat value={dissolved ? "Fully dissolved" : "Dissolving..."} label="Status" />
       </div>
       <p className="muted" style={{ fontSize: "0.88rem", marginBottom: 0 }}>
         Hot water and stirring both speed up dissolving. The particles have more energy and collide with the solute more often.
@@ -382,7 +383,7 @@ function SolubilityGraph() {
           </g>
         ))}
         <text x={padL - 38} y={H / 2} fontSize="9" fill="var(--ink-muted)" transform={`rotate(-90,${padL - 38},${H / 2})`}>g per 100 mL</text>
-        <text x={W / 2} y={H - 2} textAnchor="middle" fontSize="9" fill="var(--ink-muted)">Temperature (C)</text>
+        <text x={W / 2} y={H - 2} textAnchor="middle" fontSize="9" fill="var(--ink-muted)">Temperature (°C)</text>
         {Object.entries(solutes).map(([key, s]) => (
           <path key={key} d={makePath(s.data)} fill="none"
             stroke={s.colour} strokeWidth={key === solute ? 2.5 : 1.2}
@@ -393,11 +394,11 @@ function SolubilityGraph() {
           fill={chosen.colour} stroke="white" strokeWidth="2" />
       </svg>
       <div className="ctrl-row" style={{ marginTop: "0.25rem" }}>
-        <Slider label="Temperature" min={0} max={100} step={5} value={temp} onChange={setTemp} unit=" C" />
+        <Slider label="Temperature" min={0} max={100} step={5} value={temp} onChange={setTemp} unit=" °C" />
       </div>
       <div className="stat-readout">
         <Stat value={solubility} label="Solubility (g per 100 mL)" />
-        <Stat value={`${temp} C`} label="Temperature" />
+        <Stat value={`${temp} °C`} label="Temperature" />
       </div>
     </Interactive>
   );
@@ -410,7 +411,7 @@ function ConcentrationMatcher() {
   const items = [
     { id: "a", label: "A pinch of salt in 1 L of water", bucket: "dilute" },
     { id: "b", label: "100 g sugar per 100 mL water (below max)", bucket: "concentrated" },
-    { id: "c", label: "36 g salt in 100 mL at 20 C (no more dissolves)", bucket: "saturated" },
+    { id: "c", label: "36 g salt in 100 mL at 20 °C (no more dissolves)", bucket: "saturated" },
     { id: "d", label: "Honey left to crystallise in a jar", bucket: "supersaturated" },
     { id: "e", label: "A lightly coloured sports drink", bucket: "dilute" },
     { id: "f", label: "Salt water used to pickle food", bucket: "concentrated" },
@@ -437,7 +438,7 @@ function SeparationPicker() {
     { id: 0, mix: "Salt dissolved in water", correct: "evaporation", hint: "Salt is soluble. You need to remove the water to get the salt back." },
     { id: 1, mix: "Sand and water", correct: "filtration", hint: "Sand is insoluble and won't pass through filter paper." },
     { id: 2, mix: "Iron filings and sand", correct: "magnetism", hint: "Iron is magnetic; sand is not." },
-    { id: 3, mix: "Ethanol and water (different boiling points)", correct: "distillation", hint: "Ethanol boils at 78 C, water at 100 C. Distillation uses this difference." },
+    { id: 3, mix: "Ethanol and water (different boiling points)", correct: "distillation", hint: "Ethanol boils at 78 °C, water at 100 °C. Distillation uses this difference." },
     { id: 4, mix: "Coloured dyes in black ink", correct: "chromatography", hint: "Different dyes travel different distances up the paper." },
     { id: 5, mix: "Gravel mixed with fine sand", correct: "sieving", hint: "The particles are different sizes. A sieve lets the fine sand through but holds the gravel." },
   ];
@@ -582,7 +583,7 @@ function ChromatographySim() {
         })}
       </svg>
       <p className="muted" style={{ textAlign: "center", fontSize: "0.88rem", marginBottom: 0 }}>
-        Each dye has a unique Rf value (how far it travels compared to the solvent front). This fingerprints the dye.
+        Each dye has its own characteristic Rf value (how far it travels compared to the solvent front). This helps identify the dye.
       </p>
     </Interactive>
   );
@@ -618,9 +619,8 @@ function PollutionTreatment() {
   function check() { setChecked(true); }
   function reset() { setPlaced([]); setChecked(false); }
 
-  const orderedPlaced = correct.filter(id => placed.includes(id));
-  const isCorrectOrder = orderedPlaced.join(",") === correct.filter(id => placed.includes(id)).join(",");
-  const allCorrect = placed.length === correct.length && placed.every(id => correct.includes(id));
+  const orderedPlaced = placed;
+  const allCorrect = placed.length === correct.length && placed.every((id, i) => id === correct[i]);
 
   return (
     <Interactive title="Build a water treatment plant" subtitle="Select the steps in the right order to clean polluted water." takeaway="Real water treatment uses a sequence of steps because each technique targets a different type of pollutant: physical filtration removes solids, activated carbon removes dissolved organics, and disinfection kills microbes.">
@@ -725,10 +725,10 @@ function Section1({ progress, setProgress }) {
 
       <DotPoint id="4.1.2" title="Heating curves and changes of state" progress={progress} setProgress={setProgress}>
         <p>When you add heat to a substance, its temperature usually rises. But at certain temperatures something different happens: the temperature stops rising even though heat is still being added. These are called <Term def="Points where a substance changes from one state to another, such as melting or boiling. The temperature stays constant during the change.">changes of state</Term>.</p>
-        <p>For water, the <Term def="The temperature at which a solid turns into a liquid (0 C for water at normal atmospheric pressure).">melting point</Term> is 0 degrees Celsius and the <Term def="The temperature at which a liquid turns into a gas throughout its volume (100 C for water at normal atmospheric pressure).">boiling point</Term> is 100 degrees Celsius. During a change of state, the energy being added breaks the forces holding particles together rather than speeding the particles up. This is why the temperature stays flat.</p>
+        <p>For water, the <Term def="The temperature at which a solid turns into a liquid (0 °C for water at normal atmospheric pressure).">melting point</Term> is 0 degrees Celsius and the <Term def="The temperature at which a liquid turns into a gas throughout its volume (100 °C for water at normal atmospheric pressure).">boiling point</Term> is 100 degrees Celsius. During a change of state, the energy being added breaks the forces holding particles together rather than speeding the particles up. This is why the temperature stays flat.</p>
         <HeatingCurveExplorer />
         <Callout kind="tip" title="Reading heating curves">
-          A flat section (plateau) on a heating curve always means a change of state is happening. Two flat sections on a water curve: one at 0 C (melting) and one at 100 C (boiling).
+          A flat section (plateau) on a heating curve always means a change of state is happening. Two flat sections on a water curve: one at 0 °C (melting) and one at 100 °C (boiling).
         </Callout>
         <QGroup title="Check yourself">
           <MCQ num={3} question="Why does the temperature stay constant during melting?"
@@ -740,7 +740,7 @@ function Section1({ progress, setProgress }) {
       <DotPoint id="4.1.3" title="Particle theory and changes of state" progress={progress} setProgress={setProgress}>
         <p>We use <Term def="A scientific model that explains the behaviour of matter by describing the movement and arrangement of tiny particles.">particle theory</Term> to explain what happens during each change of state. In a solid, particles vibrate in fixed positions. When enough energy is added, they break free of their fixed positions and the solid <Term def="Changes from solid to liquid by absorbing energy. Particles gain enough energy to break out of their fixed arrangement.">melts</Term> into a liquid. Liquid particles can move past each other. When they gain enough energy to escape all attraction, they become a gas through <Term def="Change from liquid to gas. Happens at the surface at any temperature (evaporation) or throughout the liquid at boiling point.">evaporation or boiling</Term>.</p>
         <p>The reverse changes also have names: liquid to solid is <Term def="Change from liquid to solid by releasing energy. Also called solidification.">freezing</Term>, gas to liquid is <Term def="Change from gas to liquid by releasing energy. Water vapour in clouds condenses into rain drops.">condensation</Term>, and the rare direct change from solid to gas (skipping liquid) is <Term def="Direct change from solid to gas without passing through the liquid state. Dry ice (solid carbon dioxide) does this at room temperature.">sublimation</Term>.</p>
-        <Figure caption="The names of the six changes of state and the direction of energy flow.">
+        <Figure caption="The names of the main changes of state and the direction of energy flow.">
           <svg viewBox="0 0 440 140" width="100%" style={{ maxWidth: 440 }}>
             {[["SOLID", 30, 55], ["LIQUID", 170, 55], ["GAS", 320, 55]].map(([label, x, y]) => (
               <g key={label}>
@@ -771,7 +771,7 @@ function Section1({ progress, setProgress }) {
           </svg>
         </Figure>
         <Callout kind="fact" title="Dry ice">
-          Dry ice is solid carbon dioxide. It sublimates directly from solid to gas at -78 C, skipping the liquid stage completely. That's why it produces that cool smoky fog effect!
+          Dry ice is solid carbon dioxide. It sublimates directly from solid to gas at -78 °C, skipping the liquid stage completely. That's why it produces that cool smoky fog effect!
         </Callout>
       </DotPoint>
 
@@ -941,17 +941,17 @@ function Section3({ progress, setProgress }) {
         <p>A <Term def="A solution that contains the maximum amount of dissolved solute at a given temperature. No more solute will dissolve.">saturated solution</Term> is one where no more solute will dissolve at that temperature. You know it's saturated when undissolved solid sits at the bottom even after thorough stirring. When presenting solubility data, scientists use bar charts to compare different solutes at the same temperature, and line graphs to show how solubility changes with temperature for one solute.</p>
         <SolubilityGraph />
         <Callout kind="fact" title="Sugar vs salt">
-          Sugar (sucrose) is about 5 to 6 times more soluble than salt at 20 C. That's why you can make very sweet drinks, but a glass of water can only hold so much salt before it becomes saturated.
+          Sugar (sucrose) is about 5 to 6 times more soluble than salt at 20 °C. That's why you can make very sweet drinks, but a glass of water can only hold so much salt before it becomes saturated.
         </Callout>
         <QGroup title="Check yourself">
-          <MCQ num={8} question="A student adds 30 g of salt to 100 mL of water at 20 C. The solubility of salt at 20 C is 36 g per 100 mL. Is this solution saturated?"
+          <MCQ num={8} question="A student adds 30 g of salt to 100 mL of water at 20 °C. The solubility of salt at 20 °C is 36 g per 100 mL. Is this solution saturated?"
             options={["Yes, it is saturated", "No, it is unsaturated because more salt could still dissolve", "Yes, because any salt was added", "No, because salt does not dissolve"]}
-            correct={1} explain="The solution contains 30 g but could hold up to 36 g at 20 C. Since less than the maximum is dissolved, the solution is unsaturated. More salt could still dissolve." />
+            correct={1} explain="The solution contains 30 g but could hold up to 36 g at 20 °C. Since less than the maximum is dissolved, the solution is unsaturated. More salt could still dissolve." />
         </QGroup>
       </DotPoint>
 
       <DotPoint id="4.3.3" title="How temperature affects solubility" progress={progress} setProgress={setProgress}>
-        <p>For most solid solutes, solubility increases as temperature rises. Hot water particles move faster and with more energy, so they can pull more solute particles into solution before reaching saturation. Potassium nitrate is a dramatic example: its solubility jumps from about 13 g per 100 mL at 0 C to over 240 g per 100 mL at 100 C.</p>
+        <p>For most solid solutes, solubility increases as temperature rises. Hot water particles move faster and with more energy, so they can pull more solute particles into solution before reaching saturation. Potassium nitrate is a dramatic example: its solubility jumps from about 13 g per 100 mL at 0 °C to over 240 g per 100 mL at 100 °C.</p>
         <p>Gases behave the opposite way: they become less soluble in warmer water. That's why bubbles appear on the inside of a saucepan before the water even boils. Dissolved oxygen escapes as the water heats up. This matters in aquatic ecosystems: warmer rivers contain less dissolved oxygen, which can stress fish and other aquatic creatures.</p>
         <DissolvingSim />
         <Callout kind="warn" title="Watch out for gases in warm water">
@@ -971,7 +971,7 @@ function Section3({ progress, setProgress }) {
               ["Solid solute", "Ordered lattice of\nsolute particles", ["s","s","s","s","s","s"]],
               ["Water added", "Water molecules\nattract surface\nparticles", ["w","w","s","s","w","w"]],
               ["Dissolving", "Particles pulled\naway one by one", ["w","w","w","w","s","w"]],
-              ["Solution", "Solute surrounded\nby water shells", ["w","w","w","w","w","w"]],
+              ["Solution", "Solute surrounded\nby water shells", ["w","s","w","s","w","s"]],
             ].map(([title, desc, dots], i) => (
               <g key={title} transform={`translate(${i * 116},0)`}>
                 <rect width="110" height="78" rx="8" fill="var(--surface-raised)" stroke="var(--border)" strokeWidth="1" />
@@ -1147,11 +1147,11 @@ function Section4({ progress, setProgress }) {
         <p>Many industries depend on large-scale separation of mixtures. One of the most important is <Term def="An industrial process that separates a mixture of liquids with different boiling points by heating the mixture in a tall tower and collecting each component as it condenses at its own temperature level.">fractional distillation</Term>, used to separate crude oil into useful products. Crude oil is a complex mixture of hundreds of different hydrocarbons with different boiling points. When heated in a fractionating tower, each component vaporises and condenses at its own temperature level. Products collected include petrol, kerosene (jet fuel), diesel, lubricating oils and bitumen.</p>
         <p>Other important industrial separation processes include: water treatment plants (using sedimentation, filtration and disinfection); the sugar industry (using evaporation and crystallisation to extract pure sugar from sugarcane juice); and desalination plants (which force seawater through membranes to produce fresh drinking water). All of these use the same physical principles you study in the laboratory, just scaled up enormously.</p>
         <Figure caption="How a fractionating tower works to separate crude oil.">
-          <svg viewBox="0 0 300 200" width="100%" style={{ maxWidth: 320 }}>
+          <svg viewBox="0 0 350 200" width="100%" style={{ maxWidth: 370 }}>
             <rect x="110" y="20" width="80" height="160" rx="6" fill="var(--surface-raised)" stroke="var(--accent-deep)" strokeWidth="2" />
             {[
               [30, "#ef4444", "Petrol / gases (low BP)"],
-              [60, "#f59e0b", "Naphtha / aviation fuel"],
+              [60, "#f59e0b", "Naphtha"],
               [90, "#22c55e", "Kerosene / jet fuel"],
               [120, "#3b82f6", "Diesel"],
               [150, "#8b5cf6", "Lubricating oils"],
@@ -1163,7 +1163,7 @@ function Section4({ progress, setProgress }) {
               </g>
             ))}
             <rect x="80" y="170" width="140" height="26" rx="6" fill="#fbbf24" opacity="0.8" />
-            <text x="150" y="187" textAnchor="middle" fontSize="9" fill="#78350f">Crude oil heated (350 C)</text>
+            <text x="150" y="187" textAnchor="middle" fontSize="9" fill="#78350f">Crude oil heated (350 °C)</text>
             <text x="150" y="34" textAnchor="middle" fontSize="8.5" fill="var(--ink-muted)">cooler at top</text>
             <text x="150" y="162" textAnchor="middle" fontSize="8.5" fill="var(--ink-muted)">hotter at bottom</text>
             {[40, 70, 100, 130, 160].map(y => (
@@ -1221,7 +1221,7 @@ function Section5({ progress, setProgress }) {
           </svg>
         </Figure>
         <Callout kind="fact" title="The Darling River fish kills">
-          In 2018 to 2019, millions of fish died in the Darling River near Menindee in NSW. Agricultural runoff introduced excess nutrients (dissolved fertilisers) into the water. This caused a massive algal bloom. When the algae died, bacteria consumed them and used up almost all the dissolved oxygen in the water, suffocating the fish.
+          In 2018 to 2019, millions of fish died in the Darling River near Menindee in NSW. Drought and very low river flows, combined with excess nutrients (including dissolved fertilisers from agricultural runoff), caused a massive algal bloom. When the algae died, bacteria consumed them and used up almost all the dissolved oxygen in the water, suffocating the fish.
         </Callout>
         <QGroup title="Check yourself">
           <MCQ num={13} question="Which type of water pollutant CANNOT be removed by physical filtration?"
@@ -1250,7 +1250,7 @@ mountTopicApp({
   intro: "Everything around you is made of particles arranged in different ways. In this topic you will explore the three states of matter, the unusual properties of water, how solutions form and behave, and how scientists use physical properties to separate mixtures. From dissolving sugar in your tea to cleaning polluted rivers, solutions and mixtures are everywhere.",
   glossary: {
     "atom": "The smallest particle of an element that has the chemical properties of that element.",
-    "boiling point": "The temperature at which a liquid turns into a gas throughout its volume (100 C for water at normal pressure).",
+    "boiling point": "The temperature at which a liquid turns into a gas throughout its volume (100 °C for water at normal pressure).",
     "chromatography": "A separation technique that separates substances based on how strongly they attract to a surface and how soluble they are in a moving solvent.",
     "compound": "A pure substance made of two or more different elements chemically bonded in fixed ratios. Has new properties different from the original elements.",
     "concentrated solution": "A solution that contains a large amount of solute per volume of solvent.",
@@ -1267,7 +1267,7 @@ mountTopicApp({
     "insoluble": "Not able to dissolve in a given solvent.",
     "inter-particle forces": "The attractive forces between neighbouring particles. Strong in solids, moderate in liquids, very weak in gases.",
     "leaching": "A traditional separation technique using water to wash soluble toxins from plant foods, exploiting solubility.",
-    "melting point": "The temperature at which a solid turns into a liquid (0 C for water at normal pressure).",
+    "melting point": "The temperature at which a solid turns into a liquid (0 °C for water at normal pressure).",
     "mixture": "Two or more substances physically combined but not chemically bonded. Each substance keeps its own properties and can be separated by physical means.",
     "particle theory": "A scientific model explaining the behaviour of matter by describing the movement and arrangement of tiny particles.",
     "residue": "The solid material trapped on filter paper during filtration.",

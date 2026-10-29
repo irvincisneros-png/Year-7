@@ -218,7 +218,9 @@ code, .mono { font-family: var(--font-mono); }
 .formula sub, sub.f { font-size: 0.7em; }
 img { max-width: 100%; }
 ::selection { background: var(--accent-soft); color: var(--ink); }
-:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+/* the range input sets outline:none (more specific than :focus-visible), so restore a keyboard focus ring */
+input[type="range"]:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 4px; }
 
 /* ============================================================ App shell (topbar layout) */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
@@ -246,7 +248,7 @@ img { max-width: 100%; }
 }
 .brand-mark:hover { transform: rotate(-6deg) scale(1.06); }
 .brand-title { font-family: var(--font-display); font-size: 1.12rem; font-weight: 700; line-height: 1.05; }
-.brand-sub { font-family: var(--font-hand); font-size: 0.95rem; color: #ef6b4b; letter-spacing: 0; text-transform: none; }
+.brand-sub { font-family: var(--font-hand); font-size: 0.95rem; color: #c4471c; letter-spacing: 0; text-transform: none; }
 
 .tabs { display: flex; gap: 4px; align-items: center; flex: 1; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -286,7 +288,8 @@ img { max-width: 100%; }
   border: 2px solid var(--ink);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-3);
-  padding: 14px; width: 290px;
+  padding: 14px; width: 290px; max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 90px); overflow-y: auto;
   display: flex; flex-direction: column; gap: 12px;
 }
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -401,6 +404,20 @@ img { max-width: 100%; }
 }
 .callout.success h4 { color: var(--green-deep); }
 [data-theme="dark"] .callout { background: rgba(255,255,255,0.04); }
+
+/* Dark-mode contrast: the "-deep" accent shades are tuned for light surfaces,
+   so text that uses them on a dark card/callout is lifted to a lighter tint. */
+[data-theme="dark"] .brand-sub { color: #ef6b4b; }
+[data-theme="dark"] .callout h4 { color: var(--ink); }
+[data-theme="dark"] .gloss-entry dt,
+[data-theme="dark"] .dp-body a:not(.btn),
+[data-theme="dark"] .term:hover,
+[data-theme="dark"] .itab.active,
+[data-theme="dark"] .seg-toggle button.on,
+[data-theme="dark"] .ctrl label .val,
+[data-theme="dark"] .stat .stat-val,
+[data-theme="dark"] .tl-year,
+[data-theme="dark"] .tab.active .tab-id { color: color-mix(in srgb, var(--accent) 45%, #ffffff); }
 
 /* ============================================================ Glossary terms */
 .term { border-bottom: 1.5px dashed var(--accent-deep); cursor: help; position: relative; color: inherit;
@@ -647,6 +664,17 @@ select, input[type="number"], input[type="text"] { font-family: inherit; font-si
 
 /* ============================================================ Responsive */
 @media (max-width: 760px) {
+  /* topbar: keep brand + 4 icon buttons on one line on phones / small windows */
+  .topbar { padding: 8px 12px; gap: 8px; }
+  .topbar .brand { min-width: 0; flex: 1; }
+  .topbar .brand > div { min-width: 0; }
+  .topbar .brand-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .brand-sub { display: none; }
+  .topbar-actions { gap: 6px; flex-shrink: 0; }
+  .settings-pop { position: fixed; top: 60px; right: 8px; left: 8px; width: auto; max-width: none; }
+  /* glossary pop-ups: pin to the bottom of the screen so they never run off an edge */
+  .term-pop { position: fixed; left: 50%; bottom: 14px; top: auto; transform: translateX(-50%); width: min(92vw, 360px); min-width: 0; max-width: none; font-size: 0.9rem; }
+  .term-pop::after { display: none; }
   .tabs { display: none; }
   .mobile-only { display: flex; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
