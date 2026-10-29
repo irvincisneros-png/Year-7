@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Haunted Lab</title>
+<meta name="theme-color" content="#211a2c">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","mindar-image-three":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  --night: #140f1c;
+  --crypt: #211a2c;
+  --crypt-2: #2c2339;
+  --line: #3d3150;
+  --bone: #f2eadb;
+  --mist: #ab9fbd;
+  --pumpkin: #ff8c32;
+  --pumpkin-dim: #5a3418;
+  --slime: #7fe3b4;
+  --slime-dim: #1d3b30;
+  --blood: #ff6474;
+  --blood-dim: #47202a;
+  --font-display: "Creepster", "Chiller", fantasy;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --barh: 60px;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--bone); }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.5;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, #2b1d3d 0%, transparent 70%), var(--night);
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--crypt);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--pumpkin); outline-offset: 2px; }
+
+.wrap {
+  max-width: 560px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* status bar */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6;
+  background: color-mix(in srgb, var(--crypt) 94%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+.bar .wrap { display: flex; align-items: center; gap: 10px; padding-block: 8px; }
+.bar .team { font-weight: 700; min-width: 0; flex: 1 1 0; line-height: 1.2; }
+.bar .team small { display: block; color: var(--mist); font-weight: 400; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.bar .team span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.locks { display: flex; gap: 5px; flex: none; }
+.locks span {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 12px;
+  border: 1.5px solid var(--line); color: var(--mist);
+}
+.locks span.done { background: var(--slime-dim); border-color: var(--slime); color: var(--slime); }
+.clock { text-align: right; flex: none; }
+.clock .t {
+  font-family: var(--font-mono); font-weight: 600; font-size: 22px; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--pumpkin);
+}
+.clock .t.low { color: var(--blood); animation: pulse 1s ease-in-out infinite; }
+.clock small { display: block; color: var(--mist); font-size: 11px; }
+
+/* screens */
+main { padding-block: 22px 40px; }
+.screen { display: grid; gap: 18px; min-width: 0; }
+
+.title {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(52px, 17vw, 84px); line-height: .95; letter-spacing: .02em;
+  color: var(--pumpkin); margin: 0; text-wrap: balance;
+  text-shadow: 0 0 24px rgba(255, 140, 50, .35);
+  animation: flicker 6s linear infinite;
+}
+.kicker { font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--mist); margin: 0; }
+.story { font-size: 18px; margin: 0; }
+.story strong { color: var(--pumpkin); }
+
+.panel {
+  background: var(--crypt); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; display: grid; gap: 14px; min-width: 0;
+}
+.panel h2 { margin: 0; font-size: 24px; line-height: 1.2; text-wrap: balance; }
+.panel h3 { margin: 0; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--mist); }
+.panel p { margin: 0; }
+.lockno { font-family: var(--font-mono); color: var(--pumpkin); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.rules { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 700; }
+input[type="text"], select {
+  background: var(--night); border: 1.5px solid var(--line); border-radius: 10px;
+  padding: 12px; min-height: 48px; min-width: 0; width: 100%; font-size: 17px;
+}
+input:focus, select:focus { border-color: var(--pumpkin); outline: none; }
+.code-input { font-family: var(--font-mono); font-size: 24px; letter-spacing: .12em; text-transform: uppercase; text-align: center; }
+
+.btn {
+  border: 0; border-radius: 12px; padding: 14px 20px; min-height: 52px; cursor: pointer; font-weight: 700;
+  background: var(--pumpkin); color: #1d0f05; width: 100%; font-size: 18px;
+  transition: transform .08s ease, filter .15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { background: var(--crypt-2); color: var(--mist); cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--bone); border: 1.5px solid var(--line); font-weight: 400; }
+.btn.small { padding: 8px 14px; font-size: 14px; min-height: 44px; width: auto; }
+.btn.good { background: var(--slime); color: #07251a; }
+
+.feedback { min-height: 1.5em; font-weight: 700; }
+.feedback.bad { color: var(--blood); }
+.feedback.good { color: var(--slime); }
+.shake { animation: shake .4s ease; }
+
+.hints { display: grid; gap: 8px; }
+.hints:empty { display: none; }
+.hint {
+  border: 1px dashed var(--pumpkin-dim); border-radius: 10px; padding: 10px 14px;
+  background: color-mix(in srgb, var(--pumpkin) 7%, transparent);
+}
+.hint b { color: var(--pumpkin); }
+
+form { display: grid; gap: 14px; }
+
+/* hub */
+.count { margin: 0; font-family: var(--font-mono); color: var(--pumpkin); }
+.seals { display: grid; gap: 10px; }
+.seal {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
+  min-height: 76px; padding: 12px 14px; border-radius: 14px;
+  background: var(--crypt); border: 1.5px solid var(--line);
+}
+.seal:active { transform: translateY(1px); }
+.seal .sn {
+  flex: none; width: 48px; height: 48px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 28px; color: var(--pumpkin);
+  border: 2px solid var(--pumpkin); background: var(--pumpkin-dim);
+}
+.seal > span:last-child { min-width: 0; }
+.seal b { display: block; font-size: 18px; line-height: 1.25; }
+.seal small { display: block; color: var(--mist); font-size: 13px; margin-top: 2px; }
+.seal.ok { background: var(--slime-dim); border-color: var(--slime); }
+.seal.ok .sn { border-color: var(--slime); background: var(--night); color: var(--slime); text-shadow: 0 0 10px var(--slime); }
+.seal.ok small { color: var(--slime); }
+
+/* station: sticky AR block */
+.arblock {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--barh)); z-index: 4;
+  margin-inline: -16px; background: var(--night);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+.arbox { position: relative; }
+#arView {
+  position: relative; overflow: hidden; width: 100%;
+  height: 46vh; min-height: 260px; max-height: 520px;
+  background: #000;
+  isolation: isolate; /* MindAR puts the camera <video> at z-index -2; keep it above this background */
+}
+/* MindAR sizes and offsets the video and its canvas itself so the overlay lines up; don't override. */
+#arView canvas { touch-action: none; }
+.arstatus {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 2;
+  padding: 8px 14px; border-radius: 999px; font-size: 14px; line-height: 1.3; text-align: center;
+  background: rgba(20, 15, 28, .82); border: 1px solid var(--line); color: var(--bone);
+  pointer-events: none;
+}
+.arstatus.good { border-color: var(--slime); color: var(--slime); background: rgba(29, 59, 48, .9); }
+.arstatus.warn { border-color: var(--pumpkin); color: var(--pumpkin); }
+.arstatus.bad { border-color: var(--blood); color: var(--blood); background: rgba(71, 32, 42, .9); }
+#viewToggle {
+  margin: 8px 16px 0; width: calc(100% - 32px); min-height: 48px;
+  border: 1.5px solid var(--pumpkin); background: transparent; color: var(--pumpkin);
+  border-radius: 12px; font-weight: 700; cursor: pointer;
+}
+
+/* questions */
+.q { display: grid; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--line); min-width: 0; }
+.q:last-of-type { border-bottom: 0; }
+.q > p, .q > label { margin: 0; display: block; }
+.qn {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--crypt-2); border: 1px solid var(--mist); color: var(--bone);
+  font-family: var(--font-mono); font-size: 13px; margin-right: 6px; vertical-align: 1px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button {
+  flex: 1 1 auto; min-height: 48px; padding: 10px 14px; border-radius: 12px; cursor: pointer;
+  background: var(--night); border: 1.5px solid var(--line); color: var(--bone);
+}
+.chips button[aria-pressed="true"] { background: var(--pumpkin); border-color: var(--pumpkin); color: #1d0f05; font-weight: 700; }
+.chips.long { flex-direction: column; }
+.chips.long button { width: 100%; text-align: left; line-height: 1.35; }
+.num { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 20px; }
+.num input {
+  width: 6.5ch; min-height: 48px; padding: 8px; text-align: center;
+  font-family: var(--font-mono); font-size: 22px;
+  background: var(--night); border: 1.5px solid var(--line); border-radius: 10px;
+}
+.num input:focus { border-color: var(--pumpkin); outline: none; }
+
+/* lesson */
+.lesson-card { text-align: center; justify-items: center; }
+.bigletter {
+  display: grid; justify-items: center; gap: 0;
+  color: var(--mist); font-family: var(--font-mono); font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+}
+#lsLetter {
+  display: block; font-family: var(--font-display); font-size: 120px; line-height: 1.1; letter-spacing: 0;
+  color: var(--slime); text-shadow: 0 0 20px var(--slime), 0 0 50px rgba(127, 227, 180, .5);
+  animation: glow 2.4s ease-in-out infinite;
+}
+.lesson-body {
+  border: 1px solid var(--slime); background: var(--slime-dim); border-radius: 12px;
+  padding: 14px 16px; text-align: left; display: grid; gap: 8px; width: 100%;
+}
+.lesson-body p { margin: 0; }
+.tag {
+  justify-self: center; font-family: var(--font-mono); font-size: 12px;
+  border: 1px solid var(--slime); color: var(--slime); border-radius: 999px; padding: 3px 12px;
+}
+
+/* door */
+.letters { display: flex; justify-content: center; gap: 10px; }
+.letters span {
+  width: 64px; height: 84px; display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 48px; color: var(--bone);
+  background: linear-gradient(#3a3049, #271f33); border: 2px solid var(--line);
+  border-radius: 32px 32px 6px 6px; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .25);
+}
+
+/* win */
+.win { text-align: center; justify-items: center; }
+.win .title { color: var(--slime); text-shadow: 0 0 24px rgba(127, 227, 180, .35); }
+.vcode {
+  font-family: var(--font-mono); font-weight: 600; font-size: clamp(30px, 10vw, 54px);
+  letter-spacing: .08em; color: var(--night); background: var(--slime);
+  border-radius: 14px; padding: 10px 20px; max-width: 100%;
+}
+.stats { display: flex; gap: 8px; justify-content: center; width: 100%; }
+.stats div { background: var(--night); border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px; flex: 1 1 0; min-width: 0; }
+.stats b { display: block; font-family: var(--font-mono); font-size: 20px; color: var(--pumpkin); }
+.stats span { color: var(--mist); font-size: 12px; }
+
+/* overlay */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; background: rgba(10, 6, 14, .9);
+  display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+}
+.overlay .panel { max-width: 440px; text-align: center; justify-items: center; border-color: var(--blood); }
+.overlay .title { color: var(--blood); font-size: clamp(40px, 12vw, 64px); text-shadow: none; animation: none; }
+
+.footer { color: var(--mist); font-size: 13px; display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 22px; }
+
+/* atmosphere: fog + bats, start screen only */
+.hero { position: relative; overflow: hidden; padding: 18px 0 6px; }
+.fog {
+  position: absolute; left: -30%; width: 160%; height: 60px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(171, 159, 189, .22), transparent 70%);
+  animation: drift 16s ease-in-out infinite alternate; will-change: transform;
+}
+.fog.f1 { top: 10px; }
+.fog.f2 { bottom: -10px; animation-duration: 22s; animation-direction: alternate-reverse; }
+.bat { position: absolute; width: 30px; fill: #05030a; pointer-events: none; opacity: .9; }
+.bat.b1 { top: 6px; left: -40px; animation: fly 14s linear infinite; }
+.bat.b2 { top: 40px; left: -40px; width: 22px; animation: fly 19s linear 5s infinite; }
+.bat.b3 { top: 20px; left: -40px; width: 26px; animation: fly 24s linear 11s infinite; }
+.bat path.wing { transform-origin: 50% 60%; animation: flap .35s ease-in-out infinite alternate; }
+.hero > *:not(.fog):not(.bat) { position: relative; z-index: 1; }
+
+@keyframes flicker { 0%, 92%, 96%, 100% { opacity: 1 } 94% { opacity: .55 } 98% { opacity: .8 } }
+@keyframes pulse { 50% { opacity: .55 } }
+@keyframes shake { 20%, 60% { transform: translateX(-6px) } 40%, 80% { transform: translateX(6px) } }
+@keyframes glow { 50% { text-shadow: 0 0 10px var(--slime), 0 0 26px rgba(127, 227, 180, .4); } }
+@keyframes drift { from { transform: translateX(-8%) } to { transform: translateX(8%) } }
+@keyframes fly { 0% { transform: translate(0, 0) } 25% { transform: translate(120px, 14px) } 50% { transform: translate(260px, -4px) } 75% { transform: translate(380px, 16px) } 100% { transform: translate(520px, 0) } }
+@keyframes flap { from { transform: scaleY(1) } to { transform: scaleY(.45) } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar" hidden>
+  <div class="wrap">
+    <div class="team"><small>Team</small><span id="barTeam"></span></div>
+    <div class="locks" id="barSeals" aria-label="Seals"></div>
+    <div class="clock"><div class="t" id="barTime">40:00</div><small id="barHints">0 hints used</small></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- START -->
+  <section class="screen" id="s-start">
+    <div class="hero">
+      <div class="fog f1" aria-hidden="true"></div>
+      <div class="fog f2" aria-hidden="true"></div>
+      <svg class="bat b1" viewBox="0 0 40 20" aria-hidden="true"><path class="wing" d="M20 8C16 2 8 0 0 4c4 1 5 4 6 8 2-2 4-3 7-2 2 1 4 4 7 8 3-4 5-7 7-8 3-1 5 0 7 2 1-4 2-7 6-8-8-4-16-2-20 4z"/></svg>
+      <svg class="bat b2" viewBox="0 0 40 20" aria-hidden="true"><path class="wing" d="M20 8C16 2 8 0 0 4c4 1 5 4 6 8 2-2 4-3 7-2 2 1 4 4 7 8 3-4 5-7 7-8 3-1 5 0 7 2 1-4 2-7 6-8-8-4-16-2-20 4z"/></svg>
+      <svg class="bat b3" viewBox="0 0 40 20" aria-hidden="true"><path class="wing" d="M20 8C16 2 8 0 0 4c4 1 5 4 6 8 2-2 4-3 7-2 2 1 4 4 7 8 3-4 5-7 7-8 3-1 5 0 7 2 1-4 2-7 6-8-8-4-16-2-20 4z"/></svg>
+      <p class="kicker">Year 7 Science · States of matter escape room</p>
+      <h1 class="title">The Haunted Lab</h1>
+    </div>
+    <p class="story">A witch's freezing curse has trapped your class in the science lab. Break the <strong>4 seals</strong> hidden on the cards around the room, then unlock the cursed door.</p>
+    <div class="panel">
+      <h3>How it works</h3>
+      <ul class="rules">
+        <li>You have <b>30 minutes</b>. Work in pairs on one phone.</li>
+        <li>You can break the seals in any order.</li>
+        <li>Scan the Seal card on the bench. Lay it flat and use good light.</li>
+        <li>Stuck? Each seal has 2 hints, but every hint takes <b>2 minutes</b> off your clock.</li>
+        <li>If the camera won't work, tap "Can't scan? View in 3D".</li>
+      </ul>
+      <form id="startForm">
+        <div class="field">
+          <label for="teamName">Your names</label>
+          <input type="text" id="teamName" maxlength="30" placeholder="e.g. Sam and Alex" autocomplete="off" required>
+        </div>
+        <button class="btn" type="submit">Start</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- HUB -->
+  <section class="screen" id="s-hub" hidden>
+    <h2 class="title" style="font-size:clamp(40px,13vw,60px)">Break the seals</h2>
+    <p class="count" id="hubCount">0 of 4 seals broken</p>
+    <div class="seals" id="sealList"></div>
+    <button class="btn" type="button" id="doorBtn" disabled>The cursed door (break all 4 seals first)</button>
+  </section>
+
+  <!-- STATION -->
+  <section class="screen" id="s-station" hidden>
+    <div class="arblock">
+      <div class="arbox">
+        <div id="arView"></div>
+        <div class="arstatus" id="arStatus">Starting the camera...</div>
+      </div>
+      <button type="button" id="viewToggle">Can't scan? View in 3D</button>
+    </div>
+    <div class="panel">
+      <span class="lockno" id="stNo"></span>
+      <h2 id="stTitle"></h2>
+      <p id="stIntro"></p>
+      <form id="stForm">
+        <div id="stQs"></div>
+        <div class="feedback" id="stFeedback" role="status"></div>
+        <button class="btn" type="submit" id="stSubmit">Break the seal</button>
+        <button class="btn good" type="button" id="stDone" hidden>Seal broken! Back to the seals</button>
+      </form>
+      <div class="hints" id="stHints"></div>
+      <button class="btn ghost" type="button" id="stHintBtn">Get a hint (−2 min)</button>
+      <button class="btn ghost" type="button" id="stBack">Back to the seals</button>
+    </div>
+  </section>
+
+  <!-- LESSON -->
+  <section class="screen" id="s-lesson" hidden>
+    <div class="panel lesson-card">
+      <span class="lockno" id="lsNo"></span>
+      <h2 id="lsTitle"></h2>
+      <div class="bigletter">You earned the letter<span id="lsLetter"></span></div>
+      <div class="lesson-body" id="lsBody"></div>
+      <span class="tag" id="lsTag"></span>
+      <button class="btn" type="button" id="lsNext">Back to the seals</button>
+    </div>
+  </section>
+
+  <!-- DOOR -->
+  <section class="screen" id="s-door" hidden>
+    <div class="panel">
+      <span class="lockno">The cursed door</span>
+      <h2>Unscramble the letters</h2>
+      <p>Your 4 seal letters are below. Unscramble them to name the change of state that breaks the freezing curse.</p>
+      <div class="letters" id="doorLetters"></div>
+      <form id="doorForm">
+        <div class="field">
+          <label for="doorInput">Your answer</label>
+          <input type="text" id="doorInput" class="code-input" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+        </div>
+        <div class="feedback" id="doorFeedback" role="status"></div>
+        <button class="btn" type="submit">Unlock the door</button>
+      </form>
+      <div class="hints" id="doorHints"></div>
+      <button class="btn ghost" type="button" id="doorHintBtn">Get a hint (−2 min)</button>
+      <button class="btn ghost" type="button" id="doorBack">Back to the seals</button>
+    </div>
+  </section>
+
+  <!-- WIN -->
+  <section class="screen win" id="s-win" hidden>
+    <h2 class="title">Curse broken!</h2>
+    <div class="vcode" id="vcode"></div>
+    <p class="story" id="winMsg"></p>
+    <div class="stats">
+      <div><b id="statLeft"></b><span>Time left</span></div>
+      <div><b id="statHints"></b><span>Hints used</span></div>
+      <div><b id="statAt"></b><span>Finished at</span></div>
+    </div>
+    <p class="kicker">Show this screen to your teacher.</p>
+  </section>
+
+  <div class="footer" id="footer">
+    <span>Year 7 Science · States of matter</span>
+    <button class="btn ghost small" type="button" id="resetBtn">Start over</button>
+  </div>
+</main>
+
+<!-- TIME UP -->
+<div class="overlay" id="timeup" hidden>
+  <div class="panel">
+    <h2 class="title">Time's up</h2>
+    <p>The witch's curse holds the lab... for now. You can keep going for practice, but there's no prize this time.</p>
+    <button class="btn" type="button" id="overtimeBtn">Keep going (no prize)</button>
+  </div>
+</div>
+
+<script>
+// Keep the sticky AR block just under the status bar, whatever height the bar is.
+(function () {
+  var bar = document.getElementById("bar");
+  function set() { if (!bar.hidden) document.documentElement.style.setProperty("--barh", bar.offsetHeight + "px"); }
+  if (window.ResizeObserver) new ResizeObserver(set).observe(bar);
+  window.addEventListener("resize", set);
+  new MutationObserver(set).observe(bar, { attributes: true, attributeFilter: ["hidden"] });
+})();
+// Hide the footer on the start screen (app.js only toggles screens).
+(function () {
+  var s = document.getElementById("s-start"), f = document.getElementById("footer");
+  function set() { f.hidden = !s.hidden; }
+  new MutationObserver(set).observe(s, { attributes: true, attributeFilter: ["hidden"] });
+  set();
+})();
+</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
