@@ -43,7 +43,50 @@
     render();
     wrap.appendChild(btn);
     document.body.appendChild(wrap);
+    fitPhone();
   }
+
+  // On phones the fixed button would sit over the text, so it shrinks and only
+  // appears near the end of the page (where you'd mark the topic done anyway).
+  // Some topics scroll inside their own panel rather than the page, so track
+  // whichever element the student is actually scrolling.
+  var scroller = null;
+  function scrollable(el) {
+    return el && el.scrollHeight > el.clientHeight + 40;
+  }
+  function findScroller() {
+    if (scrollable(scroller) && document.contains(scroller)) return scroller;
+    var best = document.scrollingElement || document.documentElement;
+    if (!scrollable(best)) {
+      var els = document.querySelectorAll("main, div, section, article");
+      for (var i = 0; i < els.length; i++) {
+        var oy = getComputedStyle(els[i]).overflowY;
+        if ((oy === "auto" || oy === "scroll") && scrollable(els[i]) &&
+            (!scrollable(best) || els[i].clientHeight > best.clientHeight)) best = els[i];
+      }
+    }
+    return best;
+  }
+  function fitPhone(e) {
+    var wrap = document.getElementById("__markdone");
+    if (!wrap) return;
+    if (e && e.target && e.target.nodeType === 1 && scrollable(e.target)) scroller = e.target;
+    var phone = window.innerWidth < 700;
+    var btn = wrap.firstChild;
+    if (btn) { btn.style.padding = phone ? "8px 14px" : "11px 18px"; btn.style.fontSize = phone ? "13px" : "14px"; }
+    wrap.style.right = phone ? "12px" : "16px";
+    wrap.style.bottom = phone ? "12px" : "16px";
+    var sc = findScroller();
+    var nearEnd = !scrollable(sc) || sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 400;
+    var show = !phone || nearEnd;
+    wrap.style.opacity = show ? "1" : "0";
+    wrap.style.pointerEvents = show ? "auto" : "none";
+    wrap.style.transition = "opacity .2s";
+    if (btn) btn.tabIndex = show ? 0 : -1;
+  }
+  document.addEventListener("scroll", fitPhone, { passive: true, capture: true });
+  window.addEventListener("resize", fitPhone);
+  setInterval(fitPhone, 1000);   // content and tabs change after load
 
   // Attach on several signals + a couple of delayed retries, because some
   // self-contained topics (e.g. the Forces bundle) replace the DOM after load,
