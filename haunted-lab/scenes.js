@@ -168,13 +168,15 @@ function withIntro(obj) {
   const inner = obj.update;
   let t0 = null, last = -99;
   obj.update = function (t) {
-    if (t0 === null || t - last > 0.4) t0 = t;
+    if (t0 === null || t < last || t - last > 0.4) t0 = t;
     last = t;
     const k = Math.min(1, (t - t0) / 1.1);
     const c1 = 1.9, e = 1 + (c1 + 1) * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); // easeOutBack
     obj.root.scale.set(1, Math.max(0.001, k < 1 ? e : 1), 1);
     inner.call(obj, t);
   };
+  // Called whenever the scene's own clock restarts at 0 (station opened, AR <-> 3D switch).
+  obj.reset = () => { t0 = null; last = -99; if (obj.onReset) obj.onReset(); };
   return obj;
 }
 
@@ -350,13 +352,18 @@ function buildPond() {
     root.add(d); drops.push(d);
   }
 
-  // Invisible water vapour (D): faint wisps rising off the pond
+  // Invisible water vapour (D): faint upward arrows show where the invisible vapour goes (a model, not mist)
   const wisps = [];
-  for (let i = 0; i < 18; i++) {
-    const w = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: 0xe8f6ff, transparent: true, opacity: 0.25, depthWrite: false }));
-    w.scale.setScalar(0.03);
-    w.base = new THREE.Vector3(0.03 + (Math.random() - 0.5) * 0.3, 0, 0.2 + (Math.random() - 0.5) * 0.2);
-    w.phase = Math.random();
+  const shaftGeo = new THREE.CylinderGeometry(0.0016, 0.0016, 0.034, 6); shaftGeo.translate(0, 0.017, 0);
+  const headGeo = new THREE.ConeGeometry(0.0068, 0.018, 8); headGeo.translate(0, 0.043, 0);
+  for (let i = 0; i < 14; i++) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xb9e3ff, transparent: true, opacity: 0.3, depthWrite: false });
+    const w = new THREE.Group();
+    w.add(new THREE.Mesh(shaftGeo, mat), new THREE.Mesh(headGeo, mat));
+    w.mat = mat;
+    w.base = new THREE.Vector3(0.03 + (Math.random() - 0.5) * 0.34, 0, 0.2 + (Math.random() - 0.5) * 0.2);
+    w.phase = i / 14 + (Math.random() - 0.5) * 0.05;
+    w.renderOrder = 2;
     root.add(w); wisps.push(w);
   }
 
@@ -378,10 +385,9 @@ function buildPond() {
       ripples.forEach(r => { const k = (t * 0.35 + r.phase) % 1; r.scale.setScalar(1 + k * 4); r.material.opacity = 0.7 * (1 - k); });
       drops.forEach(d => { const k = (t * 1.1 + d.phase) % 1; d.position.set(d.base.x, lerp(0.42, 0.02, k), d.base.z); });
       wisps.forEach(w => {
-        const k = (t * 0.12 + w.phase) % 1;
-        w.position.set(w.base.x + Math.sin(t * 1.5 + w.phase * 9) * 0.02, lerp(0.02, 0.36, k), w.base.z);
-        w.material.opacity = 0.45 * Math.sin(Math.PI * k);
-        w.scale.setScalar(0.025 + k * 0.035);
+        const k = (t * 0.14 + w.phase) % 1;
+        w.position.set(w.base.x + Math.sin(t * 1.2 + w.phase * 9) * 0.008, lerp(0.02, 0.3, k), w.base.z);
+        w.mat.opacity = 0.42 * Math.sin(Math.PI * k);
       });
       cloud.position.x = -0.08 + Math.sin(t * 0.5) * 0.01;
       const fl = Math.max(0, Math.sin(t * 0.9) * 8 - 7.2) + Math.max(0, Math.sin(t * 2.3 + 1) * 10 - 9.5); // brief lightning flicker
@@ -403,24 +409,55 @@ function solidLattice(nx, ny, nz, gap, y0) {
     out.push(new THREE.Vector3((i - (nx - 1) / 2) * gap, y0 + j * gap, (k - (nz - 1) / 2) * gap));
   return out;
 }
-function liquidBed(n, radius, y0, gap, rand) {
-  // Close-packed but jumbled: jitter a loose lattice and keep particles in the bottom.
-  const out = [];
-  const per = Math.max(1, Math.round(Math.sqrt(n / 2)));
-  for (let i = 0; i < n; i++) {
-    const layer = Math.floor(i / (per * per + 2));
-    const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * radius;
-    out.push(new THREE.Vector3(Math.cos(a) * r, y0 + layer * gap * 0.9 + rand() * gap * 0.4, Math.sin(a) * r));
-  }
-  return out;
-}
 function seeded(seed) { let s = seed; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 
-// Gas particles bouncing in a box (bounds: |x|,|z| < r, y0 < y < y1).
-function gasCloud(n, r, y0, y1, speed, rand) {
+// Push overlapping particles apart (centres kept at least d0 apart). `fixed` particles never move.
+function separate(list, fixed, d0, passes, flat = false) {
+  for (let it = 0; it < passes; it++) {
+    for (let a = 0; a < list.length; a++) {
+      const A = list[a].p;
+      for (let b = a + 1; b < list.length; b++) {
+        const B = list[b].p;
+        let dx = B.x - A.x, dy = flat ? 0 : B.y - A.y, dz = B.z - A.z, d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (d >= d0) continue;
+        if (d < 1e-5) { dx = 1e-3; dy = dz = 0; d = 1e-3; }
+        const f = (d0 - d) / 2 / d;
+        A.x -= dx * f; A.y -= dy * f; A.z -= dz * f; B.x += dx * f; B.y += dy * f; B.z += dz * f;
+      }
+      for (let b = 0; b < fixed.length; b++) {
+        const B = fixed[b];
+        let dx = B.x - A.x, dy = B.y - A.y, dz = B.z - A.z, d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (d >= d0) continue;
+        if (d < 1e-5) { dx = 1e-3; dy = dz = 0; d = 1e-3; }
+        const f = (d0 - d) / d;
+        A.x -= dx * f; A.y -= dy * f; A.z -= dz * f;
+      }
+    }
+  }
+}
+// Liquid motion: each particle wanders (slowly turning heading), stays close to its layer height,
+// is pushed off its neighbours and kept inside the container, so it travels and changes neighbours.
+function wander(list, fixed, dt, o) {
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i];
+    q.th += (Math.random() - 0.5) * 7 * dt;
+    q.p.x += Math.cos(q.th) * o.speed * dt; q.p.z += Math.sin(q.th) * o.speed * dt;
+    q.p.y += (q.ly - q.p.y) * Math.min(1, 10 * dt);
+  }
+  separate(list, fixed, o.d0, 3, o.flat);
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i];
+    if (o.confine(q.p)) q.th = Math.atan2(-q.p.z, -q.p.x) + (Math.random() - 0.5);
+  }
+}
+
+// Gas particles bouncing in a box (|x|,|z| < r) or, with circ, a cylinder of radius r (y0 < y < y1).
+function gasCloud(n, r, y0, y1, speed, rand, circ = false) {
   const p = [], v = [];
   for (let i = 0; i < n; i++) {
-    p.push(new THREE.Vector3((rand() - 0.5) * 2 * r, lerp(y0, y1, rand()), (rand() - 0.5) * 2 * r));
+    let x, z;
+    do { x = (rand() - 0.5) * 2 * r; z = (rand() - 0.5) * 2 * r; } while (circ && x * x + z * z > r * r);
+    p.push(new THREE.Vector3(x, lerp(y0, y1, rand()), z));
     v.push(new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize().multiplyScalar(speed));
   }
   return {
@@ -428,22 +465,31 @@ function gasCloud(n, r, y0, y1, speed, rand) {
     step(dt) {
       for (let i = 0; i < n; i++) {
         p[i].addScaledVector(v[i], dt);
-        if (Math.abs(p[i].x) > r) { p[i].x = Math.sign(p[i].x) * r; v[i].x *= -1; }
-        if (Math.abs(p[i].z) > r) { p[i].z = Math.sign(p[i].z) * r; v[i].z *= -1; }
+        if (circ) bounceCircle(p[i], v[i], r);
+        else {
+          if (Math.abs(p[i].x) > r) { p[i].x = Math.sign(p[i].x) * r; v[i].x *= -1; }
+          if (Math.abs(p[i].z) > r) { p[i].z = Math.sign(p[i].z) * r; v[i].z *= -1; }
+        }
         if (p[i].y < y0) { p[i].y = y0; v[i].y *= -1; }
         if (p[i].y > y1) { p[i].y = y1; v[i].y *= -1; }
       }
     }
   };
 }
+function bounceCircle(p, v, R) {
+  const r = Math.hypot(p.x, p.z);
+  if (r > R) {
+    const nx = p.x / r, nz = p.z / r;
+    p.x = nx * R; p.z = nz * R;
+    const vn = v.x * nx + v.z * nz;
+    if (vn > 0) { v.x -= 2 * vn * nx; v.z -= 2 * vn * nz; }
+  }
+}
 
-// A state that gives a position for particle i at time t.
-function stateFn(kind, cfg) {
-  if (kind === "solid") return (i, t) => cfg.solid[i].clone().add(new THREE.Vector3(
-    Math.sin(t * 31 + i * 1.7), Math.sin(t * 27 + i * 2.3), Math.sin(t * 29 + i * 0.9)).multiplyScalar(cfg.vib));
-  if (kind === "liquid") return (i, t) => cfg.liquid[i].clone().add(new THREE.Vector3(
-    Math.sin(t * 1.9 + i * 2.1) * cfg.drift, Math.sin(t * 2.3 + i * 1.3) * cfg.drift * 0.4, Math.cos(t * 1.7 + i * 0.7) * cfg.drift));
-  return i => cfg.gas.p[i].clone();
+// Solid particles: fixed lattice sites with a tiny fast vibration.
+function solidAt(site, i, t, vib) {
+  return new THREE.Vector3(
+    site.x + Math.sin(t * 31 + i * 1.7) * vib, site.y + Math.sin(t * 27 + i * 2.3) * vib, site.z + Math.sin(t * 29 + i * 0.9) * vib);
 }
 
 // ---------- Seal 2: potion jars (changes of state) ----------
@@ -453,8 +499,175 @@ const JARS = [
   { letter: "Y", from: "liquid", to: "solid", color: C.purple },  // freezing
   { letter: "Z", from: "liquid", to: "gas", color: C.pumpkin }    // evaporation
 ];
-const JAR_N = 18, JAR_R = 0.085, JAR_H = 0.3, PR = 0.0155;
-const CYCLE = 9; // hold start 2.5 s, change 3 s, hold end 2.5 s, fade 1 s
+const JAR_N = 18, JAR_R = 0.085, JAR_H = 0.3, PR = 0.0105;
+const JAR_IN = JAR_R - PR - 0.003;          // furthest a particle centre may be from the jar axis
+const POOL_Y = 0.008 + PR + 0.002;          // height of particle centres lying on the jar floor
+const LATT = 0.039;                         // lattice spacing: particles 0.023 wide, so ~0.011 gaps show
+const T_HOLD = 3.5, T_CHG = 4, CYCLE = 12;  // BEFORE hold 3.5 s, change 4 s, AFTER hold 3.5 s, fade out/reset/fade in 1 s
+const HEATED = { W: true, Z: true };
+const M_SOLID = 0, M_LIQ = 1, M_GAS = 2, M_FREEZE = 3, M_FALL = 4;
+
+// One jar's particle simulation. Particles change state one at a time at staggered moments.
+function makeJarSim(J, seed) {
+  const rand = seeded(seed);
+  const sites = solidLattice(3, 3, 2, LATT, POOL_Y);
+  const items = sites.map((site, i) => ({ i, site, p: new THREE.Vector3(), v: new THREE.Vector3(), th: 0, ly: POOL_Y, mode: 0, ev: 0, tgt: new THREE.Vector3() }));
+  const shrinks = J.letter === "X" || J.letter === "Z";
+  const liq = [], fixed = [];
+  const sim = { items, poolR: JAR_IN, frac: 0, nL: 0 };
+  const gasTop = JAR_H - 0.025;
+  const randDisc = R => { const a = rand() * 6.283, r = Math.sqrt(rand()) * R; return [Math.cos(a) * r, Math.sin(a) * r]; };
+  sim.init = () => {
+    const N = items.length;
+    // order in which particles change state: the top layer of a melting solid goes first, otherwise random
+    const order = items.map((it, k) => ({ k, key: (J.from === "solid" ? it.site.y * 20 : 0) + rand() })).sort((a, b) => b.key - a.key).map(o => o.k);
+    order.forEach((idx, n) => { items[idx].ev = T_HOLD + 0.2 + n / (N - 1) * (T_CHG - 1.4); });
+    sim.poolR = JAR_IN; sim.frac = J.from === "liquid" ? 1 : 0;
+    items.forEach(it => {
+      it.ly = POOL_Y; it.th = rand() * 6.283; it.v.set(0, 0, 0);
+      if (J.from === "solid") { it.mode = M_SOLID; it.p.copy(it.site); }
+      else if (J.from === "gas") {
+        it.mode = M_GAS;
+        const [x, z] = randDisc(JAR_IN);
+        it.p.set(x, lerp(0.06, gasTop, rand()), z);
+        it.v.set(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize().multiplyScalar(0.4);
+      } else {
+        it.mode = M_LIQ;
+        const [x, z] = randDisc(JAR_IN);
+        it.p.set(x, POOL_Y, z);
+      }
+    });
+    if (J.from === "liquid") { // relax into a packed, jumbled pool that just touches
+      for (let k = 0; k < 80; k++) {
+        separate(items, [], 0.025, 1, true);
+        items.forEach(it => { const r = Math.hypot(it.p.x, it.p.z); if (r > JAR_IN) { it.p.x *= JAR_IN / r; it.p.z *= JAR_IN / r; } it.p.y = POOL_Y; });
+      }
+    }
+  };
+  sim.step = (dt, c) => {
+    // staggered state changes
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (c < it.ev) continue;
+      if (it.mode === M_SOLID && J.to === "liquid") { it.mode = M_LIQ; it.th = rand() * 6.283; }
+      else if (it.mode === M_LIQ && J.to === "solid") it.mode = M_FREEZE;
+      else if (it.mode === M_LIQ && J.to === "gas") { // escapes from the surface
+        it.mode = M_GAS;
+        const a = rand() * 6.283, s = 0.4;
+        it.v.set(Math.cos(a) * s * 0.4, s * 0.85, Math.sin(a) * s * 0.4);
+        it.p.y = Math.max(it.p.y, POOL_Y + 0.004);
+      } else if (it.mode === M_GAS && J.to === "liquid") { // drops into the pool
+        it.mode = M_FALL;
+        const [x, z] = randDisc(Math.max(0.02, sim.poolR * 0.85));
+        it.tgt.set(x, POOL_Y, z);
+      }
+    }
+    let nL = 0, nF = 0;
+    liq.length = 0; fixed.length = 0;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (it.mode === M_LIQ) { nL++; liq.push(it); }
+      else if (it.mode === M_FALL) nF++;
+      else if (it.mode === M_SOLID) fixed.push(it.site);
+      else if (it.mode === M_FREEZE) fixed.push(it.p);
+    }
+    sim.nL = nL;
+    const R0 = shrinks ? JAR_IN * Math.min(1, Math.max(0.45, Math.sqrt((nL + nF + 1) / items.length))) : JAR_IN;
+    sim.poolR += (R0 - sim.poolR) * Math.min(1, 4 * dt);
+    const R = sim.poolR;
+    wander(liq, fixed, dt, { speed: 0.05, d0: 0.025, flat: true, confine: p => { const r = Math.hypot(p.x, p.z); if (r > R) { p.x *= R / r; p.z *= R / r; return true; } return false; } });
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (it.mode === M_GAS) {
+        it.p.addScaledVector(it.v, dt);
+        bounceCircle(it.p, it.v, JAR_IN);
+        if (it.p.y < 0.03) { it.p.y = 0.03; it.v.y = Math.abs(it.v.y); }
+        if (it.p.y > gasTop) { it.p.y = gasTop; it.v.y = -Math.abs(it.v.y); }
+      } else if (it.mode === M_FREEZE) {
+        it.p.lerp(it.site, Math.min(1, 9 * dt));
+        if (it.p.distanceTo(it.site) < 0.0015) { it.mode = M_SOLID; it.p.copy(it.site); }
+      } else if (it.mode === M_FALL) {
+        const d = it.tgt.clone().sub(it.p), len = d.length(), st = 0.32 * dt;
+        if (len <= st) { it.p.copy(it.tgt); it.mode = M_LIQ; it.th = rand() * 6.283; }
+        else it.p.addScaledVector(d, st / len);
+      }
+    }
+    sim.frac += (nL / items.length - sim.frac) * Math.min(1, 8 * dt);
+  };
+  sim.pos = (it, t) => it.mode === M_SOLID ? solidAt(it.site, it.i, t, 0.0022) : it.p;
+  sim.init();
+  return sim;
+}
+
+let _cueTex;
+function cueTex() {
+  if (_cueTex) return _cueTex;
+  const mk = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const flame = mk(64, 96, (g, w, h) => {
+    const path = () => { g.beginPath(); g.moveTo(w / 2, 4); g.bezierCurveTo(w * 0.95, h * 0.45, w * 0.95, h * 0.95, w / 2, h - 3); g.bezierCurveTo(w * 0.05, h * 0.95, w * 0.05, h * 0.5, w / 2, 4); g.closePath(); };
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#ffd24a"); gr.addColorStop(1, "#ff4a1c");
+    path(); g.fillStyle = gr; g.fill();
+    g.save(); g.translate(w / 2, h * 0.62); g.scale(0.5, 0.5); g.translate(-w / 2, -h * 0.62);
+    path(); g.fillStyle = "#fff3b0"; g.fill(); g.restore();
+  });
+  // blue "cold" cue: a downward arrow
+  const cold = mk(64, 96, (g, w, h) => {
+    g.beginPath(); g.moveTo(w * 0.36, 4); g.lineTo(w * 0.64, 4); g.lineTo(w * 0.64, h * 0.5); g.lineTo(w * 0.92, h * 0.5);
+    g.lineTo(w / 2, h - 4); g.lineTo(w * 0.08, h * 0.5); g.lineTo(w * 0.36, h * 0.5); g.closePath();
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#d6f1ff"); gr.addColorStop(1, "#3aa6ff");
+    g.fillStyle = gr; g.fill(); g.lineWidth = 4; g.strokeStyle = "#e8f8ff"; g.stroke();
+  });
+  return (_cueTex = { flame, cold });
+}
+
+// Small readable tag under a jar: HEATING (orange) or COOLING (blue).
+function tagSprite(text, color) {
+  const c = document.createElement("canvas");
+  c.width = 320; c.height = 84;
+  const g = c.getContext("2d");
+  g.fillStyle = "rgba(20,15,28,.92)"; g.beginPath(); g.roundRect(4, 4, 312, 76, 24); g.fill();
+  g.lineWidth = 6; g.strokeStyle = color; g.stroke();
+  g.fillStyle = color; g.font = "bold 52px 'Atkinson Hyperlegible', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(text, 160, 44);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  s.scale.set(0.2, 0.2 * 84 / 320, 1); s.renderOrder = 11;
+  return s;
+}
+
+// Shared BEFORE / AFTER indicator (one canvas texture for all four jars; redrawn only when its look changes).
+function makeIndicator() {
+  const W = 320, H = 120, c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true });
+  let key = "";
+  const font = "bold 38px 'Atkinson Hyperlegible', sans-serif";
+  const pill = (g, x, label, lit) => {
+    g.fillStyle = lit ? "#ff8c32" : "rgba(20,15,28,.92)";
+    g.beginPath(); g.roundRect(x, 4, 150, 56, 18); g.fill();
+    g.lineWidth = 4; g.strokeStyle = lit ? "#ffd7a8" : "#5b4d78"; g.stroke();
+    g.fillStyle = lit ? "#140f1c" : "#8f84a8"; g.font = font; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(label, x + 75, 34);
+  };
+  return {
+    mat,
+    set(phase, prog) { // phase 0 before, 1 change, 2 after, 3 replay
+      const kk = phase + ":" + Math.round(prog * 24);
+      if (kk === key) return; key = kk;
+      const g = c.getContext("2d"); g.clearRect(0, 0, W, H);
+      pill(g, 4, "BEFORE", phase === 0); pill(g, 166, phase === 3 ? "Replay" : "AFTER", phase === 2 || phase === 3);
+      g.fillStyle = "rgba(20,15,28,.92)"; g.beginPath(); g.roundRect(4, 72, W - 8, 40, 20); g.fill();
+      g.lineWidth = 4; g.strokeStyle = "#5b4d78"; g.stroke();
+      const x0 = 30, x1 = W - 30, px = x0 + (x1 - x0) * prog;
+      g.fillStyle = "#3a2f55"; g.fillRect(x0, 90, x1 - x0, 4);
+      if (phase > 0 && phase < 3) { g.fillStyle = "#ff8c32"; g.fillRect(x0, 89, px - x0, 6); }
+      g.fillStyle = phase === 1 ? "#ffd7a8" : "#ff8c32";
+      g.beginPath(); g.moveTo(px + 14, 92); g.lineTo(px - 8, 78); g.lineTo(px - 8, 106); g.closePath(); g.fill();
+      tex.needsUpdate = true;
+    }
+  };
+}
 
 function buildJars() {
   const root = new THREE.Group();
@@ -470,7 +683,12 @@ function buildJars() {
   const corkGeo = new THREE.CylinderGeometry(JAR_R * 0.92, JAR_R * 0.8, 0.035, 28);
   const corkMat = std(C.pumpkin, { roughness: 0.8 });
   const bandGeo = new THREE.TorusGeometry(JAR_R * 0.86, 0.004, 6, 32);
-  const sphereGeo = new THREE.SphereGeometry(PR, 14, 10);
+  const sphereGeo = new THREE.SphereGeometry(PR, 16, 12);
+  const BODY_R = JAR_R - 0.004;
+  const bodyGeo = new THREE.CylinderGeometry(BODY_R, BODY_R, 1, 40);
+  const discGeo = new THREE.CircleGeometry(1, 40);
+  const surfRingGeo = new THREE.TorusGeometry(1, 0.025, 6, 48);
+  const indicator = makeIndicator(), indMat = indicator.mat;
   const jars = JARS.map((J, j) => {
     const g = new THREE.Group();
     g.position.set(-0.36 + j * 0.24, 0.014, 0.05);
@@ -489,55 +707,111 @@ function buildJars() {
     const label = badge(J.letter, "#8c7bd6", 0.08); label.position.y = JAR_H + 0.09;
     g.add(pad, ring, pool, glass, base, rim, cork, band, label);
 
-    const rand = seeded(101 + j * 17);
-    const cfg = {
-      solid: solidLattice(3, 2, 3, 0.034, 0.025),
-      liquid: liquidBed(JAR_N, JAR_R - 0.025, 0.022, 0.032, rand),
-      gas: gasCloud(JAR_N, JAR_R * 0.62, 0.02, JAR_H - 0.03, 0.22, rand),
-      vib: 0.003, drift: 0.012
-    };
-    const mesh = new THREE.InstancedMesh(sphereGeo, glow(J.color, 0.5, { roughness: 0.35 }), JAR_N);
-    // soft halo around every particle (one additive Points draw call per jar)
+    const sim = makeJarSim(J, 101 + j * 17);
+    // translucent liquid body with a flat, clearly visible surface (disc + bright ring); only visible while the jar holds liquid
+    const body = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial({ color: J.color, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    body.renderOrder = 1;
+    const surf = new THREE.Mesh(discGeo, new THREE.MeshBasicMaterial({ color: J.color, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+    surf.rotation.x = -Math.PI / 2; surf.renderOrder = 1;
+    const surfRing = new THREE.Mesh(surfRingGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    surfRing.rotation.x = Math.PI / 2; surfRing.renderOrder = 2;
+    g.add(body, surf, surfRing);
+    // BEFORE/AFTER indicator in front of the jar
+    const ind = new THREE.Sprite(indMat); ind.scale.set(0.236, 0.236 * 120 / 320, 1); ind.position.set(0, 0.012, 0.25); ind.renderOrder = 11;
+    g.add(ind);
+    // heating / cooling cue in front of the jar, plus a readable tag
+    const hot = !!HEATED[J.letter], cueCol = hot ? 0xff7a1c : 0x6cc8ff;
+    const tag = tagSprite(hot ? "HEATING" : "COOLING", hot ? "#ff8c32" : "#6cc8ff"); tag.position.set(0, 0.012, 0.335);
+    g.add(tag);
+    const cueGlow = floorGlow(cueCol, 0.17, 0); cueGlow.position.set(0, 0.006, 0.0);
+    const aura = glowSprite(cueCol, 0.28, 0); aura.position.set(0, 0.05, 0.15);
+    const cues = [];
+    const ct = cueTex();
+    for (let n = 0; n < 3; n++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: hot ? ct.flame : ct.cold, transparent: true, depthWrite: false, opacity: 0 }));
+      sp.renderOrder = 9; sp.position.set((n - 1) * 0.07, 0.05, 0.17);
+      cues.push(sp); g.add(sp);
+    }
+    g.add(cueGlow, aura);
+    const pmat = glow(J.color, 0.3, { roughness: 0.35, transparent: true });
+    const mesh = new THREE.InstancedMesh(sphereGeo, pmat, JAR_N);
+    mesh.frustumCulled = false;
+    // faint halo around every particle (one additive Points draw call per jar)
     const hgeo = new THREE.BufferGeometry();
     const hpos = new Float32Array(JAR_N * 3);
     hgeo.setAttribute("position", new THREE.BufferAttribute(hpos, 3));
-    const halo = new THREE.Points(hgeo, new THREE.PointsMaterial({ map: glowTex(), color: J.color, size: 0.07, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.4 }));
+    const halo = new THREE.Points(hgeo, new THREE.PointsMaterial({ map: glowTex(), color: J.color, size: 0.04, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.1 }));
     halo.frustumCulled = false; halo.renderOrder = 3;
     g.add(mesh, halo);
     root.add(g);
-    return { g, mesh, halo, hpos, hgeo, cfg, ring, A: stateFn(J.from, cfg), B: stateFn(J.to, cfg) };
+    return { g, mesh, pmat, halo, hpos, hgeo, sim, ring, body, surf, surfRing, cues, cueGlow, aura, hot, J };
   });
-  const lan1 = addLantern(root, -0.4, 0.45, 1), lan2 = addLantern(root, 0.4, -0.4, 0.9);
+  const lan1 = addLantern(root, -0.4, 0.5, 1), lan2 = addLantern(root, 0.4, -0.4, 0.9);
   const mistT = mist(root, [[-0.3, 0.42, 0.4], [0.3, 0.45, 0.4], [0.0, -0.35, 0.5], [-0.4, -0.3, 0.3]]);
   const batT = bats(root, 3, 0, 0, 0.4, 0.62);
   const flyT = fireflies(root, 12, 0.45, 0.5, 0.35, 0.05, 0xc8b6ff);
 
-  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3();
-  let last = 0;
-  return withIntro({
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+  let last = 0, resetCycle = -1;
+  const api = withIntro({
     root,
+    onReset() { last = 0; resetCycle = -1; jars.forEach(J => J.sim.init()); },
     update(t) {
-      const dt = Math.min(0.05, t - last); last = t;
-      const c = t % CYCLE;
-      const k = smooth((c - 2.5) / 3);
-      const fade = c > 8 ? 1 - (c - 8) : c < 0.4 ? c / 0.4 : 1;
+      const dt = Math.min(0.05, Math.max(0, t - last)); last = t;
+      const cyc = Math.floor(t / CYCLE), c = t - cyc * CYCLE;
+      // c 0..11: the demo; 11..11.5 everything fades out; at 11.5 the jars reset to BEFORE; 11.5..12 fade back in
+      if (c >= 11.5 && resetCycle !== cyc) { resetCycle = cyc; jars.forEach(J => J.sim.init()); }
+      const sc = c >= 11.5 ? 0 : c;
+      const lin = Math.min(1, Math.max(0, (c - T_HOLD) / T_CHG));
+      const fade = c < 11 ? 1 : c < 11.5 ? 1 - (c - 11) / 0.5 : (c - 11.5) / 0.5;
+      const phase = c >= 11 ? 3 : c < T_HOLD ? 0 : c < T_HOLD + T_CHG ? 1 : 2;
+      indicator.set(phase, phase === 3 ? 0 : lin);
+      const w = Math.min(1, Math.max(0, (c - T_HOLD) / 0.5)) * Math.min(1, Math.max(0, (T_HOLD + T_CHG - c) / 0.5));
+      const cue = (0.28 + 0.72 * w) * Math.max(0, fade);
       jars.forEach(J => {
-        J.cfg.gas.step(dt);
+        const sim = J.sim;
+        sim.step(dt, sc);
+        // liquid body + flat surface; the pool shrinks/grows with the liquid
+        const fr = Math.min(1, sim.frac * 1.5), rr = (sim.poolR + PR - 0.001) / BODY_R;
+        const hgt = 0.026 + 0.012 * sim.frac, top = 0.008 + hgt;
+        J.body.visible = J.surf.visible = J.surfRing.visible = fr > 0.01;
+        J.body.scale.set(rr, hgt, rr); J.body.position.y = 0.008 + hgt / 2;
+        J.body.material.opacity = 0.24 * fr * fade;
+        J.surf.scale.setScalar(rr * BODY_R); J.surf.position.y = top;
+        J.surf.material.opacity = 0.3 * fr * fade;
+        J.surfRing.scale.setScalar(rr * BODY_R); J.surfRing.position.y = top + 0.0005;
+        J.surfRing.material.opacity = 0.7 * fr * fade;
+        J.cueGlow.material.opacity = 0.7 * cue; J.aura.material.opacity = 0.35 * cue;
+        J.cues.forEach((sp, n) => {
+          sp.material.opacity = Math.min(1, cue * 1.1);
+          if (J.hot) { // flickering flame
+            const f = 0.8 + 0.3 * Math.sin(t * 13 + n * 2.3) * Math.sin(t * 7.1 + n);
+            const sz = (n === 1 ? 0.095 : 0.07) * f * (0.7 + 0.5 * cue);
+            sp.scale.set(sz * 0.7, sz, 1); sp.position.y = 0.012 + sz * 0.5; sp.position.x = (n - 1) * 0.07 + Math.sin(t * 9 + n) * 0.004;
+          } else { // blue arrows pointing down, drifting down
+            const k = (t * 0.6 + n / 3) % 1, sz = 0.075;
+            sp.scale.set(sz * 0.67, sz, 1); sp.position.x = (n - 1) * 0.07;
+            sp.position.y = 0.1 - k * 0.07;
+            sp.material.opacity = Math.min(1, cue * 1.1) * Math.sin(Math.PI * k) * 0.9 + 0.1 * cue;
+          }
+        });
         for (let i = 0; i < JAR_N; i++) {
-          const p = J.A(i, t).lerp(J.B(i, t), k);
-          sc.setScalar(Math.max(0.001, fade));
-          m.compose(p, q, sc);
+          const p = sim.pos(sim.items[i], t);
+          m.compose(p, q, one);
           J.mesh.setMatrixAt(i, m);
           J.hpos[i * 3] = p.x; J.hpos[i * 3 + 1] = p.y; J.hpos[i * 3 + 2] = p.z;
         }
         J.mesh.instanceMatrix.needsUpdate = true;
         J.hgeo.attributes.position.needsUpdate = true;
-        J.halo.material.opacity = 0.4 * Math.max(0, fade);
+        J.pmat.opacity = Math.max(0, fade);
+        J.mesh.visible = J.halo.visible = fade > 0.01;
+        J.halo.material.opacity = 0.1 * Math.max(0, fade);
         J.ring.material.emissiveIntensity = 0.7 + 0.3 * Math.sin(t * 2);
       });
       lan1.update(t); lan2.update(t + 1); mistT(t); batT(t); flyT(t);
     }
   });
+  return api;
 }
 
 // ---------- Seal 3: spell bonds (attractive forces) ----------
@@ -561,6 +835,7 @@ function buildBonds() {
   const plateEdgeMat = new THREE.LineBasicMaterial({ color: 0x8c7bd6 });
   const sphGeo = new THREE.SphereGeometry(0.016, 14, 10);
   const bondGeo = new THREE.CylinderGeometry(1, 1, 1, 6);
+  const BIN = BOX / 2 - 0.018; // furthest a liquid particle centre may be from the box axis
   const boxes = BOXES.map((B, j) => {
     const g = new THREE.Group();
     g.position.set(-0.32 + j * 0.32, 0.014, 0.05);
@@ -575,24 +850,40 @@ function buildBonds() {
     g.add(plate, plateEdge, pool, edges, glass, label);
 
     const rand = seeded(500 + j * 31);
-    let pts, n, fn, bondR, bondMax, gas;
+    let pts, n, fn, bondR, bondMax, gas, liq, step = null;
     if (B.kind === "solid") {
       pts = solidLattice(3, 3, 3, 0.05, 0.035); n = pts.length;
-      fn = stateFn("solid", { solid: pts, vib: 0.0025 });
+      fn = (i, t) => solidAt(pts[i], i, t, 0.0025);
       bondR = 0.0055; bondMax = 0.056;
     } else if (B.kind === "liquid") {
-      pts = liquidBed(20, 0.065, 0.025, 0.04, rand); n = pts.length;
-      fn = stateFn("liquid", { liquid: pts, drift: 0.016 });
+      // jumbled, close together, always on the move: particles travel and change neighbours
+      n = 20; liq = [];
+      for (let i = 0; i < n; i++) liq.push({ p: new THREE.Vector3((rand() - 0.5) * 2 * BIN, 0, (rand() - 0.5) * 2 * BIN), th: rand() * 6.283, ly: i < 12 ? 0.02 : 0.054 });
+      const confine = p => {
+        let hit = false;
+        if (Math.abs(p.x) > BIN) { p.x = Math.sign(p.x) * BIN; hit = true; }
+        if (Math.abs(p.z) > BIN) { p.z = Math.sign(p.z) * BIN; hit = true; }
+        if (p.y < 0.017) p.y = 0.017;
+        return hit;
+      };
+      liq.forEach(q => { q.p.y = q.ly; });
+      for (let k = 0; k < 80; k++) { separate(liq, [], 0.034, 1); liq.forEach(q => { q.p.x = Math.max(-BIN, Math.min(BIN, q.p.x)); q.p.z = Math.max(-BIN, Math.min(BIN, q.p.z)); q.p.y = q.ly; }); }
+      fn = i => liq[i].p;
+      step = dt => {
+        wander(liq, [], dt, { speed: 0.05, d0: 0.034, confine });
+        liq.forEach(q => { if (Math.random() < dt * 0.4) q.ly = q.ly < 0.04 ? 0.054 : 0.02; }); // climb over each other now and then
+      };
       bondR = 0.0022; bondMax = 0.055;
     } else {
       n = 12; gas = gasCloud(n, BOX / 2 - 0.02, 0.02, BOX - 0.02, 0.25, rand);
-      fn = stateFn("gas", { gas });
+      fn = (i) => gas.p[i];
       bondR = 0; bondMax = 0;
     }
     const mesh = new THREE.InstancedMesh(sphGeo, glow(C.bone, 0.3, { roughness: 0.35 }), n);
+    mesh.frustumCulled = false;
     const maxBonds = 160;
     const bonds = new THREE.InstancedMesh(bondGeo, glow(C.blood, 0.9, { transparent: true, opacity: B.kind === "solid" ? 1 : 0.65 }), maxBonds);
-    bonds.count = 0;
+    bonds.count = 0; bonds.frustumCulled = false;
     const hgeo = new THREE.BufferGeometry();
     const hpos = new Float32Array(n * 3);
     hgeo.setAttribute("position", new THREE.BufferAttribute(hpos, 3));
@@ -600,7 +891,7 @@ function buildBonds() {
     halo.frustumCulled = false; halo.renderOrder = 3;
     g.add(mesh, bonds, halo);
     root.add(g);
-    return { kind: B.kind, n, fn, gas, mesh, bonds, bondR, bondMax, maxBonds, hgeo, hpos };
+    return { kind: B.kind, n, fn, gas, step, mesh, bonds, bondR, bondMax, maxBonds, hgeo, hpos };
   });
   const lan = addLantern(root, 0.0, -0.45, 1.1);
   const lan2 = addLantern(root, -0.42, 0.45, 0.9);
@@ -612,10 +903,12 @@ function buildBonds() {
   let last = 0;
   return withIntro({
     root,
+    onReset() { last = 0; },
     update(t) {
-      const dt = Math.min(0.05, t - last); last = t;
+      const dt = Math.min(0.05, Math.max(0, t - last)); last = t;
       boxes.forEach(b => {
         if (b.gas) b.gas.step(dt);
+        if (b.step) b.step(dt);
         const P = [];
         for (let i = 0; i < b.n; i++) {
           const p = b.fn(i, t); P.push(p); m.compose(p, q, one); b.mesh.setMatrixAt(i, m);
@@ -649,47 +942,54 @@ function buildBonds() {
 // ---------- Seal 4: the witch's cauldron (heating curve) ----------
 // Graph time runs 0..20 minutes; the loop takes 16 s plus a 2 s pause.
 const tempAt = m => m < 2 ? -10 + 5 * m : m < 6 ? 0 : m < 14 ? (m - 6) * 12.5 : 100;
-const GRAPH = { w: 1024, h: 680, l: 130, r: 40, t: 70, b: 110, tMax: 20, yMin: -20, yMax: 110 };
+const POINTS = [["P", 1], ["Q", 4], ["R", 10], ["S", 17]];
+// Base layout in px at k = 1; every size scales with k so the same drawing works small (3D panel) and large (Read graph).
+const GRAPH = { w: 1024, h: 680, l: 130, r: 40, t: 100, b: 110, tMax: 20, yMin: -20, yMax: 110 };
 const gx = m => GRAPH.l + (m / GRAPH.tMax) * (GRAPH.w - GRAPH.l - GRAPH.r);
 const gy = T => GRAPH.h - GRAPH.b - ((T - GRAPH.yMin) / (GRAPH.yMax - GRAPH.yMin)) * (GRAPH.h - GRAPH.t - GRAPH.b);
-const POINTS = [["P", 1], ["Q", 4], ["R", 10], ["S", 17]];
 
-function drawGraph() {
+// Draws the heating graph to a new canvas (also used by the "Read graph" pop-up in app.js).
+export function heatingGraphCanvas(w = GRAPH.w, h = GRAPH.h, k = 1) {
+  const L = GRAPH.l * k, R = GRAPH.r * k, T0 = GRAPH.t * k, B = GRAPH.b * k;
+  const X = m => L + (m / GRAPH.tMax) * (w - L - R);
+  const Y = T => h - B - ((T - GRAPH.yMin) / (GRAPH.yMax - GRAPH.yMin)) * (h - T0 - B);
   const c = document.createElement("canvas");
-  c.width = GRAPH.w; c.height = GRAPH.h;
+  c.width = w; c.height = h;
   const g = c.getContext("2d");
-  g.fillStyle = "#f6f0e4"; g.fillRect(0, 0, c.width, c.height);
-  g.strokeStyle = "#ff8c32"; g.lineWidth = 10; g.strokeRect(5, 5, c.width - 10, c.height - 10);
-  g.font = "bold 40px 'Atkinson Hyperlegible', sans-serif"; g.fillStyle = "#140f1c"; g.textAlign = "center";
-  g.fillText("Heating ice in the cauldron", c.width / 2, 52);
-  g.lineWidth = 2; g.strokeStyle = "#d4c9e0"; g.font = "30px 'IBM Plex Mono', monospace";
+  g.fillStyle = "#f6f0e4"; g.fillRect(0, 0, w, h);
+  g.strokeStyle = "#ff8c32"; g.lineWidth = 10; g.strokeRect(5, 5, w - 10, h - 10);
+  g.font = `bold ${40 * k}px 'Atkinson Hyperlegible', sans-serif`; g.fillStyle = "#140f1c"; g.textAlign = "center";
+  g.fillText("Heating ice in the cauldron", w / 2, 52 * k);
+  g.lineWidth = 2; g.strokeStyle = "#d4c9e0"; g.font = `${30 * k}px 'IBM Plex Mono', monospace`;
   for (let T = -20; T <= 110; T += 10) {
-    g.beginPath(); g.moveTo(gx(0), gy(T)); g.lineTo(gx(20), gy(T)); g.stroke();
-    if (T % 20 === 0 || T === 100 || T === 110) {
-      if (T === 110) continue;
-      g.fillStyle = "#140f1c"; g.textAlign = "right"; g.fillText(String(T), gx(0) - 14, gy(T) + 10);
+    g.beginPath(); g.moveTo(X(0), Y(T)); g.lineTo(X(20), Y(T)); g.stroke();
+    if (T % 20 === 0 || T === 100) {
+      g.fillStyle = "#140f1c"; g.textAlign = "right"; g.fillText(String(T), X(0) - 14 * k, Y(T) + 10 * k);
     }
   }
   for (let m = 0; m <= 20; m += 5) {
-    g.beginPath(); g.moveTo(gx(m), gy(-20)); g.lineTo(gx(m), gy(110)); g.stroke();
-    g.fillStyle = "#140f1c"; g.textAlign = "center"; g.fillText(String(m), gx(m), gy(-20) + 38);
+    g.beginPath(); g.moveTo(X(m), Y(-20)); g.lineTo(X(m), Y(110)); g.stroke();
+    g.fillStyle = "#140f1c"; g.textAlign = "center"; g.fillText(String(m), X(m), Y(-20) + 38 * k);
   }
   g.strokeStyle = "#140f1c"; g.lineWidth = 4;
-  g.beginPath(); g.moveTo(gx(0), gy(110)); g.lineTo(gx(0), gy(-20)); g.lineTo(gx(20), gy(-20)); g.stroke();
-  g.font = "bold 30px 'Atkinson Hyperlegible', sans-serif";
-  g.fillText("Time (minutes)", gx(10), c.height - 22);
-  g.save(); g.translate(40, gy(45)); g.rotate(-Math.PI / 2); g.fillText("Temperature (°C)", 0, 0); g.restore();
-  g.strokeStyle = "#c2410c"; g.lineWidth = 9; g.lineJoin = "round";
+  g.beginPath(); g.moveTo(X(0), Y(110)); g.lineTo(X(0), Y(-20)); g.lineTo(X(20), Y(-20)); g.stroke();
+  g.font = `bold ${30 * k}px 'Atkinson Hyperlegible', sans-serif`;
+  g.fillText("Time (minutes)", X(10), h - 22 * k);
+  g.save(); g.translate(40 * k, Y(45)); g.rotate(-Math.PI / 2); g.fillText("Temperature (°C)", 0, 0); g.restore();
+  g.strokeStyle = "#c2410c"; g.lineWidth = 9 * k; g.lineJoin = "round";
   g.beginPath();
-  for (let m = 0; m <= 20.001; m += 0.1) { const x = gx(m), y = gy(tempAt(m)); m === 0 ? g.moveTo(x, y) : g.lineTo(x, y); }
+  for (let m = 0; m <= 20.001; m += 0.1) { const x = X(m), y = Y(tempAt(m)); m === 0 ? g.moveTo(x, y) : g.lineTo(x, y); }
   g.stroke();
-  POINTS.forEach(([L, m]) => {
-    const x = gx(m), y = gy(tempAt(m));
-    g.fillStyle = "#140f1c"; g.beginPath(); g.arc(x, y, 12, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#7c3aed"; g.beginPath(); g.arc(x, y - 52, 26, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#fff"; g.font = "bold 36px 'Atkinson Hyperlegible', sans-serif"; g.textAlign = "center"; g.fillText(L, x, y - 40);
+  POINTS.forEach(([Lb, m]) => {
+    const x = X(m), y = Y(tempAt(m));
+    g.fillStyle = "#140f1c"; g.beginPath(); g.arc(x, y, 12 * k, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#7c3aed"; g.beginPath(); g.arc(x, y - 52 * k, 26 * k, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#fff"; g.font = `bold ${36 * k}px 'Atkinson Hyperlegible', sans-serif`; g.textAlign = "center"; g.fillText(Lb, x, y - 40 * k);
   });
-  const tex = new THREE.CanvasTexture(c);
+  return c;
+}
+function drawGraph() {
+  const tex = new THREE.CanvasTexture(heatingGraphCanvas());
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   return tex;
@@ -857,13 +1157,18 @@ function buildCauldron() {
   root.add(scareLight);
   const greenC = new THREE.Color(0x7cff6b), orangeC = new THREE.Color(0xff8c32);
   const easeOutBack = x => { const c1 = 2.2; return 1 + (c1 + 1) * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
-  let firedLoop = -1, scareT0 = -99;
+  let fired = false, scareT0 = -99;
   const SCARE_LEN = 2.4;
+  const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
 
   let lastShown = "";
   const api = withIntro({
     root,
     onScare: null,
+    newVisit() { fired = false; },   // a new station visit allows the scare once more
+    onReset() {                      // scene clock restarted: drop any scare that was mid-flight
+      scareT0 = -99; face.visible = false; scareGlow.material.opacity = 0; scareLight.intensity = 0;
+    },
     update(t) {
       const c = t % 18;
       const m = Math.min(20, c / 16 * 20);
@@ -911,11 +1216,10 @@ function buildCauldron() {
       const shown = `${Math.round(T)} °C`;
       if (shown !== lastShown) { readout.draw(shown); lastShown = shown; }
 
-      // scare: fires once per loop, the moment the heating dot reaches 100 C
-      const loop = Math.floor(t / 18);
-      if (c >= SCARE_AT && c < SCARE_AT + SCARE_LEN && loop !== firedLoop) {
-        firedLoop = loop;
-        if (c - SCARE_AT < 0.5) { scareT0 = t - (c - SCARE_AT); api.onScare && api.onScare(); }
+      // scare: fires only once per station visit, the first time the heating dot reaches 100 C (never with reduced motion)
+      if (!fired && t < 18 && c >= SCARE_AT) {
+        fired = true;
+        if (!reduced() && c - SCARE_AT < 0.5) { scareT0 = t - (c - SCARE_AT); api.onScare && api.onScare(); }
       }
       const s = t - scareT0;
       if (faceReady && s >= 0 && s < SCARE_LEN) {

@@ -2,7 +2,7 @@
 // Game flow mirrors the Year 8 Haunted Server: names -> hub of 4 seals (any order) -> final door -> victory code.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { BUILDERS, addLights } from "./scenes.js";
+import { BUILDERS, addLights, heatingGraphCanvas } from "./scenes.js";
 
 const STORE = "haunted-lab-y7-v1";
 const HINT_COST = 120000;
@@ -18,23 +18,23 @@ const BOXES = [["r", "Box R"], ["s", "Box S"], ["t", "Box T"]];
 const SEALS = {
   1: {
     title: "The Graveyard Pond", dot: "4.1.1 States of water on Earth", letter: "T",
-    intro: "The curse has frozen and boiled the graveyard. Find the water in each state. Labels A to E float above the scene.",
+    intro: "The curse has frozen the graveyard. Find water in each state. Labels A to E float above the scene.",
     qs: [
       { id: "1a", text: "<b>A</b>: the icicles on the tombstone", opts: STATES },
       { id: "1b", text: "<b>B</b>: the pond", opts: STATES },
       { id: "1c", text: "<b>C</b>: the rain falling from the cloud", opts: STATES },
-      { id: "1d", text: "<b>D</b>: the water vapour rising off the pond (really invisible, shown as faint wisps)", opts: STATES },
+      { id: "1d", text: "<b>D</b>: the invisible water vapour rising off the pond (the arrows show where it goes)", opts: STATES },
       { id: "1e", text: "<b>E</b>: the snow on the mountain", opts: STATES },
-      { id: "1f", text: "Which change turns pond water into water vapour?", opts: CHANGES },
+      { id: "1f", text: "Pond water slowly turns into invisible water vapour, without boiling. What is this change called?", opts: CHANGES },
       { id: "1g", text: "High in the sky, water vapour cools and forms tiny droplets in clouds. What is this change called?", opts: CHANGES }
     ],
     hints: ["Solids keep their shape (ice, snow). Liquids flow (pond water, rain). A gas spreads out and water vapour is invisible.",
             "Two labels are solid, two are liquid and one is gas. Liquid to gas is evaporation. Gas to liquid is condensation."],
-    lesson: "<p>Water on Earth is found in all <b>3 states</b>: <b>solid</b> (ice, snow, glaciers), <b>liquid</b> (oceans, rivers, rain) and <b>gas</b> (invisible water vapour). The Sun's heat makes water <b>evaporate</b>. When vapour cools high up, it <b>condenses</b> into cloud droplets that fall as rain or snow. This is the <b>water cycle</b>.</p>"
+    lesson: "<p>Water on Earth is found in all <b>3 states</b>: <b>solid</b> (ice, snow, glaciers), <b>liquid</b> (oceans, rivers, rain) and <b>gas</b> (invisible water vapour). The Sun's heat makes water <b>evaporate</b>. When vapour cools high up, it <b>condenses</b> into tiny liquid droplets that form clouds. Droplets join to fall as rain. Some clouds also contain tiny ice crystals that grow and fall as snow. This is the <b>water cycle</b>.</p>"
   },
   2: {
     title: "The Potion Jars", dot: "4.1.3 Particles and changes of state", letter: "E",
-    intro: "Each jar of ghost particles changes state, then fades and starts again. Watch how the particles start and how they end.",
+    intro: "Each jar is heated or cooled. Watch the particles BEFORE and AFTER, then name the change. Orange = heating. Blue = cooling.",
     qs: [
       { id: "2a", text: "Jar <b>W</b> shows...", opts: CHANGES },
       { id: "2b", text: "Jar <b>X</b> shows...", opts: CHANGES },
@@ -44,12 +44,12 @@ const SEALS = {
       { id: "2f", text: "In which state are particles close together but able to slide past each other?", opts: STATES }
     ],
     hints: ["Neat rows that only wobble = solid. Close together but jumbled and sliding = liquid. Spread out and zooming everywhere = gas.",
-            "Solid to liquid is melting. Liquid to solid is freezing. Liquid to gas is evaporation. Gas to liquid is condensation. Each change is used once."],
+            "Solid to liquid is melting. Liquid to solid is freezing. Evaporation is when particles escape from the surface of a liquid and become a gas. Gas to liquid is condensation. Each change is used once."],
     lesson: "<p>Particles in a <b>solid</b> are packed in fixed positions and only <b>vibrate</b>. In a <b>liquid</b> they are still close but can <b>slide</b> past each other. In a <b>gas</b> they are far apart and move fast in all directions. Heating gives particles more energy, so they move more and can change state.</p>"
   },
   3: {
     title: "The Spell Bonds", dot: "4.1.4 Attractive forces between particles", letter: "L",
-    intro: "Glowing spell bonds show the attractive forces between particles. Thicker, brighter bonds mean stronger forces.",
+    intro: "Glowing lines show the attractive forces between particles. They are not real sticks. Thicker, brighter lines mean stronger attraction. In a gas the attraction is too weak to show.",
     qs: [
       { id: "3a", text: "Which box has the <b>strongest</b> attractive forces?", opts: BOXES },
       { id: "3b", text: "Which box has <b>medium</b> attractive forces?", opts: BOXES },
@@ -68,13 +68,13 @@ const SEALS = {
         ["slide", "The forces keep particles close, but are weak enough for them to slide past each other"],
         ["small", "Liquid particles are smaller than solid particles"]] }
     ],
-    hints: ["Look for the box with thick, bright bonds that never break, and the box with no bonds at all.",
-            "Solids have the strongest forces and gases the weakest. Liquids are in the middle: their bonds keep breaking and re-forming."],
-    lesson: "<p><b>Attractive forces</b> pull particles together. They are <b>strongest in solids</b>, so particles stay in fixed positions and the solid keeps its shape. They are <b>weaker in liquids</b>, so particles stay close but slide, and the liquid flows. In <b>gases</b> the forces are <b>very weak</b>, so particles fly apart and fill any container.</p>"
+    hints: ["Look for the box with thick, bright lines holding the particles in place, and the box where the attraction is too weak to show any lines.",
+            "Solids have the strongest forces and gases the weakest. Liquids are in the middle: their lines keep changing as particles slide past each other."],
+    lesson: "<p><b>Attractive forces</b> pull particles together. In these boxes they are <b>strongest in the solid</b>, so particles stay in fixed positions and the solid keeps its shape. They are <b>weaker in the liquid</b>, so particles stay close but slide, and the liquid flows. Gas particles are always moving fast in all directions. The attraction is <b>too weak</b> to hold them close, so they spread out to fill the container.</p>"
   },
   4: {
     title: "The Witch's Cauldron", dot: "4.1.2 Heating water and changes of state", letter: "M",
-    intro: "The witch is heating ice in her cauldron. Watch the graph and the thermometer. Move your phone closer to read the graph.",
+    intro: "The witch is heating ice in her cauldron. Watch the graph and the thermometer. Tap Read graph to see it bigger.",
     qs: [
       { id: "4a", text: "What temperature is the <b>first</b> flat section of the graph?", type: "number" },
       { id: "4b", text: "What temperature is the <b>second</b> flat section of the graph?", type: "number" },
@@ -88,14 +88,14 @@ const SEALS = {
         ["broken", "The thermometer stops working"]] }
     ],
     hints: ["The flat sections are where the line goes straight across. Read the temperature on the left side of the graph.",
-            "Ice melts at 0 °C and water boils at 100 °C. While water changes state, the energy goes into pulling particles apart, not raising the temperature."],
+            "Ice melts at 0 °C and water boils at 100 °C. While water is changing state, the heat energy goes into letting particles break free of each other, not into raising the temperature."],
     lesson: "<p>When you heat ice, its temperature rises until <b>0 °C</b>. Then it stays flat while the ice <b>melts</b>. The water heats up to <b>100 °C</b> and stays flat again while it <b>boils</b>. On the flat sections the energy is used to <b>overcome the attractive forces</b> between particles, so the state changes but the temperature doesn't. You can see this in your own heating-water practical graph.</p>"
   }
 };
 const DOOR_HINTS = ["You have 4 letters. Rearrange them into a word.", "It's the change of state that turns ice into water."];
 
 // ---------- state ----------
-const fresh = () => ({ team: "", endAt: 0, minutes: 30, started: 0, sealed: {}, ans: {}, hints: {}, hintsUsed: 0, finishedAt: 0, overtime: false, lessonFor: 0 });
+const fresh = () => ({ team: "", endAt: 0, minutes: 30, started: 0, sealed: {}, ans: {}, hints: {}, hintsUsed: 0, finishedAt: 0, overtime: false, lessonFor: 0, cool: {} });
 let S = fresh();
 try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && saved.team) S = Object.assign(fresh(), saved); } catch (e) {}
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} };
@@ -193,6 +193,9 @@ function openStation(n) {
   $("stDone").hidden = !S.sealed[n];
   renderHints();
   show("station");
+  $("graphBtn").hidden = n !== 4;
+  updateCool();
+  built(n).newVisit?.();
   openView(n, view.prefer3d ? "3d" : "ar");
 }
 
@@ -207,9 +210,26 @@ $("stQs").addEventListener("input", e => {
   if (e.target.dataset.q) { S.ans[e.target.dataset.q] = e.target.value; save(); }
 });
 
-const normNum = s => String(s || "").replace(/[^0-9-]/g, "");
+// Number answers: strip spaces, degree sign and C; the rest must be a real number. "0.0" -> "0", "-0" -> "0". Anything else is wrong.
+const normNum = s => {
+  const x = String(s || "").replace(/[\s°cC]/g, "");
+  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(x)) return x ? "bad" : "";
+  return String(Number(x));
+};
+const COOL_MS = 20000;
+let coolTimer = 0;
+function updateCool() {
+  clearInterval(coolTimer);
+  const btn = $("stSubmit");
+  const left = Math.ceil(((S.cool && S.cool[current]) - Date.now()) / 1000);
+  if (!(left > 0)) { btn.disabled = false; btn.textContent = "Break the seal"; return; }
+  btn.disabled = true;
+  btn.textContent = `The witch's curse blocks you: try again in ${left} s`;
+  coolTimer = setInterval(updateCool, 250);
+}
 $("stForm").addEventListener("submit", e => {
   e.preventDefault();
+  if (S.cool && S.cool[current] > Date.now()) return;
   const s = SEALS[current];
   const fb = $("stFeedback");
   const vals = s.qs.map(q => q.type === "number" ? normNum(S.ans[q.id]) : (S.ans[q.id] || ""));
@@ -222,6 +242,8 @@ $("stForm").addEventListener("submit", e => {
   } else {
     fb.className = "feedback bad";
     fb.textContent = `The seal holds. ${right} of ${s.qs.length} answers are correct.`;
+    S.cool = S.cool || {}; S.cool[current] = Date.now() + COOL_MS; save();
+    updateCool();
     shake();
   }
 });
@@ -364,6 +386,10 @@ async function openView(n, mode) {
   const box = $("arView");
   const S3 = built(n);
   S3.onScare = scareFlash;
+  // Scene-local clock: every scene starts at its beginning each time it is shown.
+  const t0 = now();
+  const clock = () => now() - t0;
+  S3.reset?.();
   if (mode === "ar") {
     status("Starting the camera...");
     try {
@@ -390,7 +416,7 @@ async function openView(n, mode) {
       await mind.start();
       if (token !== view.token) { try { mind.stop(); } catch (e) {} return; }
       status(`Point your phone at a Seal ${n} card.`);
-      mind.renderer.setAnimationLoop(() => { S3.update(now()); mind.renderer.render(mind.scene, mind.camera); });
+      mind.renderer.setAnimationLoop(() => { S3.update(clock()); mind.renderer.render(mind.scene, mind.camera); });
     } catch (e) {
       console.error(e);
       if (token === view.token) status("The camera didn't start. Allow camera access, or tap “View in 3D”.", "bad");
@@ -426,7 +452,7 @@ async function openView(n, mode) {
   size();
   view.ro = new ResizeObserver(size); view.ro.observe(box);
   view.renderer = renderer; view.controls = controls;
-  renderer.setAnimationLoop(() => { controls.update(); S3.update(now()); renderer.render(scene, camera); });
+  renderer.setAnimationLoop(() => { controls.update(); S3.update(clock()); renderer.render(scene, camera); });
   status("3D view: drag to turn it, pinch to zoom.");
 }
 
@@ -434,6 +460,13 @@ $("viewToggle").addEventListener("click", () => {
   view.prefer3d = view.mode === "ar";
   openView(current, view.prefer3d ? "3d" : "ar");
 });
+// "Read graph": the same heating graph, drawn large in a full-width pop-up (Seal 4).
+$("graphBtn").addEventListener("click", () => {
+  const dlg = $("graphDlg");
+  $("graphImg").src = heatingGraphCanvas(720, 900, 1.25).toDataURL("image/png");
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+});
+$("graphClose").addEventListener("click", () => { const d = $("graphDlg"); if (d.close) d.close(); else d.removeAttribute("open"); });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) closeView();
   else if (screenNow === "station") openView(current, view.prefer3d ? "3d" : "ar");
