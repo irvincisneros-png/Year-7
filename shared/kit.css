@@ -417,7 +417,19 @@ input[type="range"]:focus-visible { outline: 2.5px solid var(--accent); outline-
 [data-theme="dark"] .ctrl label .val,
 [data-theme="dark"] .stat .stat-val,
 [data-theme="dark"] .tl-year,
-[data-theme="dark"] .tab.active .tab-id { color: color-mix(in srgb, var(--accent) 45%, #ffffff); }
+[data-theme="dark"] .tab.active .tab-id,
+[data-theme="dark"] .sec-open,
+[data-theme="dark"] .hub-card .open-row,
+[data-theme="dark"] .hub-hero .hub-meta .m b,
+[data-theme="dark"] .hub-card .hub-card-num,
+[data-theme="dark"] .interactive-takeaway strong { color: color-mix(in srgb, var(--accent) 45%, #ffffff); }
+/* --accent-soft is a light pastel in every theme; boxes that put body text
+   (var(--ink), light in dark mode) on it get a dark accent tint instead. */
+[data-theme="dark"] .interactive-takeaway,
+[data-theme="dark"] .model-answer,
+[data-theme="dark"] .drop-zone.over { background: color-mix(in srgb, var(--accent) 22%, var(--card)); }
+[data-theme="dark"] .hub-hero::before { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, var(--card)) 0%, transparent 65%); }
+[data-theme="dark"] ::selection { background: color-mix(in srgb, var(--accent) 45%, var(--card)); }
 
 /* ============================================================ Glossary terms */
 .term { border-bottom: 1.5px dashed var(--accent-deep); cursor: help; position: relative; color: inherit;
@@ -475,6 +487,8 @@ input[type="range"]:focus-visible { outline: 2.5px solid var(--accent); outline-
 .btn-sm { padding: 6px 13px; font-size: 0.82rem; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
+button.card { color: var(--ink); }
+.sec-open { color: var(--accent-deep); }
 .card {
   background: var(--card);
   border: 2px solid var(--ink);

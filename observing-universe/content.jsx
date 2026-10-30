@@ -19,12 +19,12 @@ function InquiryCycleAnim() {
     const id = setInterval(() => setActive(a => (a + 1) % steps.length), 1800);
     return () => clearInterval(id);
   }, []);
-  const r = 100;
+  const r = 90;
   const cx = 160, cy = 160;
   return (
     <Interactive title="The scientific inquiry cycle" subtitle="Watch how each step flows into the next. Tap a step to explore it." takeaway="Science is a repeating cycle that begins with observation, builds through investigation and analysis, and produces knowledge that is tested and extended by other scientists.">
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "center" }}>
-        <svg viewBox="0 0 320 320" width="240" height="240" style={{ flexShrink: 0 }}>
+        <svg viewBox="-50 -6 420 332" width="340" height="269" style={{ flexShrink: 0, maxWidth: "100%" }} role="img" aria-label="The scientific inquiry cycle: observe, question, investigate, analyse, conclude, build knowledge, then back to observe.">
           {steps.map((s, i) => {
             const angle = (i / steps.length) * 2 * Math.PI - Math.PI / 2;
             const x = cx + r * Math.cos(angle);
@@ -42,8 +42,8 @@ function InquiryCycleAnim() {
                   fontSize={isActive ? 16 : 13} fill={isActive ? "#fff" : "var(--ink)"}>
                   {s.icon}
                 </text>
-                <text x={x} y={y + (isActive ? 12 : 10) + 10} textAnchor="middle"
-                  fontSize={9} fill={isActive ? "var(--accent-deep)" : "var(--ink-muted)"} fontWeight={isActive ? "700" : "400"}>
+                <text x={cx + 122 * Math.cos(angle)} y={cy + 122 * Math.sin(angle) + 4} textAnchor={Math.cos(angle) > 0.3 ? "start" : Math.cos(angle) < -0.3 ? "end" : "middle"}
+                  fontSize={12} fill={isActive ? "var(--ink)" : "var(--ink-muted)"} fontWeight={isActive ? "700" : "400"}>
                   {s.label}
                 </text>
                 {(() => {
@@ -111,7 +111,7 @@ function InstrumentSim() {
   const analogRead = 23.5;
   const digitalRead = 23.4;
   const displayed = type === "analog" ? analogRead : digitalRead;
-  const precision = type === "analog" ? "0.5 degrees C" : "0.1 degrees C";
+  const precision = type === "analog" ? "0.5 °C" : "0.1 °C";
   return (
     <Interactive title="Analog vs digital thermometer" subtitle="Switch between instruments and see how precision changes." takeaway="Digital instruments usually display finer precision than analog scales, which can reduce reading error when measuring the same temperature.">
       <div className="ctrl-row">
@@ -134,24 +134,24 @@ function InstrumentSim() {
                 {v % 10 === 0 && <text x="32" y={14 + (1-v/50)*140} textAnchor="end" fontSize="9" fill="#4a90d9">{v}</text>}
               </g>
             ))}
-            <text x="60" y="195" textAnchor="middle" fontSize="9" fill="var(--ink-muted)">deg C</text>
+            <text x="60" y="195" textAnchor="middle" fontSize="9" fill="var(--ink-muted)">°C</text>
           </svg>
         ) : (
           <div style={{ background: "#1a1a2e", color: "#0ff", padding: "20px 32px", borderRadius: 12,
             fontFamily: "monospace", fontSize: 36, fontWeight: 700, letterSpacing: 4,
             border: "3px solid #0ff", boxShadow: "0 0 20px #0ff4" }}>
             {digitalRead.toFixed(1)}
-            <div style={{ fontSize: 14, color: "#0ff8", letterSpacing: 1, marginTop: 4 }}>deg C</div>
+            <div style={{ fontSize: 14, color: "#0ff8", letterSpacing: 1, marginTop: 4 }}>°C</div>
           </div>
         )}
       </div>
       <div className="stat-readout">
-        <Stat value={displayed.toFixed(type === "analog" ? 1 : 1)} label="Reading (deg C)" />
+        <Stat value={displayed.toFixed(type === "analog" ? 1 : 1)} label="Reading (°C)" />
         <Stat value={precision} label="Precision" />
-        <Stat value={Math.abs(displayed - trueVal).toFixed(1)} label="Error from true (deg C)" />
+        <Stat value={Math.abs(displayed - trueVal).toFixed(1)} label="Error from true (°C)" />
       </div>
       <p className="muted" style={{ marginBottom: 0, marginTop: 8 }}>
-        True temperature is {trueVal} degrees C. In this example, the digital thermometer has the smaller error and finer precision.
+        True temperature is {trueVal} °C. In this example, the digital thermometer has the smaller error and finer precision.
       </p>
     </Interactive>
   );
@@ -254,7 +254,7 @@ function SolarModelSim() {
             <circle cx={cx + 55 * Math.cos(sunAngle)} cy={cy + 55 * Math.sin(sunAngle)} r={16} fill="#f7b731"/>
             <text x={cx + 55 * Math.cos(sunAngle)} y={cy + 55 * Math.sin(sunAngle) + 24} textAnchor="middle" fontSize={9} fill="#f7b731">Sun</text>
             <circle cx={cx + 22 * Math.cos(moonAngle)} cy={cy + 22 * Math.sin(moonAngle)} r={7} fill="#ccc"/>
-            <text x={cx + 22 * Math.cos(moonAngle)} y={cy + 22 * Math.sin(moonAngle) - 12} textAnchor="middle" fontSize={8} fill="#ccc">Moon</text>
+            <text x={cx + 22 * Math.cos(moonAngle)} y={cy + 22 * Math.sin(moonAngle) - 12} textAnchor="middle" fontSize={8} fill="var(--ink-muted)">Moon</text>
             <circle cx={cx + 90 * Math.cos(earthAngle * 0.5)} cy={cy + 90 * Math.sin(earthAngle * 0.5)} r={8} fill="#e74c3c"/>
             <text x={cx + 90 * Math.cos(earthAngle * 0.5)} y={cy + 90 * Math.sin(earthAngle * 0.5) - 13} textAnchor="middle" fontSize={8} fill="#e74c3c">Mars</text>
           </g>
@@ -280,7 +280,7 @@ function SolarModelSim() {
         </text>
       </svg>
       <Callout kind="key" title="Key difference">
-        In the geocentric model everything orbits Earth. In the heliocentric model Earth and the other planets orbit the Sun. Galileo's observations of Jupiter's moons and the phases of Venus proved the geocentric model was wrong.
+        In the geocentric model everything orbits Earth. In the heliocentric model Earth and the other planets orbit the Sun. Galileo's observations of Jupiter's moons and the phases of Venus showed that Ptolemy's geocentric model could not be right.
       </Callout>
     </Interactive>
   );
@@ -309,7 +309,7 @@ function DayNightSim() {
   return (
     <Interactive title="Day and night rotation" subtitle="Earth spins once every 24 hours. Watch your city move through day and night." takeaway="Day and night are caused by Earth spinning on its axis every 24 hours, so one half faces the Sun while the other half is in darkness.">
       <div className="ctrl-row">
-        <Slider label="Your latitude" min={-70} max={70} step={1} value={lat} onChange={setLat} unit=" deg" />
+        <Slider label="Your latitude" min={-70} max={70} step={1} value={lat} onChange={setLat} unit="°" />
         <button className="btn btn-ghost" onClick={() => setPaused(p => !p)}>{paused ? "Play" : "Pause"}</button>
       </div>
       <svg viewBox="0 0 300 200" width="100%" style={{ maxWidth: 400, display: "block", margin: "0 auto" }}>
@@ -339,7 +339,7 @@ function DayNightSim() {
         <text x={cx + 20} y={cy + r + 18} fontSize={9} fill="#4a90d9" textAnchor="middle">Day side</text>
       </svg>
       <div className="stat-readout">
-        <Stat value={isDay ? "DAY" : "NIGHT"} label={`Your location (${lat > 0 ? lat + "N" : lat < 0 ? Math.abs(lat) + "S" : "equator"})`} />
+        <Stat value={isDay ? "DAY" : "NIGHT"} label={`Your location (${lat > 0 ? lat + "°N" : lat < 0 ? Math.abs(lat) + "°S" : "equator"})`} />
         <Stat value="24 h" label="One full rotation" />
       </div>
     </Interactive>
@@ -359,7 +359,8 @@ function SeasonsSim() {
   ];
   const p = positions[pos];
   const earthPositions = [
-    { x: 250, y: 120 }, { x: 120, y: 210 }, { x: 0, y: 120 }, { x: 120, y: 30 },
+    /* x + 10 is the drawn centre, so each Earth sits exactly on the orbit ellipse (cx 140, rx 110, ry 90) */
+    { x: 240, y: 120 }, { x: 130, y: 210 }, { x: 20, y: 120 }, { x: 130, y: 30 },
   ];
   const ep = earthPositions[pos];
   const tiltDir = -1; /* Earth's axis points the same way in space all year */
@@ -390,10 +391,10 @@ function SeasonsSim() {
         <line
           x1={ep.x + 10} y1={ep.y - 18}
           x2={ep.x + 10 + tiltDir * 8} y2={ep.y + 18}
-          stroke="#fff" strokeWidth={2.5} />
-        <text x={ep.x + 10} y={ep.y - 26} textAnchor="middle" fontSize={8} fill="#fff">N</text>
-        <text x={ep.x + 10} y={ep.y + 32} textAnchor="middle" fontSize={8} fill="#ccc">S</text>
-        <text x={ep.x + 10} y={ep.y + 48} textAnchor="middle" fontSize={9} fill="#4a90d9" fontWeight="700">Earth</text>
+          stroke="var(--ink)" strokeWidth={2.5} />
+        <text x={ep.x + 10} y={ep.y - 24} textAnchor="middle" fontSize={9} fontWeight="700" fill="var(--ink)">N</text>
+        <text x={ep.x + 10 + tiltDir * 8} y={ep.y + 30} textAnchor="middle" fontSize={9} fontWeight="700" fill="var(--ink)">S</text>
+        <text x={ep.x + 10} y={ep.y + 44} textAnchor="middle" fontSize={9} fill="#4a90d9" fontWeight="700">Earth</text>
       </svg>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 8 }}>
         <div style={{ background: "#ff634722", borderRadius: 10, padding: "10px 14px", borderLeft: "4px solid #ff6347" }}>
@@ -586,7 +587,7 @@ function TelescopeCompare() {
   const [selected, setSelected] = useState("jwst");
   const scopes = {
     eye: { name: "Unaided eye", mirror: "~0.007 m (pupil)", wavelength: "Visible only", location: "Your head", limit: "~mag 6", discovery: "Moon phases, bright planets, ~5,000 stars", color: "#8B6914" },
-    hubble: { name: "Hubble Space Telescope", mirror: "2.4 m", wavelength: "Visible + UV + near-IR", location: "570 km above Earth", limit: "~mag 31", discovery: "Dark energy, Hubble constant, thousands of galaxies", color: "#2c5f8a" },
+    hubble: { name: "Hubble Space Telescope", mirror: "2.4 m", wavelength: "Visible + UV + near-IR", location: "About 530 km above Earth", limit: "~mag 31", discovery: "Dark energy, Hubble constant, thousands of galaxies", color: "#2c5f8a" },
     jwst: { name: "James Webb Space Telescope", mirror: "6.5 m", wavelength: "Primarily infrared", location: "1.5 million km from Earth (L2)", limit: "~mag 34 (infrared)", discovery: "Earliest galaxies, exoplanet atmospheres, hidden star birth", color: "#6c2a8a" },
   };
   const sc = scopes[selected];
@@ -679,7 +680,7 @@ function Section1({ progress, setProgress }) {
 
       <DotPoint id="1.1.3" title="Science is collaborative" progress={progress} setProgress={setProgress}>
         <p>Almost all important modern science is done by teams. Scientists share their work in <Term def="A research paper checked by independent experts before it is published.">peer-reviewed publications</Term> so others can check, challenge, and build on it. This sharing is what makes science <Term def="Each new discovery adds to a growing store of knowledge, building on what came before.">cumulative</Term>: every generation of scientists stands on the shoulders of the ones before.</p>
-        <p>When Edwin Hubble showed that galaxies are moving away from each other, he was building on Einstein's equations and earlier measurements by other astronomers. The James Webb Space Telescope needed engineers and scientists from the United States, Europe, and Canada working together for decades. No single person could have built it alone.</p>
+        <p>When Edwin Hubble showed that galaxies are moving away from each other, he was building on earlier work by other astronomers: Henrietta Leavitt's method for measuring the distances to stars and Vesto Slipher's measurements of how fast galaxies are moving. The James Webb Space Telescope needed engineers and scientists from the United States, Europe, and Canada working together for decades. No single person could have built it alone.</p>
         <Callout kind="fact" title="Giant collaborative science">
           The International Space Station has been lived in continuously since 2000. It involves space agencies from 15 countries and thousands of scientists and engineers.
         </Callout>
@@ -697,7 +698,7 @@ function Section1({ progress, setProgress }) {
         </Callout>
         <Figure caption="From observation to theory: how evidence accumulates over time.">
           <svg viewBox="0 0 560 66" width="100%" style={{ maxWidth: 560 }}>
-            {["Many observations","Hypothesis","Repeated tests","Evidence grows","Theory formed","New predictions"].map((s, i) => (
+            {["Observations","Hypothesis","Repeated tests","Evidence grows","Theory formed","New predictions"].map((s, i) => (
               <g key={s} transform={`translate(${i * 94 + 2}, 8)`}>
                 <rect width={86} height={40} rx={9} fill="var(--accent-soft)" stroke="var(--accent-deep)" strokeWidth={1.5}/>
                 <text x={43} y={24} textAnchor="middle" fontSize={10} fill="var(--ink)">{s}</text>
@@ -815,7 +816,7 @@ function Section2({ progress, setProgress }) {
         <p>Once you have data, you need to display it clearly. Use a <Term def="A graph where both axes are continuous and numerical, used to show change over time or relationships between variables.">line graph</Term> when both variables are continuous numbers (like temperature over time). Use a <Term def="A graph where one axis has categories, used to compare groups.">bar chart</Term> when one axis has separate categories (like comparing orbital periods of different planets). A conclusion must stick to what the data actually shows, nothing more.</p>
         <p>Graphs reveal <Term def="A general, consistent direction of change in data, such as a steady increase or decrease.">trends</Term> and <Term def="A consistent link between two variables shown in data.">relationships</Term>. Plotting the orbital period of each planet against its distance from the Sun reveals that planets further away take much longer to complete one orbit. This relationship is known as Kepler's third law.</p>
         <Figure caption="Orbital periods of six planets (inner to outer solar system).">
-          <svg viewBox="0 0 540 180" width="100%" style={{ maxWidth: 540 }}>
+          <svg viewBox="0 0 540 196" width="100%" style={{ maxWidth: 540 }} role="img" aria-label="Bar chart of orbital periods in Earth years: Mercury 0.24, Venus 0.62, Earth 1, Mars 1.88, Jupiter 11.86, Saturn 29.46.">
             {(() => {
               const data = [["Mercury",0.24,"#aaa"],["Venus",0.62,"#e2b97e"],["Earth",1.0,"#4a90d9"],["Mars",1.88,"#e74c3c"],["Jupiter",11.86,"#f0a500"],["Saturn",29.46,"#c2a060"]];
               const maxV = 30;
@@ -823,7 +824,7 @@ function Section2({ progress, setProgress }) {
               return data.map(([name, val, color], i) => {
                 const barH = (val / maxV) * h;
                 return (
-                  <g key={name} transform={`translate(${i * (barW + gap) + 18}, 10)`}>
+                  <g key={name} transform={`translate(${i * (barW + gap) + 18}, 24)`}>
                     <rect y={h - barH} width={barW} height={barH} rx={5} fill={color} opacity={0.85}/>
                     <text x={barW / 2} y={h - barH - 6} textAnchor="middle" fontSize={10} fill="var(--ink)" fontWeight="700">{val}</text>
                     <text x={barW / 2} y={h + 14} textAnchor="middle" fontSize={10} fill="var(--ink)">{name}</text>
@@ -832,7 +833,7 @@ function Section2({ progress, setProgress }) {
                 );
               });
             })()}
-            <text x={270} y={170} textAnchor="middle" fontSize={10} fill="var(--ink-muted)">Planets further from the Sun take much longer to complete one orbit.</text>
+            <text x={270} y={188} textAnchor="middle" fontSize={10} fill="var(--ink-muted)">Planets further from the Sun take much longer to complete one orbit.</text>
           </svg>
         </Figure>
         <QGroup title="Check yourself">
@@ -852,10 +853,52 @@ function Section3({ progress, setProgress }) {
         <p className="lead">Our place in the solar system explains almost everything we see in the sky.</p>
       </div>
 
-      <Figure src="img/earth-sun.png" caption="Earth orbits the Sun with its axis tilted — one half in daylight, the other in night." />
+      <Figure caption="Earth orbits the Sun with its axis tilted. The half facing the Sun has day; the other half has night. (Not to scale.)">
+        <svg viewBox="0 0 480 250" width="100%" style={{ maxWidth: 560 }} role="img" aria-label="Diagram: the Sun in the middle of Earth's orbit. Earth is on the orbit with its axis tilted 23.5 degrees. The half of Earth facing the Sun is lit (day) and the far half is dark (night). An arrow shows the direction Earth travels around its orbit.">
+          <defs>
+            <radialGradient id="esSun" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffe9a0"/>
+              <stop offset="70%" stopColor="#f7b731"/>
+              <stop offset="100%" stopColor="#d99e1e"/>
+            </radialGradient>
+            <marker id="esArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="var(--ink-muted)"/>
+            </marker>
+            <marker id="esRay" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+              <path d="M0,0 L7,3.5 L0,7 Z" fill="#d99e1e"/>
+            </marker>
+          </defs>
+          {/* orbit (seen from slightly above), drawn first so the Sun sits in front of it */}
+          <ellipse cx="215" cy="125" rx="175" ry="68" fill="none" stroke="var(--ink-muted)" strokeWidth="1.5" strokeDasharray="6,5"/>
+          <path d="M200,192.9 L232,192.8" stroke="var(--ink-muted)" strokeWidth="1.5" markerEnd="url(#esArrow)"/>
+          <text x="215" y="48" textAnchor="middle" fontSize="11" fill="var(--ink-muted)">Orbit: one trip around the Sun takes about 365 days</text>
+          {/* Sun */}
+          <circle cx="215" cy="125" r="38" fill="url(#esSun)" stroke="#b7791f" strokeWidth="1.5"/>
+          <text x="215" y="129" textAnchor="middle" fontSize="13" fontWeight="700" fill="#5c3d00">Sun</text>
+          {/* sunlight */}
+          {[108, 125, 142].map(y => (
+            <line key={y} x1="262" y1={y} x2="345" y2={y} stroke="#d99e1e" strokeWidth="2" markerEnd="url(#esRay)"/>
+          ))}
+          <text x="300" y="100" textAnchor="middle" fontSize="10" fill="var(--ink-muted)">sunlight</text>
+          {/* Earth: night side (away from the Sun) and day side (facing the Sun) */}
+          <circle cx="390" cy="125" r="30" fill="#1e2a44" stroke="var(--ink)" strokeWidth="1.5"/>
+          <path d="M390,95 A30,30 0 0 0 390,155 Z" fill="#4b7bc9"/>
+          <circle cx="390" cy="125" r="30" fill="none" stroke="var(--ink)" strokeWidth="1.5"/>
+          {/* axis tilted 23.5 degrees from upright (December position: south pole leans towards the Sun) */}
+          <line x1="390" y1="80" x2="390" y2="170" stroke="var(--ink-muted)" strokeWidth="1" strokeDasharray="3,3"/>
+          <line x1="407.9" y1="83.7" x2="372.1" y2="166.3" stroke="var(--ink)" strokeWidth="2.5"/>
+          <text x="412" y="80" fontSize="11" fontWeight="700" fill="var(--ink)">N</text>
+          <text x="360" y="178" fontSize="11" fontWeight="700" fill="var(--ink)">S</text>
+          <text x="420" y="104" fontSize="10" fill="var(--ink-muted)">23.5° tilt</text>
+          <text x="374" y="208" textAnchor="middle" fontSize="10" fill="var(--ink)">day</text>
+          <text x="406" y="208" textAnchor="middle" fontSize="10" fill="var(--ink)">night</text>
+          <text x="390" y="224" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ink)">Earth</text>
+          <text x="10" y="242" fontSize="10" fontStyle="italic" fill="var(--ink-muted)">Not to scale: the Sun is about 109 times wider than Earth.</text>
+        </svg>
+      </Figure>
       <DotPoint id="1.3.1" title="Historical solar system models" progress={progress} setProgress={setProgress}>
         <p>For over 1,400 years, almost everyone believed Earth sat at the centre of the universe. This was the <Term def="The Earth-centred model of the solar system, developed by Ptolemy around 150 CE.">geocentric model</Term>, developed by the Greek philosopher Ptolemy. It matched everyday experience (the sky looks like it moves around a stationary Earth) and was supported by the Church. But it needed very complicated additions called <Term def="Small circular paths added to orbits in the geocentric model to explain why planets sometimes appear to move backwards in the sky.">epicycles</Term> to explain why planets occasionally appear to move backwards.</p>
-        <p>In 1543, the Polish astronomer <Term def="The astronomer who proposed a Sun-centred model of the solar system in 1543, which later became widely accepted.">Nicolaus Copernicus</Term> proposed the <Term def="The Sun-centred model of the solar system.">heliocentric model</Term>, placing the Sun at the centre. Galileo used a telescope in 1609 to find moons orbiting Jupiter (proving not everything circles Earth) and phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: <Term def="The force of attraction between any two objects that have mass.">gravity</Term>.</p>
+        <p>In 1543, the Polish astronomer <Term def="The astronomer who proposed a Sun-centred model of the solar system in 1543, which later became widely accepted.">Nicolaus Copernicus</Term> proposed the <Term def="The Sun-centred model of the solar system.">heliocentric model</Term>, placing the Sun at the centre. Galileo began observing the sky with a telescope in 1609. In 1610 he found moons orbiting Jupiter (proving not everything circles Earth) and the phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: <Term def="The force of attraction between any two objects that have mass.">gravity</Term>.</p>
         <SolarModelSim />
         <Callout kind="key" title="Science changes with evidence">
           The geocentric model was replaced not because someone decided to, but because new observations (telescopes) revealed facts the old model could not explain. This is how science is supposed to work.
@@ -908,13 +951,17 @@ function Section4({ progress, setProgress }) {
           The Yolngu and modern science arrived at the same accurate tidal predictions from the same natural observations. Both systems are based on systematic observation tested over time. The mechanism described is different, but the practical outcome is identical.
         </Callout>
         <Figure caption="Moon phases and their connection to tidal strength: two perspectives.">
-          <svg viewBox="0 0 540 100" width="100%" style={{ maxWidth: 540 }}>
-            {[["New Moon","Spring tide","high","#333"],["First Quarter","Neap tide","moderate","#888"],["Full Moon","Spring tide","high","#e8e0c8"],["Last Quarter","Neap tide","moderate","#888"]].map(([phase, tide, level, color], i) => (
-              <g key={phase} transform={`translate(${i * 136 + 4}, 10)`}>
-                <circle cx={65} cy={30} r={20} fill={color} stroke="var(--accent-mid)" strokeWidth={2}/>
-                <text x={65} y={35} textAnchor="middle" fontSize={9} fill={color === "#333" ? "#ccc" : "var(--ink)"}>{phase}</text>
-                <text x={65} y={66} textAnchor="middle" fontSize={10} fill="var(--accent-deep)" fontWeight="700">{tide}</text>
-                <text x={65} y={82} textAnchor="middle" fontSize={9} fill="var(--ink-muted)">Tidal range: {level}</text>
+          <svg viewBox="0 0 540 104" width="100%" style={{ maxWidth: 540 }} role="img" aria-label="New Moon: spring tide, high tidal range. First Quarter: neap tide, moderate range. Full Moon: spring tide, high range. Last Quarter: neap tide, moderate range.">
+            {[["New Moon","Spring tide","high","none"],["First Quarter","Neap tide","moderate","left"],["Full Moon","Spring tide","high","full"],["Last Quarter","Neap tide","moderate","right"]].map(([phase, tide, level, lit], i) => (
+              <g key={phase} transform={`translate(${i * 136 + 4}, 6)`}>
+                {/* Moon as seen from Australia: first quarter lit on the left, last quarter lit on the right */}
+                <circle cx={65} cy={20} r={16} fill={lit === "full" ? "#e8e0c8" : "#333"} stroke="var(--ink-muted)" strokeWidth={1.5}/>
+                {(lit === "left" || lit === "right") && (
+                  <path d={`M65,4 A16,16 0 0 ${lit === "left" ? 0 : 1} 65,36 Z`} fill="#e8e0c8"/>
+                )}
+                <text x={65} y={52} textAnchor="middle" fontSize={10} fill="var(--ink)">{phase}</text>
+                <text x={65} y={70} textAnchor="middle" fontSize={10} fill="var(--accent-deep)" fontWeight="700">{tide}</text>
+                <text x={65} y={86} textAnchor="middle" fontSize={9} fill="var(--ink-muted)">Tidal range: {level}</text>
               </g>
             ))}
           </svg>
@@ -961,7 +1008,7 @@ function Section5({ progress, setProgress }) {
 
       <Figure src="img/jwst.png" caption="The James Webb Space Telescope and its golden hexagonal mirror." />
       <DotPoint id="1.5.1" title="The James Webb Space Telescope" progress={progress} setProgress={setProgress}>
-        <p>The <Term def="The most powerful space telescope ever built, launched on 25 December 2021, observing primarily in infrared light.">James Webb Space Telescope (JWST)</Term> was launched on 25 December 2021. It is the result of decades of work by engineers and scientists from three space agencies: NASA (United States), ESA (European Space Agency), and CSA (Canadian Space Agency). Its mirror is 6.5 metres across, nearly three times the size of the <Term def="A space telescope launched in 1990 that observes in visible and ultraviolet light, orbiting 570 km above Earth.">Hubble Space Telescope's</Term> mirror. This gives it far greater <Term def="The ability of a telescope to collect light from faint objects. Larger mirrors gather more light.">light-gathering power</Term>.</p>
+        <p>The <Term def="The most powerful space telescope ever built, launched on 25 December 2021, observing primarily in infrared light.">James Webb Space Telescope (JWST)</Term> was launched on 25 December 2021. It is the result of decades of work by engineers and scientists from three space agencies: NASA (United States), ESA (European Space Agency), and CSA (Canadian Space Agency). Its mirror is 6.5 metres across, nearly three times the size of the <Term def="A space telescope launched in 1990 that observes in visible, ultraviolet and near-infrared light, orbiting about 530 km above Earth.">Hubble Space Telescope's</Term> mirror. This gives it far greater <Term def="The ability of a telescope to collect light from faint objects. Larger mirrors gather more light.">light-gathering power</Term>.</p>
         <p>The JWST observes mainly in <Term def="Electromagnetic radiation with wavelengths longer than visible light but shorter than radio waves. Felt as heat.">infrared light</Term>. This lets it see through the dust clouds that block ordinary visible light, revealing hidden star-forming regions and very distant galaxies. It is parked at a special gravitational balance point called <Term def="The second Lagrange point, approximately 1.5 million km from Earth, where the telescope stays in sync with Earth's orbit while remaining on the night side.">Lagrange point L2</Term>, about 1.5 million kilometres from Earth. A five-layer sunshield the size of a tennis court keeps its instruments cold enough to detect the faint infrared glow of the most distant galaxies ever observed.</p>
         <TelescopeCompare />
         <Callout kind="success" title="JWST discoveries so far">

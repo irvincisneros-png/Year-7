@@ -45,7 +45,7 @@ function MrsgrenFlashcards() {
     letter: "R2",
     name: "Respiration",
     desc: "All cells release energy from food molecules. Most use oxygen for aerobic respiration.",
-    example: "Your muscle cells burn glucose to power every movement."
+    example: "Your muscle cells break down glucose to power every movement."
   }, {
     letter: "E",
     name: "Excretion",
@@ -518,7 +518,7 @@ function AdaptationsExplorer() {
       desc: "Large ears filled with blood vessels radiate excess body heat."
     }, {
       type: "Behavioural",
-      desc: "Nocturnal: shelters in burrows during the day to avoid 50+ degree temperatures."
+      desc: "Nocturnal: shelters in cool burrows during the day, when the ground surface can be hotter than 50 °C."
     }]
   }, {
     name: "Banksia",
@@ -791,7 +791,7 @@ function PlantCellDiagram() {
     y: "350",
     textAnchor: "middle",
     fontSize: "12",
-    fill: "var(--muted)",
+    fill: "var(--ink-muted)",
     fontWeight: "500"
   }, "Tap a hotspot to learn more")), info && /*#__PURE__*/React.createElement("div", {
     className: "card",
@@ -915,8 +915,9 @@ function AnimalCellDiagram() {
       strokeWidth: "1.5"
     });
   }), /*#__PURE__*/React.createElement("text", {
-    x: "345",
-    y: "152",
+    x: "322",
+    y: "138",
+    textAnchor: "middle",
     fontSize: "10",
     fill: "#78350f",
     fontWeight: "600"
@@ -963,7 +964,7 @@ function AnimalCellDiagram() {
     y: "328",
     textAnchor: "middle",
     fontSize: "12",
-    fill: "var(--muted)"
+    fill: "var(--ink-muted)"
   }, "Tap a hotspot")), info && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
@@ -1250,58 +1251,64 @@ function EnergyEquationSim() {
       color: eq.colour
     }
   }, eq.title), /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 480 90",
+    viewBox: "0 0 480 64",
     width: "100%",
     style: {
       maxWidth: 480,
       display: "block",
       margin: "0 auto 12px"
-    }
-  }, eq.reactants.map(function (r, i) {
-    return /*#__PURE__*/React.createElement("g", {
-      key: r,
-      transform: "translate(".concat(i * (eq.reactants.length > 2 ? 110 : 140) + 20, ", 10)")
-    }, /*#__PURE__*/React.createElement("rect", {
-      width: "95",
-      height: "44",
-      rx: "10",
-      fill: eq.colour + "33",
-      stroke: eq.colour,
-      strokeWidth: "2"
-    }), /*#__PURE__*/React.createElement("text", {
-      x: "47",
-      y: "27",
-      textAnchor: "middle",
-      fontSize: "11",
-      fontWeight: "700",
-      fill: "var(--ink)"
-    }, r));
+    },
+    role: "img",
+    "aria-label": eq.reactants.join(" + ") + " react to make " + eq.products.join(" + ")
+  }, [[eq.reactants, 0, "33"], [eq.products, 258, "22"]].map(function (_ref9, side) {
+    var _ref0 = _slicedToArray(_ref9, 3),
+      items = _ref0[0],
+      x0 = _ref0[1],
+      alpha = _ref0[2];
+    var gap = 16,
+      zone = 222;
+    var w = Math.min(100, (zone - (items.length - 1) * gap) / items.length);
+    var start = x0 + (zone - (items.length * w + (items.length - 1) * gap)) / 2;
+    return items.map(function (label, k) {
+      var x = start + k * (w + gap);
+      var lines = w < 90 && label.includes(" ") ? label.split(" ") : [label];
+      return /*#__PURE__*/React.createElement("g", {
+        key: side + label
+      }, /*#__PURE__*/React.createElement("rect", {
+        x: x,
+        y: "8",
+        width: w,
+        height: "44",
+        rx: "10",
+        fill: eq.colour + alpha,
+        stroke: eq.colour,
+        strokeWidth: "2"
+      }), lines.map(function (ln, li) {
+        return /*#__PURE__*/React.createElement("text", {
+          key: li,
+          x: x + w / 2,
+          y: (lines.length === 1 ? 34 : 27) + li * 13,
+          textAnchor: "middle",
+          fontSize: "11",
+          fontWeight: "700",
+          fill: "var(--ink)"
+        }, ln);
+      }), k < items.length - 1 && /*#__PURE__*/React.createElement("text", {
+        x: x + w + gap / 2,
+        y: "35",
+        textAnchor: "middle",
+        fontSize: "14",
+        fontWeight: "700",
+        fill: "var(--ink)"
+      }, "+"));
+    });
   }), /*#__PURE__*/React.createElement("text", {
     x: "240",
-    y: "38",
+    y: "37",
     textAnchor: "middle",
     fontSize: "24",
     fill: "var(--ink)"
-  }, "\u2192"), eq.products.map(function (p, i) {
-    return /*#__PURE__*/React.createElement("g", {
-      key: p,
-      transform: "translate(".concat(260 + i * (eq.products.length > 2 ? 73 : 100), ", 10)")
-    }, /*#__PURE__*/React.createElement("rect", {
-      width: "68",
-      height: "44",
-      rx: "10",
-      fill: eq.colour + "22",
-      stroke: eq.colour,
-      strokeWidth: "1.5"
-    }), /*#__PURE__*/React.createElement("text", {
-      x: "34",
-      y: "27",
-      textAnchor: "middle",
-      fontSize: "10",
-      fontWeight: "700",
-      fill: "var(--ink)"
-    }, p));
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "\u2192")), /*#__PURE__*/React.createElement("div", {
     className: "grid-3",
     style: {
       gap: 10
@@ -1427,11 +1434,13 @@ function TissueOrganSVG() {
     num: "1",
     caption: "Organisation of a multicellular organism: from a single cell up to the whole organism."
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 560 100",
+    viewBox: "0 0 560 72",
     width: "100%",
     style: {
       maxWidth: 560
-    }
+    },
+    role: "img",
+    "aria-label": "Cell, then tissue, then organ, then organ system, then organism: palisade cell, mesophyll tissue, leaf, shoot system, eucalyptus tree."
   }, levels.map(function (l, i) {
     return /*#__PURE__*/React.createElement("g", {
       key: l,
@@ -1449,13 +1458,13 @@ function TissueOrganSVG() {
       textAnchor: "middle",
       fontSize: "12",
       fontWeight: "700",
-      fill: "#064e3b"
+      fill: i >= 3 ? "#ffffff" : "#064e3b"
     }, l), /*#__PURE__*/React.createElement("text", {
       x: "50",
       y: "42",
       textAnchor: "middle",
       fontSize: "10",
-      fill: "#065f46"
+      fill: i >= 3 ? "#ffffff" : "#065f46"
     }, examples[i]), i < levels.length - 1 && /*#__PURE__*/React.createElement("text", {
       x: "108",
       y: "34",
@@ -1605,14 +1614,18 @@ function ClassificationBuilder() {
       display: "block",
       margin: "0 auto"
     }
-  }, ranks.map(function (_ref9, i) {
-    var _ref0 = _slicedToArray(_ref9, 2),
-      rank = _ref0[0],
-      value = _ref0[1];
+  }, ranks.map(function (_ref1, i) {
+    var _ref10 = _slicedToArray(_ref1, 2),
+      rank = _ref10[0],
+      value = _ref10[1];
     var w = widths[i];
     var x = (420 - w) / 2;
     var y = i * 34 + 4;
-    var alpha = 1 - i * 0.08;
+    /* opaque tints (emerald mixed with white) so the dark-green text stays readable in dark mode */
+    var a = 0.18 + (7 - i) * 0.08;
+    var mix = function mix(c) {
+      return Math.round(255 * (1 - a) + c * a);
+    };
     return /*#__PURE__*/React.createElement("g", {
       key: rank
     }, /*#__PURE__*/React.createElement("rect", {
@@ -1621,7 +1634,7 @@ function ClassificationBuilder() {
       width: w,
       height: "28",
       rx: "7",
-      fill: "rgba(16,185,129," + (0.18 + (7 - i) * 0.08) + ")",
+      fill: "rgb(".concat(mix(16), ",").concat(mix(185), ",").concat(mix(129), ")"),
       stroke: "#10b981",
       strokeWidth: "1.2"
     }), /*#__PURE__*/React.createElement("text", {
@@ -1652,9 +1665,9 @@ function ClassificationBuilder() {
    SECTION COMPONENTS
    ============================================================ */
 
-function Section31(_ref1) {
-  var progress = _ref1.progress,
-    setProgress = _ref1.setProgress;
+function Section31(_ref11) {
+  var progress = _ref11.progress,
+    setProgress = _ref11.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1671,7 +1684,7 @@ function Section31(_ref1) {
     setProgress: setProgress
   }, /*#__PURE__*/React.createElement("p", null, "How do you know if something is alive? Scientists use a set of seven key characteristics. If something has all seven, it is living. The easiest way to remember them is the mnemonic ", /*#__PURE__*/React.createElement(Term, {
     def: "Movement, Reproduction, Sensitivity, Growth, Respiration, Excretion, Nutrition"
-  }, "MRSGREN"), "."), /*#__PURE__*/React.createElement("p", null, "Think about a fire: it moves, it uses fuel, and it grows. But it cannot reproduce on its own, it has no sensitivity to changes around it, and it does not grow in the biological sense. Fire is not alive. A tricky case is a ", /*#__PURE__*/React.createElement(Term, {
+  }, "MRSGREN"), "."), /*#__PURE__*/React.createElement("p", null, "Think about a fire: it moves, it uses fuel, and it seems to grow. But it cannot reproduce on its own, it has no sensitivity to changes around it, and it does not grow in the biological sense. Fire is not alive. A tricky case is a ", /*#__PURE__*/React.createElement(Term, {
     def: "A tiny particle of genetic material surrounded by a protein coat; can only reproduce inside a living host cell"
   }, "virus"), ": it can reproduce, but only by hijacking a living cell, and it has no ", /*#__PURE__*/React.createElement(Term, {
     def: "All of the chemical reactions that keep a cell alive, including releasing energy from food"
@@ -1824,9 +1837,9 @@ function Section31(_ref1) {
     model: "Aboriginal and Torres Strait Islander communities have observed species over many generations and can identify long-term changes in population size, behaviour, or habitat that short-term scientific studies would miss. For example, traditional fire management knowledge has helped conservation managers restore habitat for fire-adapted species by reintroducing controlled burning practices."
   }))));
 }
-function Section32(_ref10) {
-  var progress = _ref10.progress,
-    setProgress = _ref10.setProgress;
+function Section32(_ref12) {
+  var progress = _ref12.progress,
+    setProgress = _ref12.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1835,7 +1848,7 @@ function Section32(_ref10) {
     className: "lead"
   }, "Every living thing, from a single bacterium to your own body, is built from cells. Explore what is inside them and how they work.")), /*#__PURE__*/React.createElement(Figure, {
     src: "img/cell.png",
-    caption: "A plant cell and an animal cell compared."
+    caption: "A plant cell (left) with its cell wall, chloroplasts and large vacuole, beside an animal cell (right), which has none of these."
   }), /*#__PURE__*/React.createElement(DotPoint, {
     id: "3.2.1",
     title: "Cell theory",
@@ -2045,7 +2058,7 @@ function Section32(_ref10) {
     def: "A structure made of several tissue types working together to perform a complex function"
   }, "organs"), ", and organs that work together form ", /*#__PURE__*/React.createElement(Term, {
     def: "A group of organs that cooperate to carry out a major body function"
-  }, "organ systems"), ". All cells in the same organism contain identical DNA. The difference between, say, a muscle cell and a nerve cell is not what DNA they have, but which genes are switched on during development."), /*#__PURE__*/React.createElement(TissueOrganSVG, null), /*#__PURE__*/React.createElement(SpecialisedCellMatcher, null), /*#__PURE__*/React.createElement(QGroup, {
+  }, "organ systems"), ". Almost every body cell in an organism contains the same DNA (red blood cells, which lose their nucleus, are an exception). The difference between, say, a muscle cell and a nerve cell is not what DNA they have, but which genes are switched on during development."), /*#__PURE__*/React.createElement(TissueOrganSVG, null), /*#__PURE__*/React.createElement(SpecialisedCellMatcher, null), /*#__PURE__*/React.createElement(QGroup, {
     title: "Check yourself"
   }, /*#__PURE__*/React.createElement(MCQ, {
     num: 10,
@@ -2112,9 +2125,9 @@ function Section32(_ref10) {
     model: "These are skeletal or cardiac muscle cells. The striped (striated) pattern is caused by the regular, repeating arrangement of the contractile proteins actin and myosin inside the cell. These proteins are organised into overlapping bands that give the cell its characteristic striped appearance under the microscope."
   }))));
 }
-function Section33(_ref11) {
-  var progress = _ref11.progress,
-    setProgress = _ref11.setProgress;
+function Section33(_ref13) {
+  var progress = _ref13.progress,
+    setProgress = _ref13.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {

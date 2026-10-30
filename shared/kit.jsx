@@ -624,7 +624,7 @@ function buildApp(CFG) {
                 <h3 style={{ fontSize: "1.3rem" }}>{s.label}</h3>
                 {s.blurb && <p className="muted" style={{ fontSize: "0.92rem", margin: 0 }}>{s.blurb}</p>}
                 <div className="progressbar" style={{ marginTop: 4 }}><div style={{ width: sp + "%", background: "var(--accent)" }}/></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--accent-deep)", fontWeight: 600, fontSize: "0.88rem", marginTop: 4 }}>Open section <IconArrow size={14} sw={2.5}/></div>
+                <div className="sec-open" style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, fontSize: "0.88rem", marginTop: 4 }}>Open section <IconArrow size={14} sw={2.5}/></div>
               </button>
             );
           })}

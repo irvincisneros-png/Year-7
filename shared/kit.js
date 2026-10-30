@@ -1413,11 +1413,11 @@ function buildApp(CFG) {
           background: "var(--accent)"
         }
       })), /*#__PURE__*/React.createElement("div", {
+        className: "sec-open",
         style: {
           display: "flex",
           alignItems: "center",
           gap: 6,
-          color: "var(--accent-deep)",
           fontWeight: 600,
           fontSize: "0.88rem",
           marginTop: 4

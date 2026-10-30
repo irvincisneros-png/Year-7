@@ -34,6 +34,7 @@
   border-radius: var(--r-sm);
   display: flex; align-items: center; justify-content: center;
   background: var(--paper);
+  color: var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
 }
 .hub-top .brand-title {

@@ -58,7 +58,7 @@ function InquiryCycleAnim() {
       return clearInterval(id);
     };
   }, []);
-  var r = 100;
+  var r = 90;
   var cx = 160,
     cy = 160;
   return /*#__PURE__*/React.createElement(Interactive, {
@@ -74,12 +74,15 @@ function InquiryCycleAnim() {
       justifyContent: "center"
     }
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 320 320",
-    width: "240",
-    height: "240",
+    viewBox: "-50 -6 420 332",
+    width: "340",
+    height: "269",
     style: {
-      flexShrink: 0
-    }
+      flexShrink: 0,
+      maxWidth: "100%"
+    },
+    role: "img",
+    "aria-label": "The scientific inquiry cycle: observe, question, investigate, analyse, conclude, build knowledge, then back to observe."
   }, steps.map(function (s, i) {
     var angle = i / steps.length * 2 * Math.PI - Math.PI / 2;
     var x = cx + r * Math.cos(angle);
@@ -111,11 +114,11 @@ function InquiryCycleAnim() {
       fontSize: isActive ? 16 : 13,
       fill: isActive ? "#fff" : "var(--ink)"
     }, s.icon), /*#__PURE__*/React.createElement("text", {
-      x: x,
-      y: y + (isActive ? 12 : 10) + 10,
-      textAnchor: "middle",
-      fontSize: 9,
-      fill: isActive ? "var(--accent-deep)" : "var(--ink-muted)",
+      x: cx + 122 * Math.cos(angle),
+      y: cy + 122 * Math.sin(angle) + 4,
+      textAnchor: Math.cos(angle) > 0.3 ? "start" : Math.cos(angle) < -0.3 ? "end" : "middle",
+      fontSize: 12,
+      fill: isActive ? "var(--ink)" : "var(--ink-muted)",
       fontWeight: isActive ? "700" : "400"
     }, s.label), function () {
       var a2 = (i + 1) / steps.length * 2 * Math.PI - Math.PI / 2;
@@ -264,7 +267,7 @@ function InstrumentSim() {
   var analogRead = 23.5;
   var digitalRead = 23.4;
   var displayed = type === "analog" ? analogRead : digitalRead;
-  var precision = type === "analog" ? "0.5 degrees C" : "0.1 degrees C";
+  var precision = type === "analog" ? "0.5 °C" : "0.1 °C";
   return /*#__PURE__*/React.createElement(Interactive, {
     title: "Analog vs digital thermometer",
     subtitle: "Switch between instruments and see how precision changes.",
@@ -337,7 +340,7 @@ function InstrumentSim() {
     textAnchor: "middle",
     fontSize: "9",
     fill: "var(--ink-muted)"
-  }, "deg C")) : /*#__PURE__*/React.createElement("div", {
+  }, "\xB0C")) : /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#1a1a2e",
       color: "#0ff",
@@ -357,24 +360,24 @@ function InstrumentSim() {
       letterSpacing: 1,
       marginTop: 4
     }
-  }, "deg C"))), /*#__PURE__*/React.createElement("div", {
+  }, "\xB0C"))), /*#__PURE__*/React.createElement("div", {
     className: "stat-readout"
   }, /*#__PURE__*/React.createElement(Stat, {
     value: displayed.toFixed(type === "analog" ? 1 : 1),
-    label: "Reading (deg C)"
+    label: "Reading (\xB0C)"
   }), /*#__PURE__*/React.createElement(Stat, {
     value: precision,
     label: "Precision"
   }), /*#__PURE__*/React.createElement(Stat, {
     value: Math.abs(displayed - trueVal).toFixed(1),
-    label: "Error from true (deg C)"
+    label: "Error from true (\xB0C)"
   })), /*#__PURE__*/React.createElement("p", {
     className: "muted",
     style: {
       marginBottom: 0,
       marginTop: 8
     }
-  }, "True temperature is ", trueVal, " degrees C. In this example, the digital thermometer has the smaller error and finer precision."));
+  }, "True temperature is ", trueVal, " \xB0C. In this example, the digital thermometer has the smaller error and finer precision."));
 }
 
 /* =====================================================================
@@ -618,7 +621,7 @@ function SolarModelSim() {
     y: cy + 22 * Math.sin(moonAngle) - 12,
     textAnchor: "middle",
     fontSize: 8,
-    fill: "#ccc"
+    fill: "var(--ink-muted)"
   }, "Moon"), /*#__PURE__*/React.createElement("circle", {
     cx: cx + 90 * Math.cos(earthAngle * 0.5),
     cy: cy + 90 * Math.sin(earthAngle * 0.5),
@@ -713,7 +716,7 @@ function SolarModelSim() {
   }, model === "geo" ? "Earth-centred (Ptolemy, ~150 CE)" : "Sun-centred (Copernicus, 1543 CE)")), /*#__PURE__*/React.createElement(Callout, {
     kind: "key",
     title: "Key difference"
-  }, "In the geocentric model everything orbits Earth. In the heliocentric model Earth and the other planets orbit the Sun. Galileo's observations of Jupiter's moons and the phases of Venus proved the geocentric model was wrong."));
+  }, "In the geocentric model everything orbits Earth. In the heliocentric model Earth and the other planets orbit the Sun. Galileo's observations of Jupiter's moons and the phases of Venus showed that Ptolemy's geocentric model could not be right."));
 }
 
 /* =====================================================================
@@ -767,7 +770,7 @@ function DayNightSim() {
     step: 1,
     value: lat,
     onChange: setLat,
-    unit: " deg"
+    unit: "\xB0"
   }), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-ghost",
     onClick: function onClick() {
@@ -887,7 +890,7 @@ function DayNightSim() {
     className: "stat-readout"
   }, /*#__PURE__*/React.createElement(Stat, {
     value: isDay ? "DAY" : "NIGHT",
-    label: "Your location (".concat(lat > 0 ? lat + "N" : lat < 0 ? Math.abs(lat) + "S" : "equator", ")")
+    label: "Your location (".concat(lat > 0 ? lat + "°N" : lat < 0 ? Math.abs(lat) + "°S" : "equator", ")")
   }), /*#__PURE__*/React.createElement(Stat, {
     value: "24 h",
     label: "One full rotation"
@@ -924,17 +927,18 @@ function SeasonsSim() {
     desc: "Neither hemisphere tilts towards the Sun. Days and nights are about equal."
   }];
   var p = positions[pos];
-  var earthPositions = [{
-    x: 250,
+  var earthPositions = [/* x + 10 is the drawn centre, so each Earth sits exactly on the orbit ellipse (cx 140, rx 110, ry 90) */
+  {
+    x: 240,
     y: 120
   }, {
-    x: 120,
+    x: 130,
     y: 210
   }, {
-    x: 0,
+    x: 20,
     y: 120
   }, {
-    x: 120,
+    x: 130,
     y: 30
   }];
   var ep = earthPositions[pos];
@@ -1012,23 +1016,25 @@ function SeasonsSim() {
     y1: ep.y - 18,
     x2: ep.x + 10 + tiltDir * 8,
     y2: ep.y + 18,
-    stroke: "#fff",
+    stroke: "var(--ink)",
     strokeWidth: 2.5
   }), /*#__PURE__*/React.createElement("text", {
     x: ep.x + 10,
-    y: ep.y - 26,
+    y: ep.y - 24,
     textAnchor: "middle",
-    fontSize: 8,
-    fill: "#fff"
+    fontSize: 9,
+    fontWeight: "700",
+    fill: "var(--ink)"
   }, "N"), /*#__PURE__*/React.createElement("text", {
-    x: ep.x + 10,
-    y: ep.y + 32,
+    x: ep.x + 10 + tiltDir * 8,
+    y: ep.y + 30,
     textAnchor: "middle",
-    fontSize: 8,
-    fill: "#ccc"
+    fontSize: 9,
+    fontWeight: "700",
+    fill: "var(--ink)"
   }, "S"), /*#__PURE__*/React.createElement("text", {
     x: ep.x + 10,
-    y: ep.y + 48,
+    y: ep.y + 44,
     textAnchor: "middle",
     fontSize: 9,
     fill: "#4a90d9",
@@ -1555,7 +1561,7 @@ function TelescopeCompare() {
       name: "Hubble Space Telescope",
       mirror: "2.4 m",
       wavelength: "Visible + UV + near-IR",
-      location: "570 km above Earth",
+      location: "About 530 km above Earth",
       limit: "~mag 31",
       discovery: "Dark energy, Hubble constant, thousands of galaxies",
       color: "#2c5f8a"
@@ -1808,7 +1814,7 @@ function Section1(_ref2) {
     def: "A research paper checked by independent experts before it is published."
   }, "peer-reviewed publications"), " so others can check, challenge, and build on it. This sharing is what makes science ", /*#__PURE__*/React.createElement(Term, {
     def: "Each new discovery adds to a growing store of knowledge, building on what came before."
-  }, "cumulative"), ": every generation of scientists stands on the shoulders of the ones before."), /*#__PURE__*/React.createElement("p", null, "When Edwin Hubble showed that galaxies are moving away from each other, he was building on Einstein's equations and earlier measurements by other astronomers. The James Webb Space Telescope needed engineers and scientists from the United States, Europe, and Canada working together for decades. No single person could have built it alone."), /*#__PURE__*/React.createElement(Callout, {
+  }, "cumulative"), ": every generation of scientists stands on the shoulders of the ones before."), /*#__PURE__*/React.createElement("p", null, "When Edwin Hubble showed that galaxies are moving away from each other, he was building on earlier work by other astronomers: Henrietta Leavitt's method for measuring the distances to stars and Vesto Slipher's measurements of how fast galaxies are moving. The James Webb Space Telescope needed engineers and scientists from the United States, Europe, and Canada working together for decades. No single person could have built it alone."), /*#__PURE__*/React.createElement(Callout, {
     kind: "fact",
     title: "Giant collaborative science"
   }, "The International Space Station has been lived in continuously since 2000. It involves space agencies from 15 countries and thousands of scientists and engineers."), /*#__PURE__*/React.createElement(QGroup, {
@@ -1843,7 +1849,7 @@ function Section1(_ref2) {
     style: {
       maxWidth: 560
     }
-  }, ["Many observations", "Hypothesis", "Repeated tests", "Evidence grows", "Theory formed", "New predictions"].map(function (s, i) {
+  }, ["Observations", "Hypothesis", "Repeated tests", "Evidence grows", "Theory formed", "New predictions"].map(function (s, i) {
     return /*#__PURE__*/React.createElement("g", {
       key: s,
       transform: "translate(".concat(i * 94 + 2, ", 8)")
@@ -2112,11 +2118,13 @@ function Section2(_ref5) {
   }, "relationships"), ". Plotting the orbital period of each planet against its distance from the Sun reveals that planets further away take much longer to complete one orbit. This relationship is known as Kepler's third law."), /*#__PURE__*/React.createElement(Figure, {
     caption: "Orbital periods of six planets (inner to outer solar system)."
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 540 180",
+    viewBox: "0 0 540 196",
     width: "100%",
     style: {
       maxWidth: 540
-    }
+    },
+    role: "img",
+    "aria-label": "Bar chart of orbital periods in Earth years: Mercury 0.24, Venus 0.62, Earth 1, Mars 1.88, Jupiter 11.86, Saturn 29.46."
   }, function () {
     var data = [["Mercury", 0.24, "#aaa"], ["Venus", 0.62, "#e2b97e"], ["Earth", 1.0, "#4a90d9"], ["Mars", 1.88, "#e74c3c"], ["Jupiter", 11.86, "#f0a500"], ["Saturn", 29.46, "#c2a060"]];
     var maxV = 30;
@@ -2131,7 +2139,7 @@ function Section2(_ref5) {
       var barH = val / maxV * h;
       return /*#__PURE__*/React.createElement("g", {
         key: name,
-        transform: "translate(".concat(i * (barW + gap) + 18, ", 10)")
+        transform: "translate(".concat(i * (barW + gap) + 18, ", 24)")
       }, /*#__PURE__*/React.createElement("rect", {
         y: h - barH,
         width: barW,
@@ -2162,7 +2170,7 @@ function Section2(_ref5) {
     });
   }(), /*#__PURE__*/React.createElement("text", {
     x: 270,
-    y: 170,
+    y: 188,
     textAnchor: "middle",
     fontSize: 10,
     fill: "var(--ink-muted)"
@@ -2186,9 +2194,175 @@ function Section3(_ref0) {
   }, "1.3 Space Science"), /*#__PURE__*/React.createElement("h1", null, "The Sun, Earth, Moon, and beyond"), /*#__PURE__*/React.createElement("p", {
     className: "lead"
   }, "Our place in the solar system explains almost everything we see in the sky.")), /*#__PURE__*/React.createElement(Figure, {
-    src: "img/earth-sun.png",
-    caption: "Earth orbits the Sun with its axis tilted \u2014 one half in daylight, the other in night."
-  }), /*#__PURE__*/React.createElement(DotPoint, {
+    caption: "Earth orbits the Sun with its axis tilted. The half facing the Sun has day; the other half has night. (Not to scale.)"
+  }, /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 480 250",
+    width: "100%",
+    style: {
+      maxWidth: 560
+    },
+    role: "img",
+    "aria-label": "Diagram: the Sun in the middle of Earth's orbit. Earth is on the orbit with its axis tilted 23.5 degrees. The half of Earth facing the Sun is lit (day) and the far half is dark (night). An arrow shows the direction Earth travels around its orbit."
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("radialGradient", {
+    id: "esSun",
+    cx: "50%",
+    cy: "50%",
+    r: "50%"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#ffe9a0"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "70%",
+    stopColor: "#f7b731"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#d99e1e"
+  })), /*#__PURE__*/React.createElement("marker", {
+    id: "esArrow",
+    markerWidth: "8",
+    markerHeight: "8",
+    refX: "6",
+    refY: "4",
+    orient: "auto"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M0,0 L8,4 L0,8 Z",
+    fill: "var(--ink-muted)"
+  })), /*#__PURE__*/React.createElement("marker", {
+    id: "esRay",
+    markerWidth: "7",
+    markerHeight: "7",
+    refX: "5",
+    refY: "3.5",
+    orient: "auto"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M0,0 L7,3.5 L0,7 Z",
+    fill: "#d99e1e"
+  }))), /*#__PURE__*/React.createElement("ellipse", {
+    cx: "215",
+    cy: "125",
+    rx: "175",
+    ry: "68",
+    fill: "none",
+    stroke: "var(--ink-muted)",
+    strokeWidth: "1.5",
+    strokeDasharray: "6,5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M200,192.9 L232,192.8",
+    stroke: "var(--ink-muted)",
+    strokeWidth: "1.5",
+    markerEnd: "url(#esArrow)"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "215",
+    y: "48",
+    textAnchor: "middle",
+    fontSize: "11",
+    fill: "var(--ink-muted)"
+  }, "Orbit: one trip around the Sun takes about 365 days"), /*#__PURE__*/React.createElement("circle", {
+    cx: "215",
+    cy: "125",
+    r: "38",
+    fill: "url(#esSun)",
+    stroke: "#b7791f",
+    strokeWidth: "1.5"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "215",
+    y: "129",
+    textAnchor: "middle",
+    fontSize: "13",
+    fontWeight: "700",
+    fill: "#5c3d00"
+  }, "Sun"), [108, 125, 142].map(function (y) {
+    return /*#__PURE__*/React.createElement("line", {
+      key: y,
+      x1: "262",
+      y1: y,
+      x2: "345",
+      y2: y,
+      stroke: "#d99e1e",
+      strokeWidth: "2",
+      markerEnd: "url(#esRay)"
+    });
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "300",
+    y: "100",
+    textAnchor: "middle",
+    fontSize: "10",
+    fill: "var(--ink-muted)"
+  }, "sunlight"), /*#__PURE__*/React.createElement("circle", {
+    cx: "390",
+    cy: "125",
+    r: "30",
+    fill: "#1e2a44",
+    stroke: "var(--ink)",
+    strokeWidth: "1.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M390,95 A30,30 0 0 0 390,155 Z",
+    fill: "#4b7bc9"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "390",
+    cy: "125",
+    r: "30",
+    fill: "none",
+    stroke: "var(--ink)",
+    strokeWidth: "1.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "390",
+    y1: "80",
+    x2: "390",
+    y2: "170",
+    stroke: "var(--ink-muted)",
+    strokeWidth: "1",
+    strokeDasharray: "3,3"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "407.9",
+    y1: "83.7",
+    x2: "372.1",
+    y2: "166.3",
+    stroke: "var(--ink)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "412",
+    y: "80",
+    fontSize: "11",
+    fontWeight: "700",
+    fill: "var(--ink)"
+  }, "N"), /*#__PURE__*/React.createElement("text", {
+    x: "360",
+    y: "178",
+    fontSize: "11",
+    fontWeight: "700",
+    fill: "var(--ink)"
+  }, "S"), /*#__PURE__*/React.createElement("text", {
+    x: "420",
+    y: "104",
+    fontSize: "10",
+    fill: "var(--ink-muted)"
+  }, "23.5\xB0 tilt"), /*#__PURE__*/React.createElement("text", {
+    x: "374",
+    y: "208",
+    textAnchor: "middle",
+    fontSize: "10",
+    fill: "var(--ink)"
+  }, "day"), /*#__PURE__*/React.createElement("text", {
+    x: "406",
+    y: "208",
+    textAnchor: "middle",
+    fontSize: "10",
+    fill: "var(--ink)"
+  }, "night"), /*#__PURE__*/React.createElement("text", {
+    x: "390",
+    y: "224",
+    textAnchor: "middle",
+    fontSize: "12",
+    fontWeight: "700",
+    fill: "var(--ink)"
+  }, "Earth"), /*#__PURE__*/React.createElement("text", {
+    x: "10",
+    y: "242",
+    fontSize: "10",
+    fontStyle: "italic",
+    fill: "var(--ink-muted)"
+  }, "Not to scale: the Sun is about 109 times wider than Earth."))), /*#__PURE__*/React.createElement(DotPoint, {
     id: "1.3.1",
     title: "Historical solar system models",
     progress: progress,
@@ -2201,7 +2375,7 @@ function Section3(_ref0) {
     def: "The astronomer who proposed a Sun-centred model of the solar system in 1543, which later became widely accepted."
   }, "Nicolaus Copernicus"), " proposed the ", /*#__PURE__*/React.createElement(Term, {
     def: "The Sun-centred model of the solar system."
-  }, "heliocentric model"), ", placing the Sun at the centre. Galileo used a telescope in 1609 to find moons orbiting Jupiter (proving not everything circles Earth) and phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: ", /*#__PURE__*/React.createElement(Term, {
+  }, "heliocentric model"), ", placing the Sun at the centre. Galileo began observing the sky with a telescope in 1609. In 1610 he found moons orbiting Jupiter (proving not everything circles Earth) and the phases of Venus (only possible if Venus orbits the Sun). Johannes Kepler showed the orbits are ellipses, not circles. Isaac Newton then explained why: ", /*#__PURE__*/React.createElement(Term, {
     def: "The force of attraction between any two objects that have mass."
   }, "gravity"), "."), /*#__PURE__*/React.createElement(SolarModelSim, null), /*#__PURE__*/React.createElement(Callout, {
     kind: "key",
@@ -2297,43 +2471,48 @@ function Section4(_ref1) {
   }, "The Yolngu and modern science arrived at the same accurate tidal predictions from the same natural observations. Both systems are based on systematic observation tested over time. The mechanism described is different, but the practical outcome is identical."), /*#__PURE__*/React.createElement(Figure, {
     caption: "Moon phases and their connection to tidal strength: two perspectives."
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 540 100",
+    viewBox: "0 0 540 104",
     width: "100%",
     style: {
       maxWidth: 540
-    }
-  }, [["New Moon", "Spring tide", "high", "#333"], ["First Quarter", "Neap tide", "moderate", "#888"], ["Full Moon", "Spring tide", "high", "#e8e0c8"], ["Last Quarter", "Neap tide", "moderate", "#888"]].map(function (_ref10, i) {
+    },
+    role: "img",
+    "aria-label": "New Moon: spring tide, high tidal range. First Quarter: neap tide, moderate range. Full Moon: spring tide, high range. Last Quarter: neap tide, moderate range."
+  }, [["New Moon", "Spring tide", "high", "none"], ["First Quarter", "Neap tide", "moderate", "left"], ["Full Moon", "Spring tide", "high", "full"], ["Last Quarter", "Neap tide", "moderate", "right"]].map(function (_ref10, i) {
     var _ref11 = _slicedToArray(_ref10, 4),
       phase = _ref11[0],
       tide = _ref11[1],
       level = _ref11[2],
-      color = _ref11[3];
+      lit = _ref11[3];
     return /*#__PURE__*/React.createElement("g", {
       key: phase,
-      transform: "translate(".concat(i * 136 + 4, ", 10)")
+      transform: "translate(".concat(i * 136 + 4, ", 6)")
     }, /*#__PURE__*/React.createElement("circle", {
       cx: 65,
-      cy: 30,
-      r: 20,
-      fill: color,
-      stroke: "var(--accent-mid)",
-      strokeWidth: 2
+      cy: 20,
+      r: 16,
+      fill: lit === "full" ? "#e8e0c8" : "#333",
+      stroke: "var(--ink-muted)",
+      strokeWidth: 1.5
+    }), (lit === "left" || lit === "right") && /*#__PURE__*/React.createElement("path", {
+      d: "M65,4 A16,16 0 0 ".concat(lit === "left" ? 0 : 1, " 65,36 Z"),
+      fill: "#e8e0c8"
     }), /*#__PURE__*/React.createElement("text", {
       x: 65,
-      y: 35,
+      y: 52,
       textAnchor: "middle",
-      fontSize: 9,
-      fill: color === "#333" ? "#ccc" : "var(--ink)"
+      fontSize: 10,
+      fill: "var(--ink)"
     }, phase), /*#__PURE__*/React.createElement("text", {
       x: 65,
-      y: 66,
+      y: 70,
       textAnchor: "middle",
       fontSize: 10,
       fill: "var(--accent-deep)",
       fontWeight: "700"
     }, tide), /*#__PURE__*/React.createElement("text", {
       x: 65,
-      y: 82,
+      y: 86,
       textAnchor: "middle",
       fontSize: 9,
       fill: "var(--ink-muted)"
@@ -2410,7 +2589,7 @@ function Section5(_ref12) {
   }, /*#__PURE__*/React.createElement("p", null, "The ", /*#__PURE__*/React.createElement(Term, {
     def: "The most powerful space telescope ever built, launched on 25 December 2021, observing primarily in infrared light."
   }, "James Webb Space Telescope (JWST)"), " was launched on 25 December 2021. It is the result of decades of work by engineers and scientists from three space agencies: NASA (United States), ESA (European Space Agency), and CSA (Canadian Space Agency). Its mirror is 6.5 metres across, nearly three times the size of the ", /*#__PURE__*/React.createElement(Term, {
-    def: "A space telescope launched in 1990 that observes in visible and ultraviolet light, orbiting 570 km above Earth."
+    def: "A space telescope launched in 1990 that observes in visible, ultraviolet and near-infrared light, orbiting about 530 km above Earth."
   }, "Hubble Space Telescope's"), " mirror. This gives it far greater ", /*#__PURE__*/React.createElement(Term, {
     def: "The ability of a telescope to collect light from faint objects. Larger mirrors gather more light."
   }, "light-gathering power"), "."), /*#__PURE__*/React.createElement("p", null, "The JWST observes mainly in ", /*#__PURE__*/React.createElement(Term, {

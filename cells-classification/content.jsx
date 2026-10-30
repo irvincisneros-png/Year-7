@@ -13,7 +13,7 @@ function MrsgrenFlashcards() {
     { letter: "R", name: "Reproduction", desc: "Organisms produce offspring so the species continues. This can be sexual or asexual.", example: "A strawberry plant sends out runners that grow into new plants." },
     { letter: "S", name: "Sensitivity", desc: "Organisms detect and respond to changes in their environment, called stimuli.", example: "A moth flies toward a light source at night." },
     { letter: "G", name: "Growth", desc: "Organisms increase in size and complexity using nutrients and energy.", example: "A tadpole grows into a frog over several weeks." },
-    { letter: "R2", name: "Respiration", desc: "All cells release energy from food molecules. Most use oxygen for aerobic respiration.", example: "Your muscle cells burn glucose to power every movement." },
+    { letter: "R2", name: "Respiration", desc: "All cells release energy from food molecules. Most use oxygen for aerobic respiration.", example: "Your muscle cells break down glucose to power every movement." },
     { letter: "E", name: "Excretion", desc: "Metabolic waste products are removed from the body. This is NOT the same as getting rid of undigested food.", example: "Your kidneys filter urea from the blood and produce urine." },
     { letter: "N", name: "Nutrition", desc: "Organisms obtain and use nutrients. Plants photosynthesise; animals eat food.", example: "A koala eats eucalyptus leaves to get energy and nutrients." },
   ];
@@ -275,7 +275,7 @@ function AdaptationsExplorer() {
       habitat: "Arid scrubland",
       adaptations: [
         { type: "Structural", desc: "Large ears filled with blood vessels radiate excess body heat." },
-        { type: "Behavioural", desc: "Nocturnal: shelters in burrows during the day to avoid 50+ degree temperatures." },
+        { type: "Behavioural", desc: "Nocturnal: shelters in cool burrows during the day, when the ground surface can be hotter than 50 °C." },
       ],
     },
     {
@@ -372,7 +372,7 @@ function PlantCellDiagram() {
               onClick={() => setActive(active === o.id ? null : o.id)}
             />
           ))}
-          <text x="240" y="350" textAnchor="middle" fontSize="12" fill="var(--muted)" fontWeight="500">Tap a hotspot to learn more</text>
+          <text x="240" y="350" textAnchor="middle" fontSize="12" fill="var(--ink-muted)" fontWeight="500">Tap a hotspot to learn more</text>
         </svg>
         {info && (
           <div className="card" style={{ background: "var(--accent-soft)", padding: "14px 18px", borderRadius: 12 }}>
@@ -412,7 +412,7 @@ function AnimalCellDiagram() {
           {[[320,155],[340,195],[315,235]].map(([cx,cy],i) => (
             <ellipse key={i} cx={cx} cy={cy} rx="19" ry="10" fill="#fcd34d" stroke="#b45309" strokeWidth="1.5"/>
           ))}
-          <text x="345" y="152" fontSize="10" fill="#78350f" fontWeight="600">Mitochondria</text>
+          <text x="322" y="138" textAnchor="middle" fontSize="10" fill="#78350f" fontWeight="600">Mitochondria</text>
           {/* Ribosomes (dots) */}
           {[[155,155],[175,140],[195,160],[140,175],[165,195]].map(([cx,cy],i) => (
             <circle key={i} cx={cx} cy={cy} r={4} fill="#f97316"/>
@@ -432,7 +432,7 @@ function AnimalCellDiagram() {
               onClick={() => setActive(active === o.id ? null : o.id)}
             />
           ))}
-          <text x="240" y="328" textAnchor="middle" fontSize="12" fill="var(--muted)">Tap a hotspot</text>
+          <text x="240" y="328" textAnchor="middle" fontSize="12" fill="var(--ink-muted)">Tap a hotspot</text>
         </svg>
         {info && (
           <div className="card" style={{ background: "#fef9c3", padding: "14px 18px", borderRadius: 12 }}>
@@ -599,20 +599,27 @@ function EnergyEquationSim() {
         <button className={"btn " + (mode === "photo" ? "btn-accent" : "btn-ghost")} onClick={() => setMode("photo")}>Photosynthesis</button>
       </div>
       <div style={{ fontWeight: 700, fontSize: 15, textAlign: "center", marginBottom: 14, color: eq.colour }}>{eq.title}</div>
-      <svg viewBox="0 0 480 90" width="100%" style={{ maxWidth: 480, display: "block", margin: "0 auto 12px" }}>
-        {eq.reactants.map((r, i) => (
-          <g key={r} transform={`translate(${i * (eq.reactants.length > 2 ? 110 : 140) + 20}, 10)`}>
-            <rect width="95" height="44" rx="10" fill={eq.colour + "33"} stroke={eq.colour} strokeWidth="2"/>
-            <text x="47" y="27" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ink)">{r}</text>
-          </g>
-        ))}
-        <text x="240" y="38" textAnchor="middle" fontSize="24" fill="var(--ink)">&#x2192;</text>
-        {eq.products.map((p, i) => (
-          <g key={p} transform={`translate(${260 + i * (eq.products.length > 2 ? 73 : 100)}, 10)`}>
-            <rect width="68" height="44" rx="10" fill={eq.colour + "22"} stroke={eq.colour} strokeWidth="1.5"/>
-            <text x="34" y="27" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--ink)">{p}</text>
-          </g>
-        ))}
+      <svg viewBox="0 0 480 64" width="100%" style={{ maxWidth: 480, display: "block", margin: "0 auto 12px" }} role="img" aria-label={eq.reactants.join(" + ") + " react to make " + eq.products.join(" + ")}>
+        {/* reactants fill x 0-222, products x 258-480, with "+" between boxes and an arrow in the middle */}
+        {[[eq.reactants, 0, "33"], [eq.products, 258, "22"]].map(([items, x0, alpha], side) => {
+          const gap = 16, zone = 222;
+          const w = Math.min(100, (zone - (items.length - 1) * gap) / items.length);
+          const start = x0 + (zone - (items.length * w + (items.length - 1) * gap)) / 2;
+          return items.map((label, k) => {
+            const x = start + k * (w + gap);
+            const lines = w < 90 && label.includes(" ") ? label.split(" ") : [label];
+            return (
+              <g key={side + label}>
+                <rect x={x} y="8" width={w} height="44" rx="10" fill={eq.colour + alpha} stroke={eq.colour} strokeWidth="2"/>
+                {lines.map((ln, li) => (
+                  <text key={li} x={x + w / 2} y={(lines.length === 1 ? 34 : 27) + li * 13} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ink)">{ln}</text>
+                ))}
+                {k < items.length - 1 && <text x={x + w + gap / 2} y="35" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--ink)">+</text>}
+              </g>
+            );
+          });
+        })}
+        <text x="240" y="37" textAnchor="middle" fontSize="24" fill="var(--ink)">&#x2192;</text>
       </svg>
       <div className="grid-3" style={{ gap: 10 }}>
         <div className="card" style={{ padding: "10px 12px", textAlign: "center" }}>
@@ -667,12 +674,12 @@ function TissueOrganSVG() {
   const colours = ["#bbf7d0", "#6ee7b7", "#34d399", "#10b981", "#059669"];
   return (
     <Figure num="1" caption="Organisation of a multicellular organism: from a single cell up to the whole organism.">
-      <svg viewBox="0 0 560 100" width="100%" style={{ maxWidth: 560 }}>
+      <svg viewBox="0 0 560 72" width="100%" style={{ maxWidth: 560 }} role="img" aria-label="Cell, then tissue, then organ, then organ system, then organism: palisade cell, mesophyll tissue, leaf, shoot system, eucalyptus tree.">
         {levels.map((l, i) => (
           <g key={l} transform={`translate(${i * 112 + 6}, 8)`}>
             <rect width="100" height="56" rx="10" fill={colours[i]} stroke="#065f46" strokeWidth="1.5"/>
-            <text x="50" y="24" textAnchor="middle" fontSize="12" fontWeight="700" fill="#064e3b">{l}</text>
-            <text x="50" y="42" textAnchor="middle" fontSize="10" fill="#065f46">{examples[i]}</text>
+            <text x="50" y="24" textAnchor="middle" fontSize="12" fontWeight="700" fill={i >= 3 ? "#ffffff" : "#064e3b"}>{l}</text>
+            <text x="50" y="42" textAnchor="middle" fontSize="10" fill={i >= 3 ? "#ffffff" : "#065f46"}>{examples[i]}</text>
             {i < levels.length - 1 && (
               <text x="108" y="34" textAnchor="middle" fontSize="18" fill="#059669">›</text>
             )}
@@ -753,10 +760,12 @@ function ClassificationBuilder() {
           const w = widths[i];
           const x = (420 - w) / 2;
           const y = i * 34 + 4;
-          const alpha = 1 - i * 0.08;
+          /* opaque tints (emerald mixed with white) so the dark-green text stays readable in dark mode */
+          const a = 0.18 + (7 - i) * 0.08;
+          const mix = (c) => Math.round(255 * (1 - a) + c * a);
           return (
             <g key={rank}>
-              <rect x={x} y={y} width={w} height="28" rx="7" fill={"rgba(16,185,129," + (0.18 + (7 - i) * 0.08) + ")"} stroke="#10b981" strokeWidth="1.2"/>
+              <rect x={x} y={y} width={w} height="28" rx="7" fill={`rgb(${mix(16)},${mix(185)},${mix(129)})`} stroke="#10b981" strokeWidth="1.2"/>
               <text x={x + 8} y={y + 19} fontSize="11" fontWeight="700" fill="#064e3b">{rank}</text>
               <text x={x + w - 8} y={y + 19} textAnchor="end" fontSize="11" fill="#064e3b" fontStyle={i >= 5 ? "italic" : "normal"}>{value}</text>
             </g>
@@ -786,7 +795,7 @@ function Section31({ progress, setProgress }) {
       <Figure src="img/classify.png" caption="Living things can be sorted into groups by the features they share." />
       <DotPoint id="3.1.1" title="Characteristics of living things" progress={progress} setProgress={setProgress}>
         <p>How do you know if something is alive? Scientists use a set of seven key characteristics. If something has all seven, it is living. The easiest way to remember them is the mnemonic <Term def="Movement, Reproduction, Sensitivity, Growth, Respiration, Excretion, Nutrition">MRSGREN</Term>.</p>
-        <p>Think about a fire: it moves, it uses fuel, and it grows. But it cannot reproduce on its own, it has no sensitivity to changes around it, and it does not grow in the biological sense. Fire is not alive. A tricky case is a <Term def="A tiny particle of genetic material surrounded by a protein coat; can only reproduce inside a living host cell">virus</Term>: it can reproduce, but only by hijacking a living cell, and it has no <Term def="All of the chemical reactions that keep a cell alive, including releasing energy from food">metabolism</Term> of its own. Most scientists say viruses are not truly alive.</p>
+        <p>Think about a fire: it moves, it uses fuel, and it seems to grow. But it cannot reproduce on its own, it has no sensitivity to changes around it, and it does not grow in the biological sense. Fire is not alive. A tricky case is a <Term def="A tiny particle of genetic material surrounded by a protein coat; can only reproduce inside a living host cell">virus</Term>: it can reproduce, but only by hijacking a living cell, and it has no <Term def="All of the chemical reactions that keep a cell alive, including releasing energy from food">metabolism</Term> of its own. Most scientists say viruses are not truly alive.</p>
         <Callout kind="key" title="MRSGREN">
           Movement, Reproduction, Sensitivity, Growth, Respiration, Excretion, Nutrition. All seven must be present for something to be classified as alive.
         </Callout>
@@ -881,7 +890,7 @@ function Section32({ progress, setProgress }) {
         <p className="lead">Every living thing, from a single bacterium to your own body, is built from cells. Explore what is inside them and how they work.</p>
       </div>
 
-      <Figure src="img/cell.png" caption="A plant cell and an animal cell compared." />
+      <Figure src="img/cell.png" caption="A plant cell (left) with its cell wall, chloroplasts and large vacuole, beside an animal cell (right), which has none of these." />
       <DotPoint id="3.2.1" title="Cell theory" progress={progress} setProgress={setProgress}>
         <p><Term def="The three foundational statements of biology: all living things are made of cells; the cell is the basic unit of life; all cells come from pre-existing cells">Cell theory</Term> is one of the most important ideas in all of biology. It has three parts: (1) all living things are made of one or more cells, (2) the cell is the basic structural and functional unit of life, and (3) all cells come from pre-existing cells. That third statement was a big deal because it overturned the old idea of <Term def="The mistaken idea that life could arise spontaneously from non-living matter">spontaneous generation</Term>, which claimed that maggots could appear from nothing in rotting meat.</p>
         <p>Cell theory was built up slowly over about 200 years as microscopes improved. In 1665, <Term def="English scientist who first described cells when examining cork under a microscope in 1665">Robert Hooke</Term> looked at cork under a microscope and called the tiny compartments he saw "cells". In the 1670s, <Term def="Dutch scientist who used improved microscopes to observe living single-celled organisms">Anton van Leeuwenhoek</Term> spotted living single-celled organisms in pond water for the first time. In 1838 and 1839, <Term def="Botanist who proposed in 1838 that all plants are made of cells">Matthias Schleiden</Term> and <Term def="Zoologist who proposed in 1839 that all animals are made of cells">Theodor Schwann</Term> independently concluded that all organisms are made of cells. Then in 1855, <Term def="Scientist who completed cell theory in 1855 by stating all cells come from pre-existing cells">Rudolf Virchow</Term> added the third statement.</p>
@@ -961,7 +970,7 @@ function Section32({ progress, setProgress }) {
 
       <DotPoint id="3.2.8" title="Specialised cells in multicellular organisms" progress={progress} setProgress={setProgress}>
         <p>In a <Term def="An organism whose body is made of many specialised cells working together">multicellular organism</Term>, cells can divide the labour among themselves. Each cell type becomes highly efficient at one job, allowing the whole organism to be far more complex than any single cell could be. This is called <Term def="The process by which cells in a multicellular organism develop different structures and functions">cell specialisation</Term>. The trade-off is that specialised cells cannot survive alone; they depend on other cell types to do the jobs they have given up.</p>
-        <p>Specialised cells are grouped into <Term def="A group of similar cells working together to perform a specific function">tissues</Term>, tissues are organised into <Term def="A structure made of several tissue types working together to perform a complex function">organs</Term>, and organs that work together form <Term def="A group of organs that cooperate to carry out a major body function">organ systems</Term>. All cells in the same organism contain identical DNA. The difference between, say, a muscle cell and a nerve cell is not what DNA they have, but which genes are switched on during development.</p>
+        <p>Specialised cells are grouped into <Term def="A group of similar cells working together to perform a specific function">tissues</Term>, tissues are organised into <Term def="A structure made of several tissue types working together to perform a complex function">organs</Term>, and organs that work together form <Term def="A group of organs that cooperate to carry out a major body function">organ systems</Term>. Almost every body cell in an organism contains the same DNA (red blood cells, which lose their nucleus, are an exception). The difference between, say, a muscle cell and a nerve cell is not what DNA they have, but which genes are switched on during development.</p>
         <TissueOrganSVG/>
         <SpecialisedCellMatcher/>
         <QGroup title="Check yourself">

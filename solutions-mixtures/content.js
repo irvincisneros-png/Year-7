@@ -1,6 +1,7 @@
 /* Generated from content.jsx by tools/build.js. Edit the .jsx, not this file. */
 "use strict";
 
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
@@ -37,14 +38,14 @@ function ParticleStateAnim() {
       spread: 0.12,
       colour: "#06b6d4",
       label: "Solid",
-      count: 20
+      count: 32
     },
     liquid: {
       speed: 1.4,
       spread: 0.38,
       colour: "#3b82f6",
       label: "Liquid",
-      count: 18
+      count: 32
     },
     gas: {
       speed: 3.8,
@@ -54,15 +55,21 @@ function ParticleStateAnim() {
       count: 12
     }
   };
+
+  /* liquid particles stay in the bottom part of the box (a liquid has a surface and a fixed volume) */
+  var liquidTop = function liquidTop(H) {
+    return H * 0.5;
+  };
   function initParticles(st, W, H) {
     var cfg = config[st];
     return Array.from({
       length: cfg.count
     }, function (_, i) {
-      var col = i % 4;
-      var row = Math.floor(i / 4);
-      var baseX = st === "solid" ? W * 0.2 + col * (W * 0.15) : W * 0.1 + Math.random() * W * 0.8;
-      var baseY = st === "solid" ? H * 0.2 + row * (H * 0.18) : H * 0.1 + Math.random() * H * 0.8;
+      var col = i % 8;
+      var row = Math.floor(i / 8);
+      /* solid: a regular lattice of touching particles (spacing = one diameter) */
+      var baseX = st === "solid" ? W / 2 - 3.5 * 19 + col * 19 : W * 0.05 + Math.random() * W * 0.9;
+      var baseY = st === "solid" ? H - 14 - row * 19 : st === "liquid" ? liquidTop(H) + 10 + Math.random() * (H - liquidTop(H) - 20) : H * 0.1 + Math.random() * H * 0.8;
       var angle = Math.random() * Math.PI * 2;
       return {
         x: baseX,
@@ -95,7 +102,8 @@ function ParticleStateAnim() {
           p.x += p.vx;
           p.y += p.vy;
           if (p.x < p.r || p.x > W - p.r) p.vx *= -1;
-          if (p.y < p.r || p.y > H - p.r) p.vy *= -1;
+          var top = state === "liquid" ? liquidTop(H) : 0;
+          if (p.y < top + p.r || p.y > H - p.r) p.vy *= -1;
         }
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
@@ -113,7 +121,7 @@ function ParticleStateAnim() {
             var b = particlesRef.current[j];
             var dx = a.x - b.x;
             var dy = a.y - b.y;
-            if (Math.sqrt(dx * dx + dy * dy) < 45) {
+            if (Math.sqrt(dx * dx + dy * dy) < 22) {
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
@@ -164,7 +172,7 @@ function ParticleStateAnim() {
       display: "block",
       margin: "0 auto",
       borderRadius: "12px",
-      background: "var(--surface-raised)",
+      background: "var(--bg-2)",
       maxWidth: "100%"
     }
   }), /*#__PURE__*/React.createElement("p", {
@@ -251,7 +259,7 @@ function HeatingCurveExplorer() {
   return /*#__PURE__*/React.createElement(Interactive, {
     title: "Heating curve explorer",
     subtitle: "Drag the slider to move through time and watch the temperature and phase change.",
-    takeaway: "The flat sections on a heating curve show that during a change of state the temperature stays constant because the added energy breaks forces between particles rather than speeding them up."
+    takeaway: "The flat sections on a heating curve show that during a change of state the temperature stays constant because the added energy overcomes the forces between particles rather than speeding them up."
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 ".concat(W, " ").concat(H),
     width: "100%",
@@ -548,11 +556,11 @@ function DissolvingSim() {
   }).map(function (_, i) {
     return /*#__PURE__*/React.createElement("circle", {
       key: i,
-      cx: 55 + i % 8 * 18,
-      cy: 60 + Math.floor(i / 8) * 20,
+      cx: 47 + i % 8 * 18,
+      cy: 76 + Math.floor(i / 8) * 18,
       r: "5",
       fill: "#06b6d4",
-      opacity: particleAlpha * 0.7 + 0.1,
+      opacity: particleAlpha * 0.8,
       style: {
         transition: "opacity 0.3s"
       }
@@ -627,7 +635,7 @@ function SolubilityGraph() {
     setTemp = _useState18[1];
   var solutes = {
     kno3: {
-      label: "Potassium nitrate (KNO3)",
+      label: "Potassium nitrate (KNO₃)",
       colour: "#f59e0b",
       data: [[0, 13], [20, 31], [40, 64], [60, 110], [80, 169], [100, 246]]
     },
@@ -677,7 +685,7 @@ function SolubilityGraph() {
   }, /*#__PURE__*/React.createElement(SegToggle, {
     options: [{
       value: "kno3",
-      label: "KNO3"
+      label: "KNO₃"
     }, {
       value: "nacl",
       label: "NaCl"
@@ -964,7 +972,7 @@ function SeparationPicker() {
     takeaway: "The right separation technique for any mixture depends on the physical difference between the components, such as particle size, solubility, boiling point, or magnetic properties."
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "var(--surface-raised)",
+      background: "var(--bg-2)",
       borderRadius: "10px",
       padding: "0.85rem 1rem",
       marginBottom: "0.75rem"
@@ -986,9 +994,16 @@ function SeparationPicker() {
       marginBottom: "0.75rem"
     }
   }, techniques.map(function (t) {
-    var bg = "var(--surface-raised)";
+    var bg = "var(--bg-2)";
+    var fg = "var(--ink)";
     if (chosen !== null) {
-      if (t === scenario.correct) bg = "#bbf7d0";else if (t === chosen && !isCorrect) bg = "#fecaca";
+      if (t === scenario.correct) {
+        bg = "#bbf7d0";
+        fg = "#14532d";
+      } else if (t === chosen && !isCorrect) {
+        bg = "#fecaca";
+        fg = "#7f1d1d";
+      }
     }
     return /*#__PURE__*/React.createElement("button", {
       key: t,
@@ -1000,6 +1015,7 @@ function SeparationPicker() {
         borderRadius: "8px",
         border: "1.5px solid var(--border)",
         background: bg,
+        color: fg,
         cursor: chosen ? "default" : "pointer",
         fontWeight: 600,
         fontSize: "0.85rem",
@@ -1121,7 +1137,7 @@ function ChromatographySim() {
     x: "60",
     y: solventPixel,
     width: "140",
-    height: 220 - solventPixel,
+    height: 210 - solventPixel,
     rx: "0",
     fill: "#bfdbfe",
     opacity: "0.45"
@@ -1182,7 +1198,7 @@ function ChromatographySim() {
       y: dyeY - 8,
       textAnchor: "middle",
       fontSize: "7.5",
-      fill: "var(--ink)"
+      fill: "#1f2937"
     }, "Rf=", dye.rf));
   })), /*#__PURE__*/React.createElement("p", {
     className: "muted",
@@ -1280,7 +1296,8 @@ function PollutionTreatment() {
         padding: "0.45rem 0.8rem",
         borderRadius: "8px",
         border: "1.5px solid var(--border)",
-        background: placed.includes(s.id) ? "var(--accent-soft)" : "var(--surface-raised)",
+        background: placed.includes(s.id) ? "var(--accent-soft)" : "var(--bg-2)",
+        color: "var(--ink)",
         fontWeight: placed.includes(s.id) ? 700 : 400,
         cursor: "pointer",
         fontSize: "0.88rem"
@@ -1330,11 +1347,292 @@ function PollutionTreatment() {
 }
 
 /* ============================================================
+   FIGURE: particle model of the three states (one substance, so one kind of particle)
+   ============================================================ */
+function StatesParticleSVG() {
+  var P = {
+    fill: "#4b7bc9",
+    stroke: "#1e3a8a"
+  };
+  var solid = [];
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 5; c++) solid.push([48 + c * 16, 141 - r * 16]);
+  var liquid = [[26, 141], [43, 140], [61, 141], [78, 139], [96, 141], [114, 140], [132, 141], [33, 124], [51, 122], [69, 125], [87, 123], [105, 125], [124, 123], [27, 107], [45, 105], [63, 108], [81, 106], [100, 107], [118, 105], [136, 108]];
+  /* gas particles with a short arrow showing each one's direction of travel */
+  var gas = [[356, 52, 1, 0.4], [414, 44, -0.6, 0.8], [448, 78, -0.2, -1], [378, 92, 0.9, -0.4], [432, 112, -1, 0.2], [352, 132, 0.9, 0.5], [402, 140, 0.7, -0.7], [452, 138, -0.4, -0.9]];
+  var lbl = {
+    fontSize: 12,
+    fontWeight: 700,
+    fill: "var(--ink)",
+    textAnchor: "middle"
+  };
+  var sub = {
+    fontSize: 10,
+    fill: "var(--ink-muted)",
+    textAnchor: "middle"
+  };
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 480 200",
+    width: "100%",
+    style: {
+      maxWidth: 560
+    },
+    role: "img",
+    "aria-label": "Particle diagrams of one substance. Solid: identical particles touching in a regular pattern. Liquid: the same particles still touching but jumbled, at the bottom of the container. Gas: a few of the same particles far apart, moving quickly in different directions."
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("marker", {
+    id: "gasArrow",
+    markerWidth: "6",
+    markerHeight: "6",
+    refX: "5",
+    refY: "3",
+    orient: "auto"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M0,0 L6,3 L0,6 Z",
+    fill: "var(--ink-muted)"
+  }))), /*#__PURE__*/React.createElement("path", {
+    d: "M15,28 L15,150 L145,150 L145,28",
+    fill: "none",
+    stroke: "var(--ink-muted)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M175,28 L175,150 L305,150 L305,28",
+    fill: "none",
+    stroke: "var(--ink-muted)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: "335",
+    y: "28",
+    width: "130",
+    height: "122",
+    fill: "none",
+    stroke: "var(--ink-muted)",
+    strokeWidth: "2"
+  }), solid.map(function (_ref3, i) {
+    var _ref4 = _slicedToArray(_ref3, 2),
+      x = _ref4[0],
+      y = _ref4[1];
+    return /*#__PURE__*/React.createElement("circle", {
+      key: "s" + i,
+      cx: x,
+      cy: y,
+      r: "7.6",
+      fill: P.fill,
+      stroke: P.stroke,
+      strokeWidth: "1.2"
+    });
+  }), liquid.map(function (_ref5, i) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+      x = _ref6[0],
+      y = _ref6[1];
+    return /*#__PURE__*/React.createElement("circle", {
+      key: "l" + i,
+      cx: x + 160,
+      cy: y,
+      r: "7.6",
+      fill: P.fill,
+      stroke: P.stroke,
+      strokeWidth: "1.2"
+    });
+  }), gas.map(function (_ref7, i) {
+    var _ref8 = _slicedToArray(_ref7, 4),
+      x = _ref8[0],
+      y = _ref8[1],
+      dx = _ref8[2],
+      dy = _ref8[3];
+    var m = Math.hypot(dx, dy),
+      ux = dx / m,
+      uy = dy / m;
+    return /*#__PURE__*/React.createElement("g", {
+      key: "g" + i
+    }, /*#__PURE__*/React.createElement("line", {
+      x1: x + ux * 9,
+      y1: y + uy * 9,
+      x2: x + ux * 22,
+      y2: y + uy * 22,
+      stroke: "var(--ink-muted)",
+      strokeWidth: "1.3",
+      markerEnd: "url(#gasArrow)"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: x,
+      cy: y,
+      r: "7.6",
+      fill: P.fill,
+      stroke: P.stroke,
+      strokeWidth: "1.2"
+    }));
+  }), /*#__PURE__*/React.createElement("text", _extends({
+    x: "80",
+    y: "172"
+  }, lbl), "Solid"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "80",
+    y: "188"
+  }, sub), "touching, fixed pattern, vibrate"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "240",
+    y: "172"
+  }, lbl), "Liquid"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "240",
+    y: "188"
+  }, sub), "touching, jumbled, slide past"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "400",
+    y: "172"
+  }, lbl), "Gas"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "400",
+    y: "188"
+  }, sub), "far apart, move fast"));
+}
+
+/* ============================================================
+   FIGURE: filtration set-up (replaces an image that showed solid passing through the paper)
+   ============================================================ */
+function FiltrationSVG() {
+  var t = {
+    fontSize: 12,
+    fill: "var(--ink)"
+  };
+  var lead = {
+    stroke: "var(--ink-muted)",
+    strokeWidth: 1
+  };
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 460 300",
+    width: "100%",
+    style: {
+      maxWidth: 520
+    },
+    role: "img",
+    "aria-label": "Filtration diagram. A mixture of sand and water is in a filter funnel lined with a cone of filter paper. The sand is trapped in the paper as the residue. Clear water drips from the funnel stem into a conical flask below as the filtrate."
+  }, /*#__PURE__*/React.createElement("g", {
+    transform: "translate(20,0)"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M168,58 L252,58 L230,98 L190,98 Z",
+    fill: "#9cc3e6",
+    opacity: "0.75"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M190,98 L230,98 L210,127 Z",
+    fill: "#d99e1e",
+    stroke: "#8a5a00",
+    strokeWidth: "1"
+  }), [[200, 104], [212, 106], [222, 103], [206, 113], [216, 114], [210, 121], [196, 100], [226, 100]].map(function (_ref9, i) {
+    var _ref0 = _slicedToArray(_ref9, 2),
+      x = _ref0[0],
+      y = _ref0[1];
+    return /*#__PURE__*/React.createElement("circle", {
+      key: i,
+      cx: x,
+      cy: y,
+      r: "1.8",
+      fill: "#8a5a00"
+    });
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M157,44 L210,129 L263,44",
+    fill: "none",
+    stroke: "#b08d3c",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M148,38 L202,128 L202,178 M218,178 L218,128 L272,38",
+    fill: "none",
+    stroke: "var(--ink)",
+    strokeWidth: "2.5",
+    strokeLinejoin: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "148",
+    y1: "38",
+    x2: "272",
+    y2: "38",
+    stroke: "var(--ink)",
+    strokeWidth: "1.2"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: "210",
+    cy: "190",
+    rx: "3",
+    ry: "4.5",
+    fill: "#4b7bc9"
+  }), /*#__PURE__*/React.createElement("ellipse", {
+    cx: "210",
+    cy: "206",
+    rx: "3",
+    ry: "4.5",
+    fill: "#4b7bc9"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M166,245 L254,245 L268,270 Q271,276 264,276 L156,276 Q149,276 152,270 Z",
+    fill: "#9cc3e6",
+    opacity: "0.8"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M194,168 L194,200 L150,270 Q146,278 156,278 L264,278 Q274,278 270,270 L226,200 L226,168",
+    fill: "none",
+    stroke: "var(--ink)",
+    strokeWidth: "2.5",
+    strokeLinejoin: "round"
+  }), /*#__PURE__*/React.createElement("line", _extends({
+    x1: "178",
+    y1: "70",
+    x2: "120",
+    y2: "70"
+  }, lead)), /*#__PURE__*/React.createElement("text", _extends({
+    x: "114",
+    y: "66",
+    textAnchor: "end"
+  }, t), "Mixture"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "114",
+    y: "80",
+    textAnchor: "end"
+  }, t), "(sand + water)"), /*#__PURE__*/React.createElement("line", _extends({
+    x1: "203",
+    y1: "114",
+    x2: "120",
+    y2: "122"
+  }, lead)), /*#__PURE__*/React.createElement("text", _extends({
+    x: "114",
+    y: "120",
+    textAnchor: "end"
+  }, t), "Residue"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "114",
+    y: "134",
+    textAnchor: "end"
+  }, t), "(sand)"), /*#__PURE__*/React.createElement("line", _extends({
+    x1: "258",
+    y1: "52",
+    x2: "295",
+    y2: "50"
+  }, lead)), /*#__PURE__*/React.createElement("text", _extends({
+    x: "300",
+    y: "54"
+  }, t), "Filter paper"), /*#__PURE__*/React.createElement("line", _extends({
+    x1: "243",
+    y1: "88",
+    x2: "295",
+    y2: "88"
+  }, lead)), /*#__PURE__*/React.createElement("text", _extends({
+    x: "300",
+    y: "92"
+  }, t), "Filter funnel"), /*#__PURE__*/React.createElement("line", _extends({
+    x1: "250",
+    y1: "258",
+    x2: "295",
+    y2: "258"
+  }, lead)), /*#__PURE__*/React.createElement("text", _extends({
+    x: "300",
+    y: "254"
+  }, t), "Filtrate"), /*#__PURE__*/React.createElement("text", _extends({
+    x: "300",
+    y: "268"
+  }, t), "(water)"), /*#__PURE__*/React.createElement("line", _extends({
+    x1: "156",
+    y1: "262",
+    x2: "120",
+    y2: "262"
+  }, lead)), /*#__PURE__*/React.createElement("text", _extends({
+    x: "114",
+    y: "266",
+    textAnchor: "end"
+  }, t), "Conical flask")));
+}
+
+/* ============================================================
    SECTION 1: Properties of Matter
    ============================================================ */
-function Section1(_ref3) {
-  var progress = _ref3.progress,
-    setProgress = _ref3.setProgress;
+function Section1(_ref1) {
+  var progress = _ref1.progress,
+    setProgress = _ref1.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1342,9 +1640,8 @@ function Section1(_ref3) {
   }, "4.1 Properties of Matter"), /*#__PURE__*/React.createElement("h1", null, "States of matter and heating curves"), /*#__PURE__*/React.createElement("p", {
     className: "lead"
   }, "Everything around you is made of tiny particles. Whether something is solid, liquid or gas depends on how those particles are arranged and how much energy they have.")), /*#__PURE__*/React.createElement(Figure, {
-    src: "img/states.png",
-    caption: "The same substance as a solid, a liquid and a gas \u2014 particles packed, looser, then spread out."
-  }), /*#__PURE__*/React.createElement(DotPoint, {
+    caption: "The same substance as a solid, a liquid and a gas. Every particle is identical; only how closely they are packed and how they move changes."
+  }, /*#__PURE__*/React.createElement(StatesParticleSVG, null)), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.1.1",
     title: "The three states of matter",
     progress: progress,
@@ -1355,23 +1652,36 @@ function Section1(_ref3) {
     def: "A state of matter where particles are close together but can slide past each other, taking the shape of any container."
   }, "liquid"), " or a ", /*#__PURE__*/React.createElement(Term, {
     def: "A state of matter where particles are far apart, moving rapidly in all directions, and spreading to fill any container."
-  }, "gas"), ". These are the three states of matter."), /*#__PURE__*/React.createElement("p", null, "Water is special because it naturally exists in all three states at temperatures common on Earth. Ice is found in glaciers and the polar ice caps. Liquid water covers more than 70 percent of Earth's surface in oceans, rivers and lakes. Water vapour is a gas in the atmosphere that forms clouds and drives the water cycle."), /*#__PURE__*/React.createElement(ParticleStateAnim, null), /*#__PURE__*/React.createElement(Callout, {
+  }, "gas"), ". These are the three states of matter."), /*#__PURE__*/React.createElement("p", null, "Water is special because it naturally exists in all three states at temperatures common on Earth. Ice is found in glaciers and the polar ice caps. Liquid water covers more than 70 percent of Earth's surface in oceans, rivers and lakes. Water vapour is an invisible gas in the atmosphere; when it cools it condenses into the tiny droplets that make up clouds."), /*#__PURE__*/React.createElement(ParticleStateAnim, null), /*#__PURE__*/React.createElement(Callout, {
     kind: "key",
     title: "One substance, three states"
   }, "The water molecules in ice, liquid water and water vapour are identical. Only their arrangement and movement change. This shows that physical properties depend on particle behaviour, not particle identity."), /*#__PURE__*/React.createElement(Figure, {
-    caption: "Water in all three states: ice (solid) at the poles, liquid water in oceans, and water vapour (gas) in the atmosphere."
+    caption: "Water in all three states: ice (solid) in glaciers and at the poles, liquid water in oceans, and water vapour (gas) in the atmosphere."
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 480 90",
     width: "100%",
     style: {
       maxWidth: 480
+    },
+    role: "img",
+    "aria-label": "Three panels. Ice: water particles touching in a regular pattern. Liquid water: particles touching but jumbled. Water vapour: a few particles far apart."
+  }, [["Solid (ice)", "#bfdbfe", "#1d4ed8", "Glaciers and polar ice caps"], ["Liquid (water)", "#93c5fd", "#1e40af", "Oceans, rivers and lakes"], ["Gas (water vapour)", "#dbeafe", "#3b82f6", "Invisible gas in the air"]].map(function (_ref10, i) {
+    var _ref11 = _slicedToArray(_ref10, 4),
+      label = _ref11[0],
+      fill = _ref11[1],
+      stroke = _ref11[2],
+      where = _ref11[3];
+    var dots = [];
+    if (i === 0) for (var r = 0; r < 3; r++) for (var c = 0; c < 9; c++) dots.push([42.4 + c * 8.4, 72 - r * 8.4]);
+    if (i === 1) for (var k = 0; k < 27; k++) {
+      if (k % 7 === 3) continue;
+      var _r = Math.floor(k / 9),
+        _c = k % 9;
+      dots.push([42.4 + _c * 8.4 + 2 * Math.sin(k * 12.9), 72 - _r * 8 + 1.6 * Math.cos(k * 7.3)]);
     }
-  }, [["Solid (Ice)", "#bfdbfe", "#1d4ed8", "Particles closely packed\nregular pattern, vibrate"], ["Liquid (Water)", "#93c5fd", "#1e40af", "Particles close but free\nto slide past each other"], ["Gas (Water Vapour)", "#dbeafe", "#3b82f6", "Particles far apart\nmoving rapidly in all directions"]].map(function (_ref4, i) {
-    var _ref5 = _slicedToArray(_ref4, 4),
-      label = _ref5[0],
-      fill = _ref5[1],
-      stroke = _ref5[2],
-      desc = _ref5[3];
+    if (i === 2) [[24, 50], [62, 70], [96, 46], [128, 66], [44, 62], [112, 74]].forEach(function (d) {
+      return dots.push(d);
+    });
     return /*#__PURE__*/React.createElement("g", {
       key: label,
       transform: "translate(".concat(i * 162 + 4, ", 4)")
@@ -1384,50 +1694,28 @@ function Section1(_ref3) {
       strokeWidth: "1.5"
     }), /*#__PURE__*/React.createElement("text", {
       x: "76",
-      y: "20",
+      y: "18",
       textAnchor: "middle",
       fontSize: "11",
       fontWeight: "700",
       fill: stroke
-    }, label), desc.split("\n").map(function (line, j) {
-      return /*#__PURE__*/React.createElement("text", {
-        key: j,
-        x: "76",
-        y: 35 + j * 14,
-        textAnchor: "middle",
-        fontSize: "9.5",
-        fill: "#1e3a8a"
-      }, line);
-    }), label.startsWith("Solid") && [20, 40, 60, 80, 100, 120, 30, 50, 70, 90, 110].map(function (x, k) {
+    }, label), /*#__PURE__*/React.createElement("text", {
+      x: "76",
+      y: "32",
+      textAnchor: "middle",
+      fontSize: "9.5",
+      fill: "#1e3a8a"
+    }, where), dots.map(function (_ref12, k) {
+      var _ref13 = _slicedToArray(_ref12, 2),
+        x = _ref13[0],
+        y = _ref13[1];
       return /*#__PURE__*/React.createElement("circle", {
         key: k,
-        cx: x % 132 + 10,
-        cy: Math.floor(k / 6) === 0 ? 60 : 72,
+        cx: x,
+        cy: y,
         r: "4",
         fill: stroke,
-        opacity: "0.7"
-      });
-    }), label.startsWith("Liquid") && Array.from({
-      length: 14
-    }).map(function (_, k) {
-      return /*#__PURE__*/React.createElement("circle", {
-        key: k,
-        cx: 12 + k % 7 * 20 + (Math.floor(k / 7) === 1 ? 10 : 0),
-        cy: 58 + Math.floor(k / 7) * 14,
-        r: "4.5",
-        fill: stroke,
-        opacity: "0.6"
-      });
-    }), label.startsWith("Gas") && Array.from({
-      length: 7
-    }).map(function (_, k) {
-      return /*#__PURE__*/React.createElement("circle", {
-        key: k,
-        cx: 18 + k % 4 * 38,
-        cy: 54 + Math.floor(k / 4) * 22,
-        r: "4",
-        fill: stroke,
-        opacity: "0.5"
+        opacity: "0.75"
       });
     }));
   }))), /*#__PURE__*/React.createElement(QGroup, {
@@ -1451,9 +1739,9 @@ function Section1(_ref3) {
     def: "Points where a substance changes from one state to another, such as melting or boiling. The temperature stays constant during the change."
   }, "changes of state"), "."), /*#__PURE__*/React.createElement("p", null, "For water, the ", /*#__PURE__*/React.createElement(Term, {
     def: "The temperature at which a solid turns into a liquid (0 \xB0C for water at normal atmospheric pressure)."
-  }, "melting point"), " is 0 degrees Celsius and the ", /*#__PURE__*/React.createElement(Term, {
+  }, "melting point"), " is 0 \xB0C and the ", /*#__PURE__*/React.createElement(Term, {
     def: "The temperature at which a liquid turns into a gas throughout its volume (100 \xB0C for water at normal atmospheric pressure)."
-  }, "boiling point"), " is 100 degrees Celsius. During a change of state, the energy being added breaks the forces holding particles together rather than speeding the particles up. This is why the temperature stays flat."), /*#__PURE__*/React.createElement(HeatingCurveExplorer, null), /*#__PURE__*/React.createElement(Callout, {
+  }, "boiling point"), " is 100 \xB0C. During a change of state, the energy being added overcomes the forces holding particles together rather than speeding the particles up. This is why the temperature stays flat."), /*#__PURE__*/React.createElement(HeatingCurveExplorer, null), /*#__PURE__*/React.createElement(Callout, {
     kind: "tip",
     title: "Reading heating curves"
   }, "A flat section (plateau) on a heating curve always means a change of state is happening. Two flat sections on a water curve: one at 0 \xB0C (melting) and one at 100 \xB0C (boiling)."), /*#__PURE__*/React.createElement(QGroup, {
@@ -1461,7 +1749,7 @@ function Section1(_ref3) {
   }, /*#__PURE__*/React.createElement(MCQ, {
     num: 3,
     question: "Why does the temperature stay constant during melting?",
-    options: ["The Bunsen burner turns off automatically", "Energy is used to break forces between particles, not to speed them up", "The thermometer is broken", "The water is too cold to melt"],
+    options: ["The Bunsen burner turns off automatically", "Energy is used to overcome the forces between particles, not to speed them up", "The thermometer is broken", "The water is too cold to melt"],
     correct: 1,
     explain: "During a change of state, the added energy overcomes the attractive forces holding particles in the solid lattice. This uses all the energy, so the temperature stays flat."
   }))), /*#__PURE__*/React.createElement(DotPoint, {
@@ -1484,62 +1772,14 @@ function Section1(_ref3) {
   }, "sublimation"), "."), /*#__PURE__*/React.createElement(Figure, {
     caption: "The names of the main changes of state and the direction of energy flow."
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 440 140",
+    viewBox: "0 0 520 130",
     width: "100%",
     style: {
-      maxWidth: 440
-    }
-  }, [["SOLID", 30, 55], ["LIQUID", 170, 55], ["GAS", 320, 55]].map(function (_ref6) {
-    var _ref7 = _slicedToArray(_ref6, 3),
-      label = _ref7[0],
-      x = _ref7[1],
-      y = _ref7[2];
-    return /*#__PURE__*/React.createElement("g", {
-      key: label
-    }, /*#__PURE__*/React.createElement("rect", {
-      x: x,
-      y: y,
-      width: "90",
-      height: "40",
-      rx: "10",
-      fill: "var(--accent-soft)",
-      stroke: "var(--accent-deep)",
-      strokeWidth: "1.5"
-    }), /*#__PURE__*/React.createElement("text", {
-      x: x + 45,
-      y: y + 25,
-      textAnchor: "middle",
-      fontWeight: "700",
-      fontSize: "13",
-      fill: "var(--ink)"
-    }, label));
-  }), [[120, 68, 165, 68, "Melting (+E)", 6, true], [165, 82, 120, 82, "Freezing (-E)", -6, false], [260, 68, 315, 68, "Boiling (+E)", 6, true], [315, 82, 260, 82, "Condensation (-E)", -6, false], [120, 42, 315, 42, "Sublimation (+E)", 6, true]].map(function (_ref8) {
-    var _ref9 = _slicedToArray(_ref8, 7),
-      x1 = _ref9[0],
-      y1 = _ref9[1],
-      x2 = _ref9[2],
-      y2 = _ref9[3],
-      label = _ref9[4],
-      dy = _ref9[5],
-      forward = _ref9[6];
-    return /*#__PURE__*/React.createElement("g", {
-      key: label
-    }, /*#__PURE__*/React.createElement("line", {
-      x1: x1,
-      y1: y1,
-      x2: x2,
-      y2: y2,
-      stroke: forward ? "#06b6d4" : "#f59e0b",
-      strokeWidth: "1.5",
-      markerEnd: "url(#arr".concat(forward ? "f" : "r", ")")
-    }), /*#__PURE__*/React.createElement("text", {
-      x: (x1 + x2) / 2,
-      y: y1 + dy,
-      textAnchor: "middle",
-      fontSize: "8.5",
-      fill: forward ? "#0e7490" : "#92400e"
-    }, label));
-  }), /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("marker", {
+      maxWidth: 520
+    },
+    role: "img",
+    "aria-label": "Solid to liquid is melting and liquid to solid is freezing. Liquid to gas is evaporation or boiling and gas to liquid is condensation. Solid directly to gas is sublimation. Energy is taken in (+E) for melting, boiling and sublimation and given out (\u2212E) for freezing and condensation."
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("marker", {
     id: "arrf",
     markerWidth: "6",
     markerHeight: "6",
@@ -1548,7 +1788,7 @@ function Section1(_ref3) {
     orient: "auto"
   }, /*#__PURE__*/React.createElement("path", {
     d: "M0,0 L6,3 L0,6 Z",
-    fill: "#06b6d4"
+    fill: "#0891b2"
   })), /*#__PURE__*/React.createElement("marker", {
     id: "arrr",
     markerWidth: "6",
@@ -1558,11 +1798,78 @@ function Section1(_ref3) {
     orient: "auto"
   }, /*#__PURE__*/React.createElement("path", {
     d: "M0,0 L6,3 L0,6 Z",
-    fill: "#f59e0b"
-  }))))), /*#__PURE__*/React.createElement(Callout, {
+    fill: "#d97706"
+  }))), [["SOLID", 20], ["LIQUID", 215], ["GAS", 410]].map(function (_ref14) {
+    var _ref15 = _slicedToArray(_ref14, 2),
+      label = _ref15[0],
+      x = _ref15[1];
+    return /*#__PURE__*/React.createElement("g", {
+      key: label
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: x,
+      y: "55",
+      width: "90",
+      height: "40",
+      rx: "10",
+      fill: "var(--bg-2)",
+      stroke: "var(--accent-deep)",
+      strokeWidth: "1.5"
+    }), /*#__PURE__*/React.createElement("text", {
+      x: x + 45,
+      y: "80",
+      textAnchor: "middle",
+      fontWeight: "700",
+      fontSize: "13",
+      fill: "var(--ink)"
+    }, label));
+  }), [[112, 68, 211, 68, "Melting (+E)", 61, true], [211, 84, 112, 84, "Freezing (−E)", 99, false], [307, 68, 406, 68, "Boiling (+E)", 61, true], [406, 84, 307, 84, "Condensation (−E)", 99, false]].map(function (_ref16) {
+    var _ref17 = _slicedToArray(_ref16, 7),
+      x1 = _ref17[0],
+      y1 = _ref17[1],
+      x2 = _ref17[2],
+      y2 = _ref17[3],
+      label = _ref17[4],
+      ty = _ref17[5],
+      forward = _ref17[6];
+    return /*#__PURE__*/React.createElement("g", {
+      key: label
+    }, /*#__PURE__*/React.createElement("line", {
+      x1: x1,
+      y1: y1,
+      x2: x2,
+      y2: y2,
+      stroke: forward ? "#0891b2" : "#d97706",
+      strokeWidth: "1.8",
+      markerEnd: "url(#arr".concat(forward ? "f" : "r", ")")
+    }), /*#__PURE__*/React.createElement("text", {
+      x: (x1 + x2) / 2,
+      y: ty,
+      textAnchor: "middle",
+      fontSize: "10",
+      fill: "var(--ink)"
+    }, label));
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M65,52 L65,30 L455,30 L455,50",
+    fill: "none",
+    stroke: "#0891b2",
+    strokeWidth: "1.8",
+    markerEnd: "url(#arrf)"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "260",
+    y: "24",
+    textAnchor: "middle",
+    fontSize: "10",
+    fill: "var(--ink)"
+  }, "Sublimation (+E): solid straight to gas"), /*#__PURE__*/React.createElement("text", {
+    x: "260",
+    y: "122",
+    textAnchor: "middle",
+    fontSize: "9.5",
+    fill: "var(--ink-muted)"
+  }, "+E = energy taken in   \u2212E = energy given out"))), /*#__PURE__*/React.createElement(Callout, {
     kind: "fact",
     title: "Dry ice"
-  }, "Dry ice is solid carbon dioxide. It sublimates directly from solid to gas at -78 \xB0C, skipping the liquid stage completely. That's why it produces that cool smoky fog effect!")), /*#__PURE__*/React.createElement(DotPoint, {
+  }, "Dry ice is solid carbon dioxide. It sublimes directly from solid to gas at \u221278 \xB0C, skipping the liquid stage completely. The carbon dioxide gas itself is invisible: the smoky fog you see is tiny droplets of water that condense from the air as it is chilled.")), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.1.4",
     title: "Properties of solids, liquids and gases",
     progress: progress,
@@ -1571,26 +1878,21 @@ function Section1(_ref3) {
     def: "The attractive pulling forces between neighbouring particles. Strong in solids, moderate in liquids, very weak in gases."
   }, "inter-particle forces"), ". In solids, these forces are very strong, so particles stay in fixed positions. That's why solids have a definite shape and volume."), /*#__PURE__*/React.createElement("p", null, "In liquids, forces are weaker. Particles can flow past each other, so liquids take the shape of their container but keep a definite volume. In gases, forces are almost negligible. Particles zoom around in all directions, spreading out to fill any container. This also means gases can be ", /*#__PURE__*/React.createElement(Term, {
     def: "Squeezed into a smaller volume. Gases can be compressed because there is lots of empty space between particles. Solids and liquids cannot."
-  }, "compressed"), ", unlike solids and liquids."), /*#__PURE__*/React.createElement(Figure, {
-    caption: "Comparing the properties of solids, liquids and gases."
-  }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 480 100",
-    width: "100%",
+  }, "compressed"), ", unlike solids and liquids."), /*#__PURE__*/React.createElement("div", {
     style: {
-      maxWidth: 480
+      overflowX: "auto"
     }
-  }, [["Property", "Solid", "Liquid", "Gas"], ["Shape", "Fixed", "Container's shape", "Fills container"], ["Volume", "Fixed", "Fixed", "No fixed volume"], ["Compressible?", "No", "No", "Yes"], ["Flows?", "No", "Yes", "Yes"]].map(function (row, ri) {
-    return row.map(function (cell, ci) {
-      return /*#__PURE__*/React.createElement("text", {
-        key: "".concat(ri).concat(ci),
-        x: ci === 0 ? 8 : 130 + (ci - 1) * 115,
-        y: 14 + ri * 17,
-        fontSize: ri === 0 ? "10" : "9.5",
-        fontWeight: ri === 0 || ci === 0 ? "700" : "400",
-        fill: ri === 0 ? "var(--accent-deep)" : "var(--ink)"
-      }, cell);
-    });
-  }))), /*#__PURE__*/React.createElement(QGroup, {
+  }, /*#__PURE__*/React.createElement("table", {
+    className: "data-table",
+    style: {
+      fontSize: "0.88rem"
+    }
+  }, /*#__PURE__*/React.createElement("caption", {
+    className: "figure-caption",
+    style: {
+      captionSide: "bottom"
+    }
+  }, "Comparing the properties of solids, liquids and gases."), /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Property"), /*#__PURE__*/React.createElement("th", null, "Solid"), /*#__PURE__*/React.createElement("th", null, "Liquid"), /*#__PURE__*/React.createElement("th", null, "Gas"))), /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Shape"), /*#__PURE__*/React.createElement("td", null, "Fixed"), /*#__PURE__*/React.createElement("td", null, "Takes container's shape"), /*#__PURE__*/React.createElement("td", null, "Fills container")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Volume"), /*#__PURE__*/React.createElement("td", null, "Fixed"), /*#__PURE__*/React.createElement("td", null, "Fixed"), /*#__PURE__*/React.createElement("td", null, "No fixed volume")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Compressible?"), /*#__PURE__*/React.createElement("td", null, "No"), /*#__PURE__*/React.createElement("td", null, "No"), /*#__PURE__*/React.createElement("td", null, "Yes")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Flows?"), /*#__PURE__*/React.createElement("td", null, "No"), /*#__PURE__*/React.createElement("td", null, "Yes"), /*#__PURE__*/React.createElement("td", null, "Yes"))))), /*#__PURE__*/React.createElement(QGroup, {
     title: "Check yourself"
   }, /*#__PURE__*/React.createElement(MCQ, {
     num: 4,
@@ -1604,9 +1906,9 @@ function Section1(_ref3) {
 /* ============================================================
    SECTION 2: Properties of Water
    ============================================================ */
-function Section2(_ref0) {
-  var progress = _ref0.progress,
-    setProgress = _ref0.setProgress;
+function Section2(_ref18) {
+  var progress = _ref18.progress,
+    setProgress = _ref18.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1622,7 +1924,7 @@ function Section2(_ref0) {
     progress: progress,
     setProgress: setProgress
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement(Term, {
-    def: "The amount of mass packed into a given volume. Formula: density = mass divided by volume (rho = m/v). Units: g/mL or kg per cubic metre."
+    def: "The amount of mass packed into a given volume. Formula: density = mass divided by volume (\u03C1 = m/V). Units: g/mL, g/cm\xB3 or kg/m\xB3."
   }, "Density"), " tells you how much mass is packed into a volume of space. Water has a density of about 1.00 g/mL. Interestingly, ice is less dense than liquid water (about 0.917 g/mL) because water molecules form a more open, hexagonal crystal pattern when they freeze. This is why ice floats on water, which is crucial for life in frozen lakes: the ice acts like a lid, keeping the liquid water underneath from freezing solid."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement(Term, {
     def: "The upward force exerted by a fluid on an object that is partially or fully submerged. An object floats when buoyant force equals its weight."
   }, "Buoyancy"), " is the upward push a fluid gives an object. An object floats when it is less dense than the fluid. If it is denser, it sinks. ", /*#__PURE__*/React.createElement(Term, {
@@ -1640,10 +1942,10 @@ function Section2(_ref0) {
     explain: "Ice (0.917 g/mL) is less dense than liquid water (1.00 g/mL) because water molecules form an open hexagonal lattice when frozen, taking up more space for the same mass."
   }))), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.2.3",
-    title: "Calculating density using rho = m/v",
+    title: "Calculating density using \u03C1 = m/V",
     progress: progress,
     setProgress: setProgress
-  }, /*#__PURE__*/React.createElement("p", null, "You can calculate the density of any substance using the formula: ", /*#__PURE__*/React.createElement("strong", null, "density = mass / volume"), " (written as rho = m/v). In the lab, mass is measured in grams using an electronic balance, and volume is measured in millilitres (mL) or cubic centimetres (cm cubed). These give density in g/mL or g per cm cubed."), /*#__PURE__*/React.createElement("p", null, "For regular-shaped objects (like a cube), you can calculate volume using geometry: V = length x width x height. For irregular-shaped objects (like a pebble), you use the ", /*#__PURE__*/React.createElement(Term, {
+  }, /*#__PURE__*/React.createElement("p", null, "You can calculate the density of any substance using the formula: ", /*#__PURE__*/React.createElement("strong", null, "density = mass / volume"), " (written as \u03C1 = m/V, where \u03C1 is the Greek letter rho). In the lab, mass is measured in grams using an electronic balance, and volume is measured in millilitres (mL) or cubic centimetres (cm\xB3). These give density in g/mL or g/cm\xB3 (1 mL = 1 cm\xB3)."), /*#__PURE__*/React.createElement("p", null, "For regular-shaped objects (like a cube), you can calculate volume using geometry: V = length x width x height. For irregular-shaped objects (like a pebble), you use the ", /*#__PURE__*/React.createElement(Term, {
     def: "A method to measure the volume of an irregular object by lowering it into a measuring cylinder of water and measuring how much the water level rises."
   }, "water displacement method"), ": lower the object into a measuring cylinder of water and read how much the water level rises. That rise equals the object's volume."), /*#__PURE__*/React.createElement(Figure, {
     caption: "Using water displacement to measure the volume of an irregular object."
@@ -1758,10 +2060,10 @@ function Section2(_ref0) {
     textAnchor: "middle",
     fontSize: "9",
     fill: "var(--ink-muted)"
-  }, "After: 65 mL = Vol 15 mL"))), /*#__PURE__*/React.createElement(Callout, {
+  }, "After: 65 mL, so V = 15 mL"))), /*#__PURE__*/React.createElement(Callout, {
     kind: "tip",
     title: "Worked example"
-  }, "A rock has a mass of 54 g. When placed in a measuring cylinder, the water level rises from 50 mL to 70 mL. Volume = 70 - 50 = 20 mL. Density = 54 / 20 = 2.70 g/mL. That matches aluminium!"), /*#__PURE__*/React.createElement(QGroup, {
+  }, "An irregular metal object has a mass of 54 g. When placed in a measuring cylinder, the water level rises from 50 mL to 70 mL. Volume = 70 \u2212 50 = 20 mL. Density = 54 \xF7 20 = 2.70 g/mL. That matches aluminium (2.70 g/mL)!"), /*#__PURE__*/React.createElement(QGroup, {
     title: "Check yourself"
   }, /*#__PURE__*/React.createElement(WrittenQ, {
     num: 6,
@@ -1779,20 +2081,23 @@ function Section2(_ref0) {
   }, "measurement uncertainty"), " and can come from impurities in your sample, temperature differences, or reading the scale at an angle (parallax error)."), /*#__PURE__*/React.createElement(Figure, {
     caption: "Published densities of common substances compared to water."
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 400 130",
+    viewBox: "0 0 400 146",
     width: "100%",
     style: {
       maxWidth: 400
-    }
-  }, [["Water", 1.00, "#06b6d4"], ["Ice", 0.917, "#93c5fd"], ["Veg. oil", 0.92, "#fbbf24"], ["Ethanol", 0.79, "#a78bfa"], ["Aluminium", 2.70, "#94a3b8"]].map(function (_ref1, i) {
-    var _ref10 = _slicedToArray(_ref1, 3),
-      name = _ref10[0],
-      val = _ref10[1],
-      col = _ref10[2];
+    },
+    role: "img",
+    "aria-label": "Densities: water 1.00, ice 0.917, vegetable oil 0.92, ethanol 0.79, aluminium 2.70 grams per millilitre."
+  }, [["Water", 1.00, "1.00", "#06b6d4"], ["Ice", 0.917, "0.917", "#93c5fd"], ["Veg. oil", 0.92, "0.92", "#fbbf24"], ["Ethanol", 0.79, "0.79", "#a78bfa"], ["Aluminium", 2.70, "2.70", "#94a3b8"]].map(function (_ref19, i) {
+    var _ref20 = _slicedToArray(_ref19, 4),
+      name = _ref20[0],
+      val = _ref20[1],
+      txt = _ref20[2],
+      col = _ref20[3];
     var barW = Math.min(val / 3 * 240, 240);
     return /*#__PURE__*/React.createElement("g", {
       key: name,
-      transform: "translate(0,".concat(i * 24, ")")
+      transform: "translate(0,".concat(i * 24 + 4, ")")
     }, /*#__PURE__*/React.createElement("text", {
       x: "2",
       y: "16",
@@ -1805,27 +2110,28 @@ function Section2(_ref0) {
       height: "16",
       rx: "4",
       fill: col,
-      opacity: "0.8"
+      opacity: "0.85"
     }), /*#__PURE__*/React.createElement("text", {
-      x: 84 + barW,
+      x: "330",
       y: "16",
-      fontSize: "9.5",
-      fill: "var(--ink-muted)"
-    }, val, " g/mL"));
+      fontSize: "10",
+      fill: "var(--ink)"
+    }, txt, " g/mL"));
   }), /*#__PURE__*/React.createElement("line", {
     x1: 80 + 240 / 3,
-    y1: 0,
+    y1: 4,
     x2: 80 + 240 / 3,
-    y2: 125,
+    y2: 126,
     stroke: "#ef4444",
     strokeWidth: "1.2",
     strokeDasharray: "4,3"
   }), /*#__PURE__*/React.createElement("text", {
-    x: 80 + 240 / 3 + 2,
-    y: 10,
-    fontSize: "9",
+    x: 80 + 240 / 3,
+    y: 140,
+    textAnchor: "middle",
+    fontSize: "9.5",
     fill: "#ef4444"
-  }, "Water = 1.00"))), /*#__PURE__*/React.createElement(Callout, {
+  }, "water = 1.00 g/mL"))), /*#__PURE__*/React.createElement(Callout, {
     kind: "key",
     title: "Float or sink?"
   }, "If density is less than 1.00 g/mL, the object floats in water. If density is greater than 1.00 g/mL, it sinks. You can see from the chart that oil and ice both float, while aluminium sinks.")));
@@ -1834,9 +2140,9 @@ function Section2(_ref0) {
 /* ============================================================
    SECTION 3: Solutions
    ============================================================ */
-function Section3(_ref11) {
-  var progress = _ref11.progress,
-    setProgress = _ref11.setProgress;
+function Section3(_ref21) {
+  var progress = _ref21.progress,
+    setProgress = _ref21.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1934,7 +2240,7 @@ function Section3(_ref11) {
     setProgress: setProgress
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement(Term, {
     def: "The maximum mass of a solute that can dissolve in 100 mL of solvent at a specific temperature. Measured in g per 100 mL."
-  }, "Solubility"), " tells you the maximum amount of a solute that can dissolve in a given volume of solvent at a specific temperature. It is usually measured in grams per 100 mL of water at a stated temperature. Different solutes have very different solubilities: at 20 degrees Celsius, sugar dissolves up to about 204 g per 100 mL, while salt only dissolves up to about 36 g per 100 mL."), /*#__PURE__*/React.createElement("p", null, "A ", /*#__PURE__*/React.createElement(Term, {
+  }, "Solubility"), " tells you the maximum amount of a solute that can dissolve in a given volume of solvent at a specific temperature. It is usually measured in grams per 100 mL of water at a stated temperature. Different solutes have very different solubilities: at 20 \xB0C, sugar dissolves up to about 204 g per 100 mL, while salt only dissolves up to about 36 g per 100 mL."), /*#__PURE__*/React.createElement("p", null, "A ", /*#__PURE__*/React.createElement(Term, {
     def: "A solution that contains the maximum amount of dissolved solute at a given temperature. No more solute will dissolve."
   }, "saturated solution"), " is one where no more solute will dissolve at that temperature. You know it's saturated when undissolved solid sits at the bottom even after thorough stirring. When presenting solubility data, scientists use bar charts to compare different solutes at the same temperature, and line graphs to show how solubility changes with temperature for one solute."), /*#__PURE__*/React.createElement(SolubilityGraph, null), /*#__PURE__*/React.createElement(Callout, {
     kind: "fact",
@@ -1952,10 +2258,10 @@ function Section3(_ref11) {
     title: "How temperature affects solubility",
     progress: progress,
     setProgress: setProgress
-  }, /*#__PURE__*/React.createElement("p", null, "For most solid solutes, solubility increases as temperature rises. Hot water particles move faster and with more energy, so they can pull more solute particles into solution before reaching saturation. Potassium nitrate is a dramatic example: its solubility jumps from about 13 g per 100 mL at 0 \xB0C to over 240 g per 100 mL at 100 \xB0C."), /*#__PURE__*/React.createElement("p", null, "Gases behave the opposite way: they become less soluble in warmer water. That's why bubbles appear on the inside of a saucepan before the water even boils. Dissolved oxygen escapes as the water heats up. This matters in aquatic ecosystems: warmer rivers contain less dissolved oxygen, which can stress fish and other aquatic creatures."), /*#__PURE__*/React.createElement(DissolvingSim, null), /*#__PURE__*/React.createElement(Callout, {
+  }, /*#__PURE__*/React.createElement("p", null, "For most solid solutes, solubility increases as temperature rises. Hot water particles move faster and with more energy, so they can pull more solute particles into solution before reaching saturation. Potassium nitrate is a dramatic example: its solubility jumps from about 13 g per 100 mL at 0 \xB0C to over 240 g per 100 mL at 100 \xB0C."), /*#__PURE__*/React.createElement("p", null, "Gases behave the opposite way: they become less soluble in warmer water. That's why small bubbles appear on the inside of a saucepan before the water even boils: dissolved air (mostly nitrogen and oxygen) comes out of solution as the water heats up. This matters in aquatic ecosystems: warmer rivers contain less dissolved oxygen, which can stress fish and other aquatic creatures."), /*#__PURE__*/React.createElement(DissolvingSim, null), /*#__PURE__*/React.createElement(Callout, {
     kind: "warn",
     title: "Watch out for gases in warm water"
-  }, "Warm soft drinks fizz more when you open them because CO2 gas is less soluble at warm temperatures. Cold drinks keep more CO2 dissolved, so they stay fizzy longer.")), /*#__PURE__*/React.createElement(DotPoint, {
+  }, "Warm soft drinks fizz more when you open them because CO\u2082 gas is less soluble at warm temperatures. Cold drinks keep more CO\u2082 dissolved, so they stay fizzy longer.")), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.3.4",
     title: "Particle theory and solutions",
     progress: progress,
@@ -1970,24 +2276,24 @@ function Section3(_ref11) {
   }, "Stirring moves fresh unsaturated water into contact with the undissolved solute. This replaces the concentrated water right next to the solute and brings in more water molecules to attract solute particles."), /*#__PURE__*/React.createElement(Figure, {
     caption: "Particle-level model of a solute dissolving in water."
   }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 460 80",
+    viewBox: "0 0 460 96",
     width: "100%",
     style: {
       maxWidth: 460
     }
-  }, [["Solid solute", "Ordered lattice of\nsolute particles", ["s", "s", "s", "s", "s", "s"]], ["Water added", "Water molecules\nattract surface\nparticles", ["w", "w", "s", "s", "w", "w"]], ["Dissolving", "Particles pulled\naway one by one", ["w", "w", "w", "w", "s", "w"]], ["Solution", "Solute surrounded\nby water shells", ["w", "s", "w", "s", "w", "s"]]].map(function (_ref12, i) {
-    var _ref13 = _slicedToArray(_ref12, 3),
-      title = _ref13[0],
-      desc = _ref13[1],
-      dots = _ref13[2];
+  }, [["Solid solute", "Ordered lattice of\nsolute particles", ["s", "s", "s", "s", "s", "s"]], ["Water added", "Water molecules\nattract surface\nparticles", ["w", "w", "s", "s", "w", "w"]], ["Dissolving", "Particles pulled\naway one by one", ["w", "w", "w", "w", "s", "w"]], ["Solution", "Solute surrounded\nby water shells", ["w", "s", "w", "s", "w", "s"]]].map(function (_ref22, i) {
+    var _ref23 = _slicedToArray(_ref22, 3),
+      title = _ref23[0],
+      desc = _ref23[1],
+      dots = _ref23[2];
     return /*#__PURE__*/React.createElement("g", {
       key: title,
       transform: "translate(".concat(i * 116, ",0)")
     }, /*#__PURE__*/React.createElement("rect", {
       width: "110",
-      height: "78",
+      height: "94",
       rx: "8",
-      fill: "var(--surface-raised)",
+      fill: "var(--bg-2)",
       stroke: "var(--border)",
       strokeWidth: "1"
     }), /*#__PURE__*/React.createElement("text", {
@@ -1996,7 +2302,7 @@ function Section3(_ref11) {
       textAnchor: "middle",
       fontWeight: "700",
       fontSize: "9.5",
-      fill: "var(--accent-deep)"
+      fill: "var(--ink)"
     }, title), dots.map(function (d, j) {
       return /*#__PURE__*/React.createElement("circle", {
         key: j,
@@ -2004,16 +2310,16 @@ function Section3(_ref11) {
         cy: 30 + Math.floor(j / 3) * 20,
         r: "8",
         fill: d === "s" ? "#06b6d4" : "#e0f2fe",
-        stroke: d === "s" ? "#0e7490" : "#bfdbfe",
-        strokeWidth: "1"
+        stroke: d === "s" ? "#0e7490" : "#5b8fc7",
+        strokeWidth: "1.2"
       });
     }), desc.split("\n").map(function (line, j) {
       return /*#__PURE__*/React.createElement("text", {
         key: j,
         x: "55",
-        y: 66 + j * 11,
+        y: 68 + j * 10,
         textAnchor: "middle",
-        fontSize: "7.5",
+        fontSize: "8",
         fill: "var(--ink-muted)"
       }, line);
     }), i < 3 && /*#__PURE__*/React.createElement("text", {
@@ -2048,9 +2354,9 @@ function Section3(_ref11) {
 /* ============================================================
    SECTION 4: Separating Mixtures
    ============================================================ */
-function Section4(_ref14) {
-  var progress = _ref14.progress,
-    setProgress = _ref14.setProgress;
+function Section4(_ref24) {
+  var progress = _ref24.progress,
+    setProgress = _ref24.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -2058,9 +2364,8 @@ function Section4(_ref14) {
   }, "4.4 Separating Mixtures"), /*#__PURE__*/React.createElement("h1", null, "Pure substances, mixtures and separation techniques"), /*#__PURE__*/React.createElement("p", {
     className: "lead"
   }, "Mixtures can be separated because each component keeps its own physical properties. Choosing the right technique depends on knowing those differences.")), /*#__PURE__*/React.createElement(Figure, {
-    src: "img/separating.png",
-    caption: "Filtration separates an insoluble solid from a liquid."
-  }), /*#__PURE__*/React.createElement(DotPoint, {
+    caption: "Filtration separates an insoluble solid from a liquid: the solid stays in the filter paper as the residue and the liquid passes through as the filtrate."
+  }, /*#__PURE__*/React.createElement(FiltrationSVG, null)), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.4.1",
     title: "Atoms, compounds and mixtures",
     progress: progress,
@@ -2069,76 +2374,157 @@ function Section4(_ref14) {
     def: "The smallest particle of an element that has the chemical properties of that element. Cannot be broken down further by ordinary chemical means."
   }, "atoms"), ". When atoms of two or more different elements are chemically bonded together in fixed ratios, they form a ", /*#__PURE__*/React.createElement(Term, {
     def: "A pure substance made of two or more different elements chemically bonded in fixed ratios. Has new properties different from the original elements."
-  }, "compound"), ". Water (H2O) is a compound of hydrogen and oxygen. Importantly, the properties of a compound are completely different from those of its component elements: hydrogen burns, oxygen supports fire, but together they form water, which puts out fires!"), /*#__PURE__*/React.createElement("p", null, "A ", /*#__PURE__*/React.createElement(Term, {
+  }, "compound"), ". Water (H\u2082O) is a compound of hydrogen and oxygen. Importantly, the properties of a compound are completely different from those of its component elements: hydrogen burns, oxygen supports fire, but together they form water, which puts out fires!"), /*#__PURE__*/React.createElement("p", null, "A ", /*#__PURE__*/React.createElement(Term, {
     def: "Two or more substances physically combined but NOT chemically bonded. Each substance keeps its own properties. No fixed ratio. Can be separated by physical means."
   }, "mixture"), " is formed when two or more substances are physically combined without any chemical bonding. The key difference: in a compound, properties change and you need a chemical reaction to separate the elements; in a mixture, each component keeps its own properties and can be separated by physical methods like filtering or evaporation."), /*#__PURE__*/React.createElement(Figure, {
-    caption: "Comparing elements, compounds and mixtures using particle diagrams."
+    caption: "Comparing elements, compounds and mixtures using particle diagrams (grey = iron atom, red = oxygen atom, white = hydrogen atom, yellow = salt particle)."
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 420 110",
     width: "100%",
     style: {
       maxWidth: 420
-    }
-  }, [{
-    title: "Element (e.g. iron)",
-    dots: Array(9).fill("iron"),
-    colour: "#94a3b8"
-  }, {
-    title: "Compound (e.g. water)",
-    dots: Array(6).fill("water"),
-    colour2: "#3b82f6",
-    colour: "#60a5fa"
-  }, {
-    title: "Mixture (e.g. seawater)",
-    dots: ["water", "water", "salt", "water", "salt", "water", "water", "salt", "water"],
-    colours: ["#60a5fa", "#60a5fa", "#fbbf24", "#60a5fa", "#fbbf24", "#60a5fa", "#60a5fa", "#fbbf24", "#60a5fa"]
-  }].map(function (_ref15, i) {
-    var title = _ref15.title,
-      dots = _ref15.dots,
-      colour = _ref15.colour,
-      colours = _ref15.colours;
-    return /*#__PURE__*/React.createElement("g", {
-      key: title,
-      transform: "translate(".concat(i * 142, ",0)")
-    }, /*#__PURE__*/React.createElement("rect", {
-      width: "135",
-      height: "108",
-      rx: "10",
-      fill: "var(--surface-raised)",
-      stroke: "var(--border)",
-      strokeWidth: "1.2"
-    }), /*#__PURE__*/React.createElement("text", {
-      x: "67",
-      y: "16",
-      textAnchor: "middle",
-      fontWeight: "700",
-      fontSize: "9.5",
-      fill: "var(--accent-deep)"
-    }, title), dots.map(function (d, j) {
+    },
+    role: "img",
+    "aria-label": "Three panels. Element: identical iron atoms packed together. Compound: water molecules, each one oxygen atom bonded to two hydrogen atoms. Mixture: water molecules and separate salt particles mixed together but not bonded."
+  }, function () {
+    var Water = function Water(_ref25) {
+      var x = _ref25.x,
+        y = _ref25.y;
+      return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+        x1: x,
+        y1: y,
+        x2: x - 8,
+        y2: y + 7,
+        stroke: "#475569",
+        strokeWidth: "1.5"
+      }), /*#__PURE__*/React.createElement("line", {
+        x1: x,
+        y1: y,
+        x2: x + 8,
+        y2: y + 7,
+        stroke: "#475569",
+        strokeWidth: "1.5"
+      }), /*#__PURE__*/React.createElement("circle", {
+        cx: x - 8,
+        cy: y + 7,
+        r: "4.5",
+        fill: "#f1f5f9",
+        stroke: "#475569",
+        strokeWidth: "1"
+      }), /*#__PURE__*/React.createElement("circle", {
+        cx: x + 8,
+        cy: y + 7,
+        r: "4.5",
+        fill: "#f1f5f9",
+        stroke: "#475569",
+        strokeWidth: "1"
+      }), /*#__PURE__*/React.createElement("circle", {
+        cx: x,
+        cy: y,
+        r: "8",
+        fill: "#ef6b4b",
+        stroke: "#9a3412",
+        strokeWidth: "1.2"
+      }));
+    };
+    var Salt = function Salt(_ref26) {
+      var x = _ref26.x,
+        y = _ref26.y;
       return /*#__PURE__*/React.createElement("circle", {
-        key: j,
-        cx: 18 + j % 3 * 34,
-        cy: 30 + Math.floor(j / 3) * 24,
-        r: d === "salt" ? 7 : 8,
-        fill: colours ? colours[j] : colour,
-        stroke: colours ? colours[j] === "#fbbf24" ? "#d97706" : "#2563eb" : "#475569",
+        cx: x,
+        cy: y,
+        r: "7",
+        fill: "#fbbf24",
+        stroke: "#b45309",
         strokeWidth: "1.2"
       });
-    }), /*#__PURE__*/React.createElement("text", {
-      x: "67",
-      y: "104",
-      textAnchor: "middle",
-      fontSize: "8",
-      fill: "var(--ink-muted)"
-    }, i === 0 ? "One type of atom" : i === 1 ? "Bonded, fixed ratio" : "Mixed, not bonded"));
-  }))), /*#__PURE__*/React.createElement(QGroup, {
+    };
+    var panels = [{
+      title: "Element (e.g. iron)",
+      note: "One type of atom",
+      body: [0, 1, 2].flatMap(function (r) {
+        return [0, 1, 2].map(function (c) {
+          return /*#__PURE__*/React.createElement("circle", {
+            key: r + "-" + c,
+            cx: 49.5 + c * 18,
+            cy: 38 + r * 18,
+            r: "9",
+            fill: "#94a3b8",
+            stroke: "#475569",
+            strokeWidth: "1.2"
+          });
+        });
+      })
+    }, {
+      title: "Compound (e.g. water)",
+      note: "Atoms bonded in a fixed ratio",
+      body: [[42, 38], [92, 36], [40, 72], [94, 70]].map(function (_ref27, k) {
+        var _ref28 = _slicedToArray(_ref27, 2),
+          x = _ref28[0],
+          y = _ref28[1];
+        return /*#__PURE__*/React.createElement(Water, {
+          key: k,
+          x: x,
+          y: y
+        });
+      })
+    }, {
+      title: "Mixture (e.g. seawater)",
+      note: "Mixed, not bonded",
+      body: [].concat(_toConsumableArray([[36, 38], [98, 44], [62, 74]].map(function (_ref29, k) {
+        var _ref30 = _slicedToArray(_ref29, 2),
+          x = _ref30[0],
+          y = _ref30[1];
+        return /*#__PURE__*/React.createElement(Water, {
+          key: "w" + k,
+          x: x,
+          y: y
+        });
+      })), _toConsumableArray([[70, 40], [28, 76], [104, 80]].map(function (_ref31, k) {
+        var _ref32 = _slicedToArray(_ref31, 2),
+          x = _ref32[0],
+          y = _ref32[1];
+        return /*#__PURE__*/React.createElement(Salt, {
+          key: "s" + k,
+          x: x,
+          y: y
+        });
+      })))
+    }];
+    return panels.map(function (pn, i) {
+      return /*#__PURE__*/React.createElement("g", {
+        key: pn.title,
+        transform: "translate(".concat(i * 142, ",0)")
+      }, /*#__PURE__*/React.createElement("rect", {
+        width: "135",
+        height: "108",
+        rx: "10",
+        fill: "var(--bg-2)",
+        stroke: "var(--border)",
+        strokeWidth: "1.2"
+      }), /*#__PURE__*/React.createElement("text", {
+        x: "67.5",
+        y: "16",
+        textAnchor: "middle",
+        fontWeight: "700",
+        fontSize: "9.5",
+        fill: "var(--ink)"
+      }, pn.title), pn.body, /*#__PURE__*/React.createElement("text", {
+        x: "67.5",
+        y: "102",
+        textAnchor: "middle",
+        fontSize: "8",
+        fill: "var(--ink-muted)"
+      }, pn.note));
+    });
+  }())), /*#__PURE__*/React.createElement(QGroup, {
     title: "Check yourself"
   }, /*#__PURE__*/React.createElement(MCQ, {
     num: 10,
     question: "Which of the following is a compound?",
-    options: ["Air", "Salt water", "Water (H2O)", "Iron filings"],
+    options: ["Air", "Salt water", "Water (H₂O)", "Iron filings"],
     correct: 2,
-    explain: "Water (H2O) is a compound because hydrogen and oxygen atoms are chemically bonded together in a fixed ratio of 2:1. Air is a mixture, salt water is a mixture, and iron filings are an element."
+    explain: "Water (H\u2082O) is a compound because hydrogen and oxygen atoms are chemically bonded together in a fixed ratio of 2:1. Air is a mixture, salt water is a mixture, and iron filings are an element."
   }))), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.4.2",
     title: "Classifying matter as pure or impure",
@@ -2197,36 +2583,21 @@ function Section4(_ref14) {
     title: "Physical properties used in separation",
     progress: progress,
     setProgress: setProgress
-  }, /*#__PURE__*/React.createElement("p", null, "Every separation technique works by exploiting a difference in physical properties between the components of a mixture. The table below shows the main techniques and what property they rely on. No chemical change occurs: each component keeps its identity throughout."), /*#__PURE__*/React.createElement(Figure, {
-    caption: "Six separation techniques, the property each exploits, and an example."
-  }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 480 170",
-    width: "100%",
+  }, /*#__PURE__*/React.createElement("p", null, "Every separation technique works by exploiting a difference in physical properties between the components of a mixture. The table below shows the main techniques and what property they rely on. No chemical change occurs: each component keeps its identity throughout."), /*#__PURE__*/React.createElement("div", {
     style: {
-      maxWidth: 480
+      overflowX: "auto"
     }
-  }, [["Technique", "Property exploited", "Example"], ["Filtration", "Particle size", "Sand from water"], ["Evaporation", "Boiling point (solvent)", "Salt from salt water"], ["Distillation", "Different boiling points", "Ethanol from water"], ["Magnetism", "Magnetic attraction", "Iron filings from sand"], ["Chromatography", "Solubility + surface attraction", "Dyes in ink"], ["Sieving", "Particle size (larger)", "Gravel from fine sand"]].map(function (row, ri) {
-    return /*#__PURE__*/React.createElement("g", {
-      key: ri,
-      transform: "translate(0,".concat(ri * 24, ")")
-    }, /*#__PURE__*/React.createElement("rect", {
-      x: "0",
-      y: "0",
-      width: "480",
-      height: "23",
-      rx: "3",
-      fill: ri === 0 ? "var(--accent-soft)" : ri % 2 === 0 ? "var(--surface)" : "var(--surface-raised)"
-    }), row.map(function (cell, ci) {
-      return /*#__PURE__*/React.createElement("text", {
-        key: ci,
-        x: ci === 0 ? 6 : ci === 1 ? 152 : 305,
-        y: "16",
-        fontSize: ri === 0 ? "10" : "9.5",
-        fontWeight: ri === 0 ? "700" : "400",
-        fill: ri === 0 ? "var(--accent-deep)" : "var(--ink)"
-      }, cell);
-    }));
-  }))), /*#__PURE__*/React.createElement(SeparationPicker, null)), /*#__PURE__*/React.createElement(DotPoint, {
+  }, /*#__PURE__*/React.createElement("table", {
+    className: "data-table",
+    style: {
+      fontSize: "0.88rem"
+    }
+  }, /*#__PURE__*/React.createElement("caption", {
+    className: "figure-caption",
+    style: {
+      captionSide: "bottom"
+    }
+  }, "Six separation techniques, the property each exploits, and an example."), /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Technique"), /*#__PURE__*/React.createElement("th", null, "Property exploited"), /*#__PURE__*/React.createElement("th", null, "Example"))), /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Filtration"), /*#__PURE__*/React.createElement("td", null, "Particle size"), /*#__PURE__*/React.createElement("td", null, "Sand from water")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Evaporation"), /*#__PURE__*/React.createElement("td", null, "Boiling point (solvent)"), /*#__PURE__*/React.createElement("td", null, "Salt from salt water")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Distillation"), /*#__PURE__*/React.createElement("td", null, "Different boiling points"), /*#__PURE__*/React.createElement("td", null, "Ethanol from water")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Magnetism"), /*#__PURE__*/React.createElement("td", null, "Magnetic attraction"), /*#__PURE__*/React.createElement("td", null, "Iron filings from sand")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Chromatography"), /*#__PURE__*/React.createElement("td", null, "Solubility + surface attraction"), /*#__PURE__*/React.createElement("td", null, "Dyes in ink")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "Sieving"), /*#__PURE__*/React.createElement("td", null, "Particle size (larger)"), /*#__PURE__*/React.createElement("td", null, "Gravel from fine sand"))))), /*#__PURE__*/React.createElement(SeparationPicker, null)), /*#__PURE__*/React.createElement(DotPoint, {
     id: "4.4.4",
     title: "Separation techniques in practice",
     progress: progress,
@@ -2313,14 +2684,14 @@ function Section4(_ref14) {
     width: "80",
     height: "160",
     rx: "6",
-    fill: "var(--surface-raised)",
+    fill: "var(--bg-2)",
     stroke: "var(--accent-deep)",
     strokeWidth: "2"
-  }), [[30, "#ef4444", "Petrol / gases (low BP)"], [60, "#f59e0b", "Naphtha"], [90, "#22c55e", "Kerosene / jet fuel"], [120, "#3b82f6", "Diesel"], [150, "#8b5cf6", "Lubricating oils"]].map(function (_ref16) {
-    var _ref17 = _slicedToArray(_ref16, 3),
-      y = _ref17[0],
-      col = _ref17[1],
-      label = _ref17[2];
+  }), [[30, "#ef4444", "Petrol / gases (low BP)"], [60, "#f59e0b", "Naphtha"], [90, "#22c55e", "Kerosene / jet fuel"], [120, "#3b82f6", "Diesel"], [150, "#8b5cf6", "Lubricating oils"]].map(function (_ref33) {
+    var _ref34 = _slicedToArray(_ref33, 3),
+      y = _ref34[0],
+      col = _ref34[1],
+      label = _ref34[2];
     return /*#__PURE__*/React.createElement("g", {
       key: label
     }, /*#__PURE__*/React.createElement("line", {
@@ -2387,9 +2758,9 @@ function Section4(_ref14) {
 /* ============================================================
    SECTION 5: Solutions and Mixtures in Context
    ============================================================ */
-function Section5(_ref18) {
-  var progress = _ref18.progress,
-    setProgress = _ref18.setProgress;
+function Section5(_ref35) {
+  var progress = _ref35.progress,
+    setProgress = _ref35.setProgress;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "topic-head"
   }, /*#__PURE__*/React.createElement("div", {
@@ -2403,7 +2774,7 @@ function Section5(_ref18) {
     setProgress: setProgress
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement(Term, {
     def: "The introduction of harmful substances into a water body (river, lake, ocean or groundwater) in amounts that damage the ecosystem or make the water unsafe."
-  }, "Water pollution"), " happens when harmful substances enter a water body. Pollutants can be physical (sand, silt, litter), chemical (fertilisers, heavy metal ions, oil, pesticides) or biological (excess bacteria or algae). Sources include agricultural runoff, industrial discharge, urban runoff from roads and drains, and sewage discharge."), /*#__PURE__*/React.createElement("p", null, "Removing pollutants requires choosing the right technique for each type. Insoluble solids can be removed by sedimentation and filtration because they are too large to pass through a filter and dense enough to settle. Oil floating on the surface can be skimmed or absorbed by booms, exploiting the density difference between oil and water. Dissolved chemical pollutants like fertilisers are much harder to remove because their particles are small enough to pass through any filter. These require activated carbon, chemical treatment, or reverse osmosis."), /*#__PURE__*/React.createElement(PollutionTreatment, null), /*#__PURE__*/React.createElement(Callout, {
+  }, "Water pollution"), " happens when harmful substances enter a water body. Pollutants can be physical (sand, silt, litter), chemical (fertilisers, heavy metal ions, oil, pesticides) or biological (excess bacteria or algae). Sources include agricultural runoff, industrial discharge, urban runoff from roads and drains, and sewage discharge."), /*#__PURE__*/React.createElement("p", null, "Removing pollutants requires choosing the right technique for each type. Insoluble solids can be removed by sedimentation and filtration because they are too large to pass through a filter and dense enough to settle. Oil floating on the surface can be skimmed or absorbed by booms, exploiting the density difference between oil and water. Dissolved chemical pollutants like fertilisers are much harder to remove because their particles are small enough to pass through ordinary filters. These require activated carbon, chemical treatment, or reverse osmosis."), /*#__PURE__*/React.createElement(PollutionTreatment, null), /*#__PURE__*/React.createElement(Callout, {
     kind: "warn",
     title: "Filtration alone is not enough"
   }, "A physical filter can only remove particles that are larger than its pores. Dissolved pollutants (like fertilisers or dissolved heavy metals) have particles far too small to be trapped. Real water treatment plants use a sequence of techniques to tackle every type of pollutant."), /*#__PURE__*/React.createElement(Figure, {
@@ -2414,10 +2785,10 @@ function Section5(_ref18) {
     style: {
       maxWidth: 480
     }
-  }, [["Screening", "Large debris\n(particle size)"], ["Sedimentation", "Heavy particles\n(density)"], ["Filtration", "Fine solids\n(particle size)"], ["Activated carbon", "Dissolved organics\n(adsorption)"], ["Disinfection", "Bacteria/viruses\n(chemical/UV)"]].map(function (_ref19, i) {
-    var _ref20 = _slicedToArray(_ref19, 2),
-      step = _ref20[0],
-      desc = _ref20[1];
+  }, [["Screening", "Large debris\n(particle size)"], ["Sedimentation", "Heavy particles\n(density)"], ["Filtration", "Fine solids\n(particle size)"], ["Activated carbon", "Dissolved organics\n(adsorption)"], ["Disinfection", "Bacteria/viruses\n(chemical/UV)"]].map(function (_ref36, i) {
+    var _ref37 = _slicedToArray(_ref36, 2),
+      step = _ref37[0],
+      desc = _ref37[1];
     return /*#__PURE__*/React.createElement("g", {
       key: step,
       transform: "translate(".concat(i * 96 + 2, ",0)")
@@ -2425,7 +2796,7 @@ function Section5(_ref18) {
       width: "90",
       height: "66",
       rx: "8",
-      fill: i % 2 === 0 ? "var(--accent-soft)" : "var(--surface-raised)",
+      fill: "var(--bg-2)",
       stroke: "var(--accent-deep)",
       strokeWidth: "1"
     }), /*#__PURE__*/React.createElement("text", {
@@ -2434,7 +2805,7 @@ function Section5(_ref18) {
       textAnchor: "middle",
       fontWeight: "700",
       fontSize: "9.5",
-      fill: "var(--accent-deep)"
+      fill: "var(--ink)"
     }, step), desc.split("\n").map(function (line, j) {
       return /*#__PURE__*/React.createElement("text", {
         key: j,
