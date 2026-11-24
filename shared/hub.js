@@ -129,8 +129,8 @@ function YearHub(CFG) {
     }, /*#__PURE__*/React.createElement("a", {
       className: "icon-btn",
       href: "/",
-      "aria-label": "All year groups \u2014 Junior Science home",
-      title: "All year groups",
+      "aria-label": "Back to the Woonona High Learning Hub",
+      title: "Woonona High Learning Hub",
       style: {
         width: "auto",
         padding: "0 14px",
@@ -144,7 +144,7 @@ function YearHub(CFG) {
         fontSize: "0.85rem",
         fontWeight: 600
       }
-    }, "All years")), /*#__PURE__*/React.createElement("div", {
+    }, "\u2190 Learning Hub")), /*#__PURE__*/React.createElement("div", {
       style: {
         position: "relative"
       }

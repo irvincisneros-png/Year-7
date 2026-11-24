@@ -57,7 +57,7 @@ function YearHub(CFG) {
             <div><div className="brand-title">{CFG.schoolTitle || "Junior Science"}</div><div className="brand-sub">Year {CFG.year} · NSW Stage {CFG.stage || (CFG.year <= 8 ? 4 : 5)}</div></div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a className="icon-btn" href="/" aria-label="All year groups — Junior Science home" title="All year groups" style={{ width: "auto", padding: "0 14px", gap: 8, textDecoration: "none" }}><IconHome size={16}/><span style={{ fontSize: "0.85rem", fontWeight: 600 }}>All years</span></a>
+            <a className="icon-btn" href="/" aria-label="Back to the Woonona High Learning Hub" title="Woonona High Learning Hub" style={{ width: "auto", padding: "0 14px", gap: 8, textDecoration: "none" }}><IconHome size={16}/><span style={{ fontSize: "0.85rem", fontWeight: 600 }}>← Learning Hub</span></a>
             <div style={{ position: "relative" }}>
             <button className="icon-btn" data-settings-toggle onClick={() => setOpen(o => !o)} aria-label="Display settings" aria-expanded={open} title="Display settings"><IconGear/></button>
             {open && (
